@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import { cn } from "@wifo/ui";
 import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
 import { Toaster } from "@wifo/ui/toast";
@@ -12,21 +12,16 @@ import "~/app/styles.css";
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
-      ? "https://turbo.t3.gg"
+      ? "https://dashboard.padelhub.pe"
       : "http://localhost:3000",
   ),
-  title: "Create T3 Turbo",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  title: "PadelHub - Court Owner Dashboard",
+  description: "Manage your padel courts, bookings, and grow your business with PadelHub",
   openGraph: {
-    title: "Create T3 Turbo",
-    description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://create-t3-turbo.vercel.app",
-    siteName: "Create T3 Turbo",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@jullerino",
-    creator: "@jullerino",
+    title: "PadelHub - Court Owner Dashboard",
+    description: "Manage your padel courts, bookings, and grow your business with PadelHub",
+    url: "https://dashboard.padelhub.pe",
+    siteName: "PadelHub",
   },
 };
 
@@ -37,9 +32,9 @@ export const viewport: Viewport = {
   ],
 };
 
-const geistSans = Geist({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
 });
 const geistMono = Geist_Mono({
   subsets: ["latin"],
@@ -52,7 +47,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
-          geistSans.variable,
+          inter.variable,
           geistMono.variable,
         )}
       >
