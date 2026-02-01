@@ -3,7 +3,7 @@
   "extends": ["config:base"],
   "packageRules": [
     {
-      "matchPackagePatterns": ["^@acme/"],
+      "matchPackagePatterns": ["^@wifo/"],
       "enabled": false
     }
   ],

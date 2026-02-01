@@ -1,5 +1,5 @@
 {
-  "name": "@acme/auth",
+  "name": "@wifo/auth",
   "private": true,
   "type": "module",
   "exports": {
@@ -17,20 +17,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/db": "workspace:*",
     "@better-auth/expo": "catalog:",
     "@t3-oss/env-core": "^0.13.8",
+    "@wifo/db": "workspace:*",
     "better-auth": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
     "@better-auth/cli": "catalog:",
+    "@wifo/eslint-config": "workspace:*",
+    "@wifo/prettier-config": "workspace:*",
+    "@wifo/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@wifo/prettier-config"
 }

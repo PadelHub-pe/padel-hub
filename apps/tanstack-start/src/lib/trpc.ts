@@ -7,9 +7,8 @@ import {
   unstable_localLink,
 } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
+import * as Api from "@wifo/api";
 import SuperJSON from "superjson";
-
-import * as Api from "@acme/api";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";

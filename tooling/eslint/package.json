@@ -1,5 +1,5 @@
 {
-  "name": "@acme/eslint-config",
+  "name": "@wifo/eslint-config",
   "private": true,
   "type": "module",
   "exports": {
@@ -24,12 +24,12 @@
     "typescript-eslint": "^8.46.2"
   },
   "devDependencies": {
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "@wifo/prettier-config": "workspace:*",
+    "@wifo/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@wifo/prettier-config"
 }

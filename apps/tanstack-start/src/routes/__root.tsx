@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import type { AppRouter } from "@wifo/api";
 import type * as React from "react";
 import {
   createRootRouteWithContext,
@@ -9,10 +10,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-import type { AppRouter } from "@acme/api";
-import { ThemeProvider, ThemeToggle } from "@acme/ui/theme";
-import { Toaster } from "@acme/ui/toast";
+import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
+import { Toaster } from "@wifo/ui/toast";
 
 import appCss from "~/styles.css?url";
 

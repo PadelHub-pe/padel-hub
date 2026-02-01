@@ -1,5 +1,5 @@
 {
-  "name": "@acme/tanstack-start",
+  "name": "@wifo/tanstack-start",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -13,10 +13,6 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/api": "workspace:*",
-    "@acme/auth": "workspace:*",
-    "@acme/db": "workspace:*",
-    "@acme/ui": "workspace:*",
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/geist-mono": "^5.2.7",
     "@t3-oss/env-core": "^0.13.8",
@@ -29,6 +25,10 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
+    "@wifo/api": "workspace:*",
+    "@wifo/auth": "workspace:*",
+    "@wifo/db": "workspace:*",
+    "@wifo/ui": "workspace:*",
     "better-auth": "catalog:",
     "nitro": "3.0.1-alpha.1",
     "react": "catalog:react19",
@@ -37,15 +37,15 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "catalog:",
+    "@wifo/eslint-config": "workspace:*",
+    "@wifo/prettier-config": "workspace:*",
+    "@wifo/tailwind-config": "workspace:*",
+    "@wifo/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
@@ -53,5 +53,5 @@
     "vite": "catalog:",
     "vite-tsconfig-paths": "^5.1.4"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@wifo/prettier-config"
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@acme/ui",
+  "name": "@wifo/ui",
   "private": true,
   "type": "module",
   "exports": {
@@ -29,10 +29,10 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
+    "@wifo/eslint-config": "workspace:*",
+    "@wifo/prettier-config": "workspace:*",
+    "@wifo/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:react19",
@@ -43,5 +43,5 @@
     "react": "catalog:react19",
     "zod": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@wifo/prettier-config"
 }
