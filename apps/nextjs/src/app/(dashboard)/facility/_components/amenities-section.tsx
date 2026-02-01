@@ -1,17 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 
-const AMENITIES = [
-  { id: "parking", label: "Estacionamiento", icon: "🅿️" },
-  { id: "indoor", label: "Canchas Techadas", icon: "🏠" },
-  { id: "cafe", label: "Cafetería", icon: "☕" },
-  { id: "showers", label: "Duchas", icon: "🚿" },
-  { id: "lockers", label: "Casilleros", icon: "🔒" },
-  { id: "proshop", label: "Pro Shop", icon: "🏪" },
-  { id: "rental", label: "Alquiler de Equipos", icon: "🎾" },
-  { id: "wifi", label: "WiFi", icon: "📶" },
-  { id: "accessible", label: "Accesible", icon: "♿" },
-  { id: "kids", label: "Área de Niños", icon: "👶" },
-] as const;
+import { AMENITIES } from "~/lib/constants/amenities";
 
 interface AmenitiesSectionProps {
   selectedAmenities: string[];
@@ -52,4 +41,3 @@ export function AmenitiesSection({ selectedAmenities }: AmenitiesSectionProps) {
   );
 }
 
-export { AMENITIES };

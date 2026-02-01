@@ -5,18 +5,7 @@ import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 import { Textarea } from "@wifo/ui/textarea";
 
-const AMENITIES = [
-  { id: "parking", label: "Estacionamiento" },
-  { id: "indoor", label: "Canchas techadas" },
-  { id: "outdoor", label: "Canchas al aire libre" },
-  { id: "cafe", label: "Cafetería" },
-  { id: "showers", label: "Duchas" },
-  { id: "lockers", label: "Casilleros" },
-  { id: "wifi", label: "Wi-Fi" },
-  { id: "pro_shop", label: "Tienda de equipamiento" },
-  { id: "lessons", label: "Clases/Entrenamiento" },
-  { id: "air_conditioning", label: "Aire acondicionado" },
-];
+import { AMENITIES } from "~/lib/constants/amenities";
 
 export interface FacilityInfoData {
   name: string;
