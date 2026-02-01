@@ -4,7 +4,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import { appRouter, createTRPCContext } from "@wifo/api";
+import { appRouter, createCallerFactory, createTRPCContext } from "@wifo/api";
 
 import { auth } from "~/auth/server";
 import { createQueryClient } from "./query-client";
@@ -29,6 +29,17 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
   router: appRouter,
   ctx: createContext,
   queryClient: getQueryClient,
+});
+
+/**
+ * Server-side caller for direct tRPC calls in layouts and server components
+ * Use this when you need the result directly, not for prefetching
+ */
+const createCaller = createCallerFactory(appRouter);
+
+export const api = cache(async () => {
+  const ctx = await createContext();
+  return createCaller(ctx);
 });
 
 export function HydrateClient(props: { children: React.ReactNode }) {

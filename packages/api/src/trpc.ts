@@ -125,3 +125,9 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Create a server-side caller for direct calls in layouts and server components
+ * @see https://trpc.io/docs/server/server-side-calls
+ */
+export const createCallerFactory = t.createCallerFactory;

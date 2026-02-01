@@ -1,25 +1,11 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { protectedProcedure } from "../trpc";
+import { facilities, ownerAccounts } from "@wifo/db/schema";
 
-// Mock data for MVP - will be replaced with real database queries
-const mockFacilityProfile = {
-  id: "1",
-  name: "Padel Club Miraflores",
-  phone: "+51 1 234 5678",
-  email: "info@padelclubmiraflores.pe",
-  website: "https://padelclubmiraflores.pe",
-  description:
-    "Premium padel facility in the heart of Miraflores with 4 professional courts, cafe, and pro shop. Perfect for players of all levels.",
-  address: {
-    street: "Av. José Pardo 620",
-    district: "Miraflores",
-    city: "Lima",
-  },
-  amenities: ["parking", "indoor", "cafe", "showers", "lockers", "wifi"],
-  photos: [] as string[],
-};
+import { protectedProcedure } from "../trpc";
 
 const updateProfileSchema = z.object({
   name: z.string().min(3).max(100),
@@ -36,18 +22,81 @@ const updateProfileSchema = z.object({
 });
 
 export const facilityRouter = {
-  getProfile: protectedProcedure.query(() => {
-    return mockFacilityProfile;
+  getProfile: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const ownerAccount = await ctx.db.query.ownerAccounts.findFirst({
+      where: eq(ownerAccounts.userId, userId),
+      with: {
+        facilities: {
+          limit: 1,
+        },
+      },
+    });
+
+    const facility = ownerAccount?.facilities[0];
+
+    if (!facility) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "No se encontró el local",
+      });
+    }
+
+    return {
+      id: facility.id,
+      name: facility.name,
+      phone: facility.phone,
+      email: facility.email ?? "",
+      website: facility.website ?? "",
+      description: facility.description ?? "",
+      address: {
+        street: facility.address,
+        district: facility.district,
+        city: facility.city,
+      },
+      amenities: facility.amenities ?? [],
+      photos: facility.photos ?? [],
+    };
   }),
 
   updateProfile: protectedProcedure
     .input(updateProfileSchema)
-    .mutation(({ input }) => {
-      // For MVP, just log the update and return success
-      console.log("[FACILITY] Profile update received:", input);
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
 
-      // In production, this would update the database
-      // await ctx.db.update(facilities).set(input).where(eq(facilities.id, facilityId))
+      const ownerAccount = await ctx.db.query.ownerAccounts.findFirst({
+        where: eq(ownerAccounts.userId, userId),
+        with: {
+          facilities: {
+            limit: 1,
+          },
+        },
+      });
+
+      const facility = ownerAccount?.facilities[0];
+
+      if (!facility) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No se encontró el local",
+        });
+      }
+
+      await ctx.db
+        .update(facilities)
+        .set({
+          name: input.name,
+          phone: input.phone,
+          email: input.email ?? null,
+          website: input.website ?? null,
+          description: input.description ?? null,
+          address: input.address.street,
+          district: input.address.district,
+          city: input.address.city,
+          amenities: input.amenities,
+        })
+        .where(eq(facilities.id, facility.id));
 
       return { success: true };
     }),
