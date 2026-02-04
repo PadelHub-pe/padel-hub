@@ -108,6 +108,15 @@ export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
 export const courtTypeEnum = pgEnum("court_type", ["indoor", "outdoor"]);
 
 /**
+ * Court status enum
+ */
+export const courtStatusEnum = pgEnum("court_status", [
+  "active",
+  "maintenance",
+  "inactive",
+]);
+
+/**
  * Courts table - individual padel courts within a facility
  */
 export const courts = pgTable("courts", {
@@ -117,6 +126,10 @@ export const courts = pgTable("courts", {
     .references(() => facilities.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   type: courtTypeEnum("type").notNull(),
+  status: courtStatusEnum("status").default("active").notNull(),
+  description: text("description"),
+  priceInCents: integer("price_in_cents"),
+  imageUrl: text("image_url"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -215,11 +228,16 @@ export const CreateFacilitySchema = createInsertSchema(facilities, {
 
 export const CreateCourtSchema = createInsertSchema(courts, {
   name: z.string().min(2).max(100),
+  description: z.string().max(500).optional(),
+  priceInCents: z.number().int().min(0).optional(),
+  imageUrl: z.string().url().optional(),
 }).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
   isActive: true,
 });
+
+export const UpdateCourtSchema = CreateCourtSchema.partial();
 
 export * from "./auth-schema";
