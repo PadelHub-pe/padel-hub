@@ -24,21 +24,21 @@ export default async function CourtDetailPage({ params }: CourtDetailPageProps) 
 function CourtViewSkeleton() {
   return (
     <div className="p-8">
+      {/* Breadcrumb skeleton */}
+      <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
+
       {/* Header skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-9 w-9 animate-pulse rounded-lg bg-gray-200" />
-          <div>
-            <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
-            <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-200" />
-          </div>
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200" />
         </div>
-        <div className="h-9 w-32 animate-pulse rounded-lg bg-gray-200" />
+        <div className="h-9 w-36 animate-pulse rounded-lg bg-gray-200" />
       </div>
 
       {/* Content skeleton */}
       <div className="mt-8 space-y-6">
-        <div className="h-64 animate-pulse rounded-xl border bg-white" />
+        <div className="h-72 animate-pulse rounded-xl border bg-white" />
         <div className="h-48 animate-pulse rounded-xl border bg-white" />
       </div>
     </div>

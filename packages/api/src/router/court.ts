@@ -18,6 +18,7 @@ const createCourtSchema = z.object({
   status: z.enum(["active", "maintenance", "inactive"]).default("active"),
   description: z.string().max(500).optional(),
   priceInCents: z.number().int().min(0).optional(),
+  peakPriceInCents: z.number().int().min(0).optional(),
   imageUrl: z.string().url().optional(),
 });
 
@@ -162,6 +163,7 @@ export const courtRouter = {
         status: input.status,
         description: input.description ?? null,
         priceInCents: input.priceInCents ?? null,
+        peakPriceInCents: input.peakPriceInCents ?? null,
         imageUrl: input.imageUrl ?? null,
       })
       .returning();
@@ -207,6 +209,7 @@ export const courtRouter = {
           ...input.data,
           description: input.data.description ?? existingCourt.description,
           priceInCents: input.data.priceInCents ?? existingCourt.priceInCents,
+          peakPriceInCents: input.data.peakPriceInCents ?? existingCourt.peakPriceInCents,
           imageUrl: input.data.imageUrl ?? existingCourt.imageUrl,
         })
         .where(eq(courts.id, input.id))

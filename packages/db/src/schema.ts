@@ -129,6 +129,7 @@ export const courts = pgTable("courts", {
   status: courtStatusEnum("status").default("active").notNull(),
   description: text("description"),
   priceInCents: integer("price_in_cents"),
+  peakPriceInCents: integer("peak_price_in_cents"),
   imageUrl: text("image_url"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -230,6 +231,7 @@ export const CreateCourtSchema = createInsertSchema(courts, {
   name: z.string().min(2).max(100),
   description: z.string().max(500).optional(),
   priceInCents: z.number().int().min(0).optional(),
+  peakPriceInCents: z.number().int().min(0).optional(),
   imageUrl: z.string().url().optional(),
 }).omit({
   id: true,

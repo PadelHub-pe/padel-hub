@@ -24,14 +24,13 @@ export default async function EditCourtPage({ params }: EditCourtPageProps) {
 function EditFormSkeleton() {
   return (
     <div className="p-8">
+      {/* Breadcrumb skeleton */}
+      <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
+
       {/* Header skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-9 w-9 animate-pulse rounded-lg bg-gray-200" />
-          <div>
-            <div className="h-8 w-56 animate-pulse rounded bg-gray-200" />
-            <div className="mt-2 h-4 w-40 animate-pulse rounded bg-gray-200" />
-          </div>
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
         </div>
         <div className="flex gap-3">
           <div className="h-9 w-24 animate-pulse rounded-lg bg-gray-200" />
@@ -41,8 +40,11 @@ function EditFormSkeleton() {
 
       {/* Form sections skeleton */}
       <div className="mt-8 space-y-6">
-        <div className="h-80 animate-pulse rounded-xl border bg-white" />
+        <div className="h-64 animate-pulse rounded-xl border bg-white" />
+        <div className="h-32 animate-pulse rounded-xl border bg-white" />
+        <div className="h-32 animate-pulse rounded-xl border bg-white" />
         <div className="h-48 animate-pulse rounded-xl border bg-white" />
+        <div className="h-24 animate-pulse rounded-xl border border-red-200 bg-white" />
       </div>
     </div>
   );

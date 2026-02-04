@@ -5,22 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 
-interface CourtImageFormProps {
+interface PhotoSectionProps {
   imageUrl: string;
   errors: Record<string, string>;
-  onChange: (value: string) => void;
+  onChange: (url: string) => void;
 }
 
-export function CourtImageForm({
-  imageUrl,
-  errors,
-  onChange,
-}: CourtImageFormProps) {
+export function PhotoSection({ imageUrl, errors, onChange }: PhotoSectionProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-gray-900">
-          Imagen de la Cancha
+          Foto de la Cancha
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -39,7 +35,8 @@ export function CourtImageForm({
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-gray-400">
               <ImageIcon className="h-12 w-12" />
-              <p className="mt-2 text-sm">Vista previa de la imagen</p>
+              <p className="mt-2 text-sm">Vista previa de imagen</p>
+              <p className="text-xs">Resolución mínima: 800×600px</p>
             </div>
           )}
         </div>
@@ -59,7 +56,7 @@ export function CourtImageForm({
             <p className="text-sm text-red-500">{errors.imageUrl}</p>
           )}
           <p className="text-xs text-gray-500">
-            Ingresa la URL de una imagen para mostrar en la tarjeta de la cancha
+            Formatos soportados: JPG, PNG, WebP
           </p>
         </div>
       </CardContent>
