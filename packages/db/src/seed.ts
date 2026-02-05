@@ -11,6 +11,8 @@ import {
   facilities,
   courts,
   bookings,
+  organizations,
+  organizationMembers,
 } from "./schema";
 
 async function seed() {
@@ -30,66 +32,90 @@ async function seed() {
   const userId = randomUUID();
   const accountId = randomUUID();
   const ownerAccountId = randomUUID();
-  const facilityId = randomUUID();
+
+  // Secondary user (facility manager)
+  const managerEmail = "manager@padelhub.pe";
+  const managerUserId = randomUUID();
+  const managerAccountId = randomUUID();
+
+  // Third user (staff)
+  const staffEmail = "staff@padelhub.pe";
+  const staffUserId = randomUUID();
+  const staffAccountId = randomUUID();
+
+  // Organization IDs
+  const orgId = randomUUID();
+  const orgSlug = "padel-group-lima";
+
+  // Facility IDs
+  const facility1Id = randomUUID();
+  const facility2Id = randomUUID();
+  const facility3Id = randomUUID();
 
   // Hash the password using Better Auth's crypto
   const hashedPassword = await hashPassword(testPassword);
 
   try {
-    // Delete existing test user and their accounts (if exists)
-    const existingUser = await db.select().from(user).where(eq(user.email, testEmail)).limit(1);
-    const existingUserRecord = existingUser[0];
-    if (existingUserRecord) {
-      console.log("🗑️  Removing existing test user and related data...\n");
+    // ==========================================================================
+    // CLEANUP: Remove existing test data
+    // ==========================================================================
+    console.log("🗑️  Cleaning up existing test data...\n");
 
-      // Find owner account
-      const existingOwner = await db
-        .select()
-        .from(ownerAccounts)
-        .where(eq(ownerAccounts.userId, existingUserRecord.id))
-        .limit(1);
+    // Delete by emails
+    for (const email of [testEmail, managerEmail, staffEmail]) {
+      const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1);
+      const existingUserRecord = existingUser[0];
+      if (existingUserRecord) {
+        // Delete organization memberships
+        await db.delete(organizationMembers).where(eq(organizationMembers.userId, existingUserRecord.id));
 
-      const existingOwnerRecord = existingOwner[0];
-      if (existingOwnerRecord) {
-        // Find facility
-        const existingFacility = await db
+        // Find and delete owner account data
+        const existingOwner = await db
           .select()
-          .from(facilities)
-          .where(eq(facilities.ownerId, existingOwnerRecord.id))
+          .from(ownerAccounts)
+          .where(eq(ownerAccounts.userId, existingUserRecord.id))
           .limit(1);
 
-        const existingFacilityRecord = existingFacility[0];
-        if (existingFacilityRecord) {
-          // Delete bookings
-          await db.delete(bookings).where(eq(bookings.facilityId, existingFacilityRecord.id));
-          // Delete courts
-          await db.delete(courts).where(eq(courts.facilityId, existingFacilityRecord.id));
-          // Delete facility
-          await db.delete(facilities).where(eq(facilities.id, existingFacilityRecord.id));
+        const existingOwnerRecord = existingOwner[0];
+        if (existingOwnerRecord) {
+          const existingFacilities = await db
+            .select()
+            .from(facilities)
+            .where(eq(facilities.ownerId, existingOwnerRecord.id));
+
+          for (const facility of existingFacilities) {
+            await db.delete(bookings).where(eq(bookings.facilityId, facility.id));
+            await db.delete(courts).where(eq(courts.facilityId, facility.id));
+            await db.delete(facilities).where(eq(facilities.id, facility.id));
+          }
+
+          await db.delete(ownerAccounts).where(eq(ownerAccounts.id, existingOwnerRecord.id));
         }
 
-        // Delete owner account
-        await db.delete(ownerAccounts).where(eq(ownerAccounts.id, existingOwnerRecord.id));
+        await db.delete(account).where(eq(account.userId, existingUserRecord.id));
+        await db.delete(user).where(eq(user.id, existingUserRecord.id));
       }
-
-      // Delete accounts first (foreign key constraint)
-      await db.delete(account).where(eq(account.userId, existingUserRecord.id));
-      await db.delete(user).where(eq(user.id, existingUserRecord.id));
     }
 
-    // Create user
+    // Delete test organization
+    const existingOrg = await db.select().from(organizations).where(eq(organizations.slug, orgSlug)).limit(1);
+    if (existingOrg[0]) {
+      await db.delete(organizationMembers).where(eq(organizationMembers.organizationId, existingOrg[0].id));
+      await db.delete(organizations).where(eq(organizations.id, existingOrg[0].id));
+    }
+
+    // ==========================================================================
+    // CREATE USERS
+    // ==========================================================================
+
+    // Main owner user
     await db.insert(user).values({
       id: userId,
-      name: "Test Owner",
+      name: "Carlos Mendoza",
       email: testEmail,
       emailVerified: true,
     });
 
-    console.log("✅ Created user:");
-    console.log(`   Email: ${testEmail}`);
-    console.log(`   Name: Test Owner\n`);
-
-    // Create account with password (credential provider)
     await db.insert(account).values({
       id: accountId,
       accountId: userId,
@@ -98,9 +124,54 @@ async function seed() {
       password: hashedPassword,
     });
 
-    console.log("✅ Created account with password\n");
+    console.log("✅ Created owner user:");
+    console.log(`   Email: ${testEmail}`);
+    console.log(`   Name: Carlos Mendoza\n`);
 
-    // Create owner account
+    // Manager user
+    await db.insert(user).values({
+      id: managerUserId,
+      name: "Ana García",
+      email: managerEmail,
+      emailVerified: true,
+    });
+
+    await db.insert(account).values({
+      id: managerAccountId,
+      accountId: managerUserId,
+      providerId: "credential",
+      userId: managerUserId,
+      password: hashedPassword,
+    });
+
+    console.log("✅ Created manager user:");
+    console.log(`   Email: ${managerEmail}`);
+    console.log(`   Name: Ana García\n`);
+
+    // Staff user
+    await db.insert(user).values({
+      id: staffUserId,
+      name: "Luis Vargas",
+      email: staffEmail,
+      emailVerified: true,
+    });
+
+    await db.insert(account).values({
+      id: staffAccountId,
+      accountId: staffUserId,
+      providerId: "credential",
+      userId: staffUserId,
+      password: hashedPassword,
+    });
+
+    console.log("✅ Created staff user:");
+    console.log(`   Email: ${staffEmail}`);
+    console.log(`   Name: Luis Vargas\n`);
+
+    // ==========================================================================
+    // CREATE OWNER ACCOUNT
+    // ==========================================================================
+
     await db.insert(ownerAccounts).values({
       id: ownerAccountId,
       userId: userId,
@@ -111,39 +182,141 @@ async function seed() {
 
     console.log("✅ Created owner account\n");
 
-    // Create facility
+    // ==========================================================================
+    // CREATE ORGANIZATION
+    // ==========================================================================
+
+    await db.insert(organizations).values({
+      id: orgId,
+      name: "Padel Group Lima",
+      slug: orgSlug,
+      contactEmail: "admin@padelgrouplima.pe",
+      contactPhone: "+51999888777",
+      isActive: true,
+    });
+
+    console.log("✅ Created organization: Padel Group Lima\n");
+
+    // ==========================================================================
+    // CREATE ORGANIZATION MEMBERS
+    // ==========================================================================
+
+    // Owner as org_admin
+    await db.insert(organizationMembers).values({
+      id: randomUUID(),
+      organizationId: orgId,
+      userId: userId,
+      role: "org_admin",
+      facilityIds: [],
+    });
+
+    // Manager with access to facility 1 and 2
+    await db.insert(organizationMembers).values({
+      id: randomUUID(),
+      organizationId: orgId,
+      userId: managerUserId,
+      role: "facility_manager",
+      facilityIds: [facility1Id, facility2Id],
+    });
+
+    // Staff with access to facility 1 only
+    await db.insert(organizationMembers).values({
+      id: randomUUID(),
+      organizationId: orgId,
+      userId: staffUserId,
+      role: "staff",
+      facilityIds: [facility1Id],
+    });
+
+    console.log("✅ Created organization members:");
+    console.log("   • Carlos Mendoza (org_admin)");
+    console.log("   • Ana García (facility_manager)");
+    console.log("   • Luis Vargas (staff)\n");
+
+    // ==========================================================================
+    // CREATE FACILITIES
+    // ==========================================================================
+
+    // Facility 1: Main club in San Isidro (active)
     await db.insert(facilities).values({
-      id: facilityId,
+      id: facility1Id,
       ownerId: ownerAccountId,
-      name: "Padel Club Lima",
-      description: "El mejor club de padel en Lima con canchas de primer nivel",
+      organizationId: orgId,
+      name: "Padel Club San Isidro",
+      description: "Nuestro club principal con canchas de primer nivel en el corazón de San Isidro",
       address: "Av. Javier Prado Este 1234",
       district: "San Isidro",
       city: "Lima",
       phone: "+51999888777",
-      email: "contacto@padelclublima.pe",
-      website: "https://padelclublima.pe",
-      amenities: ["estacionamiento", "vestuarios", "cafeteria", "tienda"],
+      email: "sanisidro@padelgrouplima.pe",
+      website: "https://padelgrouplima.pe/sanisidro",
+      amenities: ["estacionamiento", "vestuarios", "cafeteria", "tienda", "wifi"],
+      photos: [
+        "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=400&fit=crop",
+      ],
       isActive: true,
     });
 
-    console.log("✅ Created facility: Padel Club Lima\n");
+    // Facility 2: Miraflores location (active)
+    await db.insert(facilities).values({
+      id: facility2Id,
+      ownerId: ownerAccountId,
+      organizationId: orgId,
+      name: "Padel Club Miraflores",
+      description: "Club moderno cerca al malecón con vista al mar",
+      address: "Calle Schell 456",
+      district: "Miraflores",
+      city: "Lima",
+      phone: "+51999777666",
+      email: "miraflores@padelgrouplima.pe",
+      amenities: ["estacionamiento", "vestuarios", "bar", "terraza"],
+      photos: [
+        "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&h=400&fit=crop",
+      ],
+      isActive: true,
+    });
 
-    // Create courts
-    const courtData = [
+    // Facility 3: La Molina location (inactive - under construction)
+    await db.insert(facilities).values({
+      id: facility3Id,
+      ownerId: ownerAccountId,
+      organizationId: orgId,
+      name: "Padel Club La Molina",
+      description: "Próximamente - Nuestro nuevo club en La Molina",
+      address: "Av. La Fontana 789",
+      district: "La Molina",
+      city: "Lima",
+      phone: "+51999666555",
+      email: "lamolina@padelgrouplima.pe",
+      amenities: ["estacionamiento", "vestuarios"],
+      photos: [],
+      isActive: false,
+    });
+
+    console.log("✅ Created 3 facilities:");
+    console.log("   • Padel Club San Isidro (active)");
+    console.log("   • Padel Club Miraflores (active)");
+    console.log("   • Padel Club La Molina (inactive)\n");
+
+    // ==========================================================================
+    // CREATE COURTS
+    // ==========================================================================
+
+    // Courts for Facility 1 (San Isidro) - 4 courts
+    const facility1Courts = [
       { name: "Cancha 1", type: "indoor" as const, priceInCents: 8000, peakPriceInCents: 10000 },
       { name: "Cancha 2", type: "indoor" as const, priceInCents: 8000, peakPriceInCents: 10000 },
       { name: "Cancha 3", type: "outdoor" as const, priceInCents: 6000, peakPriceInCents: 8000 },
       { name: "Cancha 4", type: "outdoor" as const, priceInCents: 6000, peakPriceInCents: 8000, status: "maintenance" as const },
     ];
 
-    const courtIds: string[] = [];
-    for (const court of courtData) {
+    const facility1CourtIds: string[] = [];
+    for (const court of facility1Courts) {
       const courtId = randomUUID();
-      courtIds.push(courtId);
+      facility1CourtIds.push(courtId);
       await db.insert(courts).values({
         id: courtId,
-        facilityId: facilityId,
+        facilityId: facility1Id,
         name: court.name,
         type: court.type,
         status: court.status ?? "active",
@@ -152,128 +325,166 @@ async function seed() {
       });
     }
 
-    console.log(`✅ Created ${courtData.length} courts\n`);
+    // Courts for Facility 2 (Miraflores) - 3 courts
+    const facility2Courts = [
+      { name: "Cancha Premium 1", type: "indoor" as const, priceInCents: 10000, peakPriceInCents: 12000 },
+      { name: "Cancha Premium 2", type: "indoor" as const, priceInCents: 10000, peakPriceInCents: 12000 },
+      { name: "Cancha Vista Mar", type: "outdoor" as const, priceInCents: 9000, peakPriceInCents: 11000 },
+    ];
 
-    // Create sample bookings
+    const facility2CourtIds: string[] = [];
+    for (const court of facility2Courts) {
+      const courtId = randomUUID();
+      facility2CourtIds.push(courtId);
+      await db.insert(courts).values({
+        id: courtId,
+        facilityId: facility2Id,
+        name: court.name,
+        type: court.type,
+        status: "active",
+        priceInCents: court.priceInCents,
+        peakPriceInCents: court.peakPriceInCents,
+      });
+    }
+
+    // Courts for Facility 3 (La Molina) - 2 courts (not yet active)
+    const facility3Courts = [
+      { name: "Cancha A", type: "indoor" as const, priceInCents: 7000, peakPriceInCents: 9000 },
+      { name: "Cancha B", type: "indoor" as const, priceInCents: 7000, peakPriceInCents: 9000 },
+    ];
+
+    for (const court of facility3Courts) {
+      await db.insert(courts).values({
+        id: randomUUID(),
+        facilityId: facility3Id,
+        name: court.name,
+        type: court.type,
+        status: "inactive",
+        priceInCents: court.priceInCents,
+        peakPriceInCents: court.peakPriceInCents,
+        isActive: false,
+      });
+    }
+
+    const totalCourts = facility1Courts.length + facility2Courts.length + facility3Courts.length;
+    console.log(`✅ Created ${totalCourts} courts across all facilities\n`);
+
+    // ==========================================================================
+    // CREATE BOOKINGS
+    // ==========================================================================
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Extract court IDs for bookings (we know these exist since we just created them)
-    const court1Id = courtIds[0] ?? "";
-    const court2Id = courtIds[1] ?? "";
-    const court3Id = courtIds[2] ?? "";
-
-    const bookingsData = [
+    // Bookings for Facility 1 (San Isidro)
+    const facility1Bookings = [
       // Today's bookings
       {
         code: `PH-${today.getFullYear()}-8X4K`,
-        courtId: court1Id,
+        courtId: facility1CourtIds[0] ?? "",
         date: today,
         startTime: "09:00",
         endTime: "10:30",
         status: "confirmed" as const,
-        customerName: "Carlos Mendoza",
-        customerEmail: "carlos.m@email.com",
+        customerName: "Roberto Silva",
+        customerEmail: "roberto.s@email.com",
         priceInCents: 8000,
         isPeakRate: false,
       },
       {
         code: `PH-${today.getFullYear()}-9Y5L`,
-        courtId: court2Id,
+        courtId: facility1CourtIds[1] ?? "",
         date: today,
         startTime: "10:00",
         endTime: "11:30",
         status: "confirmed" as const,
-        customerName: "Ana García",
-        customerEmail: "ana.g@email.com",
+        customerName: "María Torres",
+        customerEmail: "maria.t@email.com",
         priceInCents: 8000,
         isPeakRate: false,
       },
       {
         code: `PH-${today.getFullYear()}-7Z3M`,
-        courtId: court1Id,
+        courtId: facility1CourtIds[0] ?? "",
         date: today,
         startTime: "11:00",
         endTime: "12:30",
         status: "in_progress" as const,
-        customerName: "Luis Vargas",
+        customerName: "Pedro Sánchez",
         customerPhone: "+51999888777",
         priceInCents: 10000,
         isPeakRate: true,
       },
       {
         code: `PH-${today.getFullYear()}-6W2N`,
-        courtId: court3Id,
+        courtId: facility1CourtIds[2] ?? "",
         date: today,
         startTime: "18:00",
         endTime: "19:30",
         status: "pending" as const,
-        customerName: "María Torres",
-        customerEmail: "maria.t@email.com",
+        customerName: "Sofia Reyes",
+        customerEmail: "sofia.r@email.com",
         priceInCents: 8000,
         isPeakRate: true,
       },
       // Tomorrow's bookings
       {
         code: `PH-${today.getFullYear()}-5V1P`,
-        courtId: court1Id,
+        courtId: facility1CourtIds[0] ?? "",
         date: addDays(today, 1),
         startTime: "09:00",
         endTime: "10:30",
         status: "confirmed" as const,
-        customerName: "Pedro Sánchez",
-        customerEmail: "pedro.s@email.com",
+        customerName: "Diego Ramírez",
+        customerEmail: "diego.r@email.com",
         priceInCents: 8000,
         isPeakRate: false,
       },
       {
         code: `PH-${today.getFullYear()}-4U0Q`,
-        courtId: court2Id,
+        courtId: facility1CourtIds[1] ?? "",
         date: addDays(today, 1),
         startTime: "17:00",
         endTime: "18:30",
         status: "confirmed" as const,
-        customerName: "Sofia Reyes",
-        customerEmail: "sofia.r@email.com",
+        customerName: "Elena Flores",
+        customerEmail: "elena.f@email.com",
         priceInCents: 10000,
         isPeakRate: true,
       },
-      // Yesterday's bookings (completed/cancelled)
+      // Past bookings (for stats)
       {
         code: `PH-${today.getFullYear()}-3T9R`,
-        courtId: court1Id,
+        courtId: facility1CourtIds[0] ?? "",
         date: addDays(today, -1),
         startTime: "10:00",
         endTime: "11:30",
         status: "completed" as const,
-        customerName: "Roberto Sánchez",
-        customerEmail: "roberto.s@email.com",
+        customerName: "Carmen López",
+        customerEmail: "carmen.l@email.com",
         priceInCents: 8000,
         isPeakRate: false,
       },
       {
         code: `PH-${today.getFullYear()}-2S8S`,
-        courtId: court2Id,
+        courtId: facility1CourtIds[1] ?? "",
         date: addDays(today, -1),
         startTime: "18:00",
         endTime: "19:30",
-        status: "cancelled" as const,
-        customerName: "Elena Flores",
-        customerEmail: "elena.f@email.com",
+        status: "completed" as const,
+        customerName: "Jorge Medina",
+        customerEmail: "jorge.m@email.com",
         priceInCents: 10000,
         isPeakRate: true,
-        cancelledBy: "user" as const,
-        cancellationReason: "No puedo asistir por motivos personales",
       },
-      // Older bookings
       {
         code: `PH-${today.getFullYear()}-1R7T`,
-        courtId: court3Id,
+        courtId: facility1CourtIds[2] ?? "",
         date: addDays(today, -3),
         startTime: "16:00",
         endTime: "17:30",
         status: "completed" as const,
-        customerName: "Diego Ramírez",
+        customerName: "Paula Castro",
         customerPhone: "+51987654321",
         priceInCents: 6000,
         isPeakRate: false,
@@ -282,24 +493,142 @@ async function seed() {
       },
       {
         code: `PH-${today.getFullYear()}-0Q6U`,
-        courtId: court1Id,
+        courtId: facility1CourtIds[0] ?? "",
         date: addDays(today, -5),
         startTime: "19:00",
         endTime: "20:30",
         status: "completed" as const,
-        customerName: "Carmen López",
-        customerEmail: "carmen.l@email.com",
+        customerName: "Andrés Vega",
+        customerEmail: "andres.v@email.com",
         priceInCents: 10000,
         isPeakRate: true,
       },
+      // Cancelled booking
+      {
+        code: `PH-${today.getFullYear()}-XC1A`,
+        courtId: facility1CourtIds[1] ?? "",
+        date: addDays(today, -2),
+        startTime: "14:00",
+        endTime: "15:30",
+        status: "cancelled" as const,
+        customerName: "Laura Ríos",
+        customerEmail: "laura.r@email.com",
+        priceInCents: 8000,
+        isPeakRate: false,
+        cancelledBy: "user" as const,
+        cancellationReason: "No puedo asistir por motivos personales",
+      },
     ];
 
-    for (const booking of bookingsData) {
+    // Bookings for Facility 2 (Miraflores)
+    const facility2Bookings = [
+      // Today's bookings
+      {
+        code: `PH-${today.getFullYear()}-MF1A`,
+        courtId: facility2CourtIds[0] ?? "",
+        date: today,
+        startTime: "08:00",
+        endTime: "09:30",
+        status: "confirmed" as const,
+        customerName: "Ricardo Paz",
+        customerEmail: "ricardo.p@email.com",
+        priceInCents: 10000,
+        isPeakRate: false,
+      },
+      {
+        code: `PH-${today.getFullYear()}-MF2B`,
+        courtId: facility2CourtIds[1] ?? "",
+        date: today,
+        startTime: "09:00",
+        endTime: "10:30",
+        status: "confirmed" as const,
+        customerName: "Natalia Cruz",
+        customerEmail: "natalia.c@email.com",
+        priceInCents: 10000,
+        isPeakRate: false,
+      },
+      {
+        code: `PH-${today.getFullYear()}-MF3C`,
+        courtId: facility2CourtIds[2] ?? "",
+        date: today,
+        startTime: "17:00",
+        endTime: "18:30",
+        status: "pending" as const,
+        customerName: "Fernando Gil",
+        customerEmail: "fernando.g@email.com",
+        priceInCents: 11000,
+        isPeakRate: true,
+      },
+      // Past bookings
+      {
+        code: `PH-${today.getFullYear()}-MF4D`,
+        courtId: facility2CourtIds[0] ?? "",
+        date: addDays(today, -1),
+        startTime: "10:00",
+        endTime: "11:30",
+        status: "completed" as const,
+        customerName: "Gabriela Luna",
+        customerEmail: "gabriela.l@email.com",
+        priceInCents: 10000,
+        isPeakRate: false,
+      },
+      {
+        code: `PH-${today.getFullYear()}-MF5E`,
+        courtId: facility2CourtIds[1] ?? "",
+        date: addDays(today, -2),
+        startTime: "19:00",
+        endTime: "20:30",
+        status: "completed" as const,
+        customerName: "Martín Rojas",
+        customerEmail: "martin.r@email.com",
+        priceInCents: 12000,
+        isPeakRate: true,
+      },
+      {
+        code: `PH-${today.getFullYear()}-MF6F`,
+        courtId: facility2CourtIds[2] ?? "",
+        date: addDays(today, -4),
+        startTime: "16:00",
+        endTime: "17:30",
+        status: "completed" as const,
+        customerName: "Valeria Soto",
+        customerEmail: "valeria.s@email.com",
+        priceInCents: 9000,
+        isPeakRate: false,
+      },
+    ];
+
+    // Insert all bookings
+    type BookingData = {
+      code: string;
+      courtId: string;
+      facilityId: string;
+      date: Date;
+      startTime: string;
+      endTime: string;
+      status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
+      customerName: string;
+      customerEmail?: string;
+      customerPhone?: string;
+      priceInCents: number;
+      isPeakRate: boolean;
+      isManualBooking?: boolean;
+      paymentMethod?: "cash" | "card" | "app";
+      cancelledBy?: "user" | "owner" | "system";
+      cancellationReason?: string;
+    };
+
+    const allBookings: BookingData[] = [
+      ...facility1Bookings.map((b) => ({ ...b, facilityId: facility1Id })),
+      ...facility2Bookings.map((b) => ({ ...b, facilityId: facility2Id })),
+    ];
+
+    for (const booking of allBookings) {
       await db.insert(bookings).values({
         id: randomUUID(),
         code: booking.code,
         courtId: booking.courtId,
-        facilityId: facilityId,
+        facilityId: booking.facilityId,
         date: booking.date,
         startTime: booking.startTime,
         endTime: booking.endTime,
@@ -320,19 +649,35 @@ async function seed() {
       });
     }
 
-    console.log(`✅ Created ${bookingsData.length} sample bookings\n`);
+    console.log(`✅ Created ${allBookings.length} sample bookings\n`);
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🔐 Test Credentials:");
-    console.log(`   Email:    ${testEmail}`);
+    // ==========================================================================
+    // SUMMARY
+    // ==========================================================================
+
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔐 Test Credentials (same password for all users):");
     console.log(`   Password: ${testPassword}`);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    console.log("");
+    console.log("   👤 Org Admin:        " + testEmail);
+    console.log("   👤 Facility Manager: " + managerEmail);
+    console.log("   👤 Staff:            " + staffEmail);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     console.log("📊 Seeded Data Summary:");
-    console.log(`   • 1 Owner Account`);
-    console.log(`   • 1 Facility (Padel Club Lima)`);
-    console.log(`   • ${courtData.length} Courts`);
-    console.log(`   • ${bookingsData.length} Bookings`);
+    console.log("   • 3 Users (org_admin, facility_manager, staff)");
+    console.log("   • 1 Organization (Padel Group Lima)");
+    console.log("   • 3 Facilities:");
+    console.log("     - Padel Club San Isidro (active, 4 courts)");
+    console.log("     - Padel Club Miraflores (active, 3 courts)");
+    console.log("     - Padel Club La Molina (inactive, 2 courts)");
+    console.log(`   • ${totalCourts} Courts total`);
+    console.log(`   • ${allBookings.length} Bookings`);
+    console.log("");
+
+    console.log("🔗 URLs to test:");
+    console.log(`   • Org facilities overview: /org/${orgSlug}/facilities`);
+    console.log(`   • Facility dashboard:      /org/${orgSlug}/facilities/{facilityId}/dashboard`);
     console.log("");
 
     console.log("🎉 Seeding complete!");

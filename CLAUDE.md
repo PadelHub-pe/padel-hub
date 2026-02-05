@@ -15,6 +15,7 @@ See `PRD.MD` for complete functional requirements, data models, and user flows.
 
 ## Domain Concepts
 
+- **Organization**: A business entity that owns/manages one or more facilities
 - **Facility**: A venue with one or more courts (also called "club" or "venue")
 - **Court**: A single padel playing surface (indoor/outdoor)
 - **Slot**: A bookable time period on a court (typically 60-120 minutes)
@@ -25,10 +26,11 @@ See `PRD.MD` for complete functional requirements, data models, and user flows.
 
 ### Key Entities
 ```
-User (Player) ─┬─► Booking ◄── Court ◄── Facility ◄── OwnerAccount
-               │      │
-               │      └─► OpenMatch ◄── JoinRequest
-               └──────────────┘
+Organization ─┬─► OrganizationMember (role: org_admin | facility_manager | staff)
+              │
+              └─► Facility ─► Court ─► Booking ◄── User (Player)
+                                          │
+                                          └─► OpenMatch ◄── JoinRequest
 ```
 
 ## Localization (MVP)
@@ -74,7 +76,6 @@ pnpm turbo gen init   # Scaffold new package from templates
 ```
 /apps
   ├─ nextjs           # Court Owner Dashboard (web)
-  ├─ tanstack-start   # Alternative web app (not used for MVP)
   └─ expo             # Player App (iOS + Android)
 /packages
   ├─ api              # tRPC v11 router definitions
@@ -88,6 +89,45 @@ pnpm turbo gen init   # Scaffold new package from templates
   ├─ tailwind         # Shared Tailwind CSS config
   └─ typescript       # Shared TypeScript configs
 ```
+
+### Web Dashboard Route Structure
+
+The Next.js dashboard uses a multi-organization architecture. All users belong to at least one organization, even if they only manage a single facility.
+
+```
+apps/nextjs/src/app/
+├─ (auth)/                    # Public auth pages (login, register)
+├─ (org)/                     # Organization-scoped routes (main dashboard)
+│   └─ org/
+│       ├─ _components/       # Shared org components (OrgSidebar)
+│       └─ [orgSlug]/         # Dynamic org segment
+│           ├─ layout.tsx     # Auth validation only (no sidebar)
+│           ├─ (org-view)/    # Org-level views with OrgSidebar
+│           │   ├─ layout.tsx # Renders OrgSidebar
+│           │   └─ facilities/
+│           │       ├─ page.tsx           # Facilities list
+│           │       └─ _components/       # FacilityCard, filters, etc.
+│           └─ (facility-view)/           # Facility-level views with FacilitySidebar
+│               └─ facilities/
+│                   └─ [facilityId]/
+│                       ├─ layout.tsx     # Renders FacilitySidebar
+│                       ├─ page.tsx       # Facility dashboard (default)
+│                       ├─ courts/        # Courts management
+│                       ├─ bookings/      # Bookings list & calendar
+│                       ├─ settings/      # Facility settings
+│                       └─ ...
+```
+
+**Key routing patterns:**
+- Route groups `(org-view)` and `(facility-view)` prevent layout nesting - each has its own sidebar
+- `[orgSlug]` layout handles auth validation, child layouts handle sidebars
+- Facility root (`/org/[orgSlug]/facilities/[facilityId]`) renders the dashboard directly
+- Use `useParams()` to get `orgSlug` and `facilityId` for building navigation links
+
+**URL examples:**
+- `/org/padel-group-lima/facilities` - List all facilities
+- `/org/padel-group-lima/facilities/abc123` - Facility dashboard
+- `/org/padel-group-lima/facilities/abc123/courts` - Courts management
 
 ### Package Dependencies Flow
 ```

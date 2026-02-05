@@ -8,6 +8,7 @@ import {
   text,
   time,
   timestamp,
+  unique,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -15,6 +16,81 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 import { user } from "./auth-schema";
+
+// =============================================================================
+// Organization Schema
+// =============================================================================
+
+/**
+ * Organization role enum
+ */
+export const orgRoleEnum = pgEnum("org_role", [
+  "org_admin",
+  "facility_manager",
+  "staff",
+]);
+
+/**
+ * Organizations table - represents a company/group that owns multiple facilities
+ */
+export const organizations = pgTable("organizations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  logoUrl: text("logo_url"),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 20 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  members: many(organizationMembers),
+  facilities: many(facilities),
+}));
+
+/**
+ * Organization members table - links users to organizations with roles
+ */
+export const organizationMembers = pgTable(
+  "organization_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: orgRoleEnum("role").notNull().default("staff"),
+    // For facility_manager/staff: which facilities they can access (null = all)
+    facilityIds: jsonb("facility_ids").$type<string[]>().default([]),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.userId)],
+);
+
+export const organizationMembersRelations = relations(
+  organizationMembers,
+  ({ one }) => ({
+    organization: one(organizations, {
+      fields: [organizationMembers.organizationId],
+      references: [organizations.id],
+    }),
+    user: one(user, {
+      fields: [organizationMembers.userId],
+      references: [user.id],
+    }),
+  }),
+);
 
 export const Post = pgTable("post", (t) => ({
   id: t.uuid().notNull().primaryKey().defaultRandom(),
@@ -74,6 +150,10 @@ export const facilities = pgTable("facilities", {
   ownerId: uuid("owner_id")
     .notNull()
     .references(() => ownerAccounts.id, { onDelete: "cascade" }),
+  // Organization reference (nullable for backward compatibility during migration)
+  organizationId: uuid("organization_id").references(() => organizations.id, {
+    onDelete: "set null",
+  }),
   name: varchar("name", { length: 200 }).notNull(),
   description: text("description"),
   address: varchar("address", { length: 500 }).notNull(),
@@ -96,6 +176,10 @@ export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
   owner: one(ownerAccounts, {
     fields: [facilities.ownerId],
     references: [ownerAccounts.id],
+  }),
+  organization: one(organizations, {
+    fields: [facilities.organizationId],
+    references: [organizations.id],
   }),
   courts: many(courts),
   operatingHours: many(operatingHours),
@@ -357,6 +441,30 @@ export const CreateManualBookingSchema = z.object({
   customerPhone: z.string().max(20).optional(),
   customerEmail: z.string().email().optional().or(z.literal("")),
   notes: z.string().max(500).optional(),
+});
+
+export const CreateOrganizationSchema = createInsertSchema(organizations, {
+  name: z.string().min(2).max(200),
+  slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/),
+  contactEmail: z.string().email().optional(),
+  contactPhone: z.string().max(20).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isActive: true,
+});
+
+export const CreateOrganizationMemberSchema = createInsertSchema(
+  organizationMembers,
+  {
+    role: z.enum(["org_admin", "facility_manager", "staff"]),
+    facilityIds: z.array(z.string().uuid()).optional(),
+  },
+).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export * from "./auth-schema";

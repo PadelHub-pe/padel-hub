@@ -107,9 +107,14 @@ pnpm db:seed
 ```
 
 This populates the database with sample data for development:
-- 1 owner account (email: `owner@padelhub.pe`, password: `password123`)
-- 1 facility with 4 courts
-- 10 sample bookings with various statuses
+- 3 user accounts:
+  - `owner@padelhub.pe` (password: `password123`) - Org Admin
+  - `manager@padelhub.pe` (password: `password123`) - Facility Manager
+  - `staff@padelhub.pe` (password: `password123`) - Staff
+- 1 organization: "Padel Group Lima" (slug: `padel-group-lima`)
+- 3 facilities across San Isidro, Miraflores, and La Molina districts
+- 9 courts (3 per facility)
+- 17 sample bookings with various statuses
 
 ### 8. Start the Development Server
 
@@ -200,7 +205,10 @@ padel-hub/
 │   │   ├── src/
 │   │   │   ├── app/         # Next.js App Router pages
 │   │   │   │   ├── (auth)/  # Authentication pages (login, register)
-│   │   │   │   └── (dashboard)/ # Dashboard pages (protected)
+│   │   │   │   └── (org)/   # Organization-scoped routes (main dashboard)
+│   │   │   │       └── org/[orgSlug]/
+│   │   │   │           ├── (org-view)/      # Org-level views (facilities list)
+│   │   │   │           └── (facility-view)/ # Facility-level views (dashboard, courts, etc.)
 │   │   │   ├── components/  # Shared React components
 │   │   │   └── trpc/        # tRPC client setup
 │   │   └── public/          # Static assets
@@ -209,7 +217,7 @@ padel-hub/
 ├── packages/
 │   ├── api/                 # tRPC API Router
 │   │   └── src/
-│   │       ├── router/      # Route handlers (booking.ts, court.ts, etc.)
+│   │       ├── router/      # Route handlers (booking.ts, court.ts, org.ts, etc.)
 │   │       ├── root.ts      # Root router combining all routes
 │   │       └── trpc.ts      # tRPC context and procedures
 │   │
@@ -219,7 +227,7 @@ padel-hub/
 │   │
 │   ├── db/                  # Database (Drizzle ORM)
 │   │   └── src/
-│   │       ├── schema.ts    # Database schema definitions
+│   │       ├── schema.ts    # Database schema (includes organizations, organizationMembers)
 │   │       ├── client.ts    # Database client
 │   │       └── seed.ts      # Seed data script
 │   │
@@ -243,6 +251,20 @@ padel-hub/
 ├── package.json             # Root package.json with scripts
 └── turbo.json               # Turborepo configuration
 ```
+
+### Web Dashboard URL Structure
+
+The dashboard supports multi-organization management:
+
+| URL Pattern | Description |
+|-------------|-------------|
+| `/org/[orgSlug]/facilities` | List all facilities for an organization |
+| `/org/[orgSlug]/facilities/[facilityId]` | Facility dashboard |
+| `/org/[orgSlug]/facilities/[facilityId]/courts` | Manage courts |
+| `/org/[orgSlug]/facilities/[facilityId]/bookings` | View bookings |
+| `/org/[orgSlug]/facilities/[facilityId]/bookings/calendar` | Calendar view |
+
+Example: `/org/padel-group-lima/facilities/abc123/courts`
 
 ---
 
@@ -284,11 +306,22 @@ This opens an interactive CLI to add shadcn/ui components to `packages/ui`.
 
 ### Creating a New Page
 
-1. Create a new folder in `apps/nextjs/src/app/(dashboard)/your-page/`
+**For org-level pages** (e.g., organization settings, team management):
+1. Create folder in `apps/nextjs/src/app/(org)/org/[orgSlug]/(org-view)/your-page/`
+2. Add `page.tsx` and `_components/` folder
 
-2. Add `page.tsx` for the route
+**For facility-level pages** (e.g., reports, analytics for a specific facility):
+1. Create folder in `apps/nextjs/src/app/(org)/org/[orgSlug]/(facility-view)/facilities/[facilityId]/your-page/`
+2. Add `page.tsx` and `_components/` folder
+3. Use `useParams()` to get `orgSlug` and `facilityId` for navigation links
 
-3. Add `_components/` folder for page-specific components
+```tsx
+// Example: Getting route params for navigation
+const params = useParams();
+const orgSlug = params.orgSlug as string;
+const facilityId = params.facilityId as string;
+const basePath = `/org/${orgSlug}/facilities/${facilityId}`;
+```
 
 ### Patterns to Follow
 

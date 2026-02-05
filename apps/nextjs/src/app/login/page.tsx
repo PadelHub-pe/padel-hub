@@ -52,7 +52,7 @@ export default function LoginPage() {
           message: result.error.message ?? "Email or password is incorrect",
         });
       } else {
-        router.push("/dashboard");
+        router.push("/org");
       }
     } catch {
       form.setError("root", {
@@ -65,7 +65,7 @@ export default function LoginPage() {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: "/org",
       });
     } catch {
       form.setError("root", {

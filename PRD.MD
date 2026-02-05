@@ -168,6 +168,7 @@ A centralized platform creates network effects: more courts attract more players
 
 **Court Owner Dashboard (Web)**
 
+- Multi-organization support (owners can manage multiple facilities under one organization)
 - Court owner registration and onboarding
 - Court profile management
 - Court/slot configuration

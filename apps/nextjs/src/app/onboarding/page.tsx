@@ -22,9 +22,9 @@ export default async function OnboardingPage() {
     redirect("/register");
   }
 
-  // If onboarding already completed, redirect to dashboard
+  // If onboarding already completed, redirect to org
   if (status.onboardingCompletedAt) {
-    redirect("/dashboard");
+    redirect("/org");
   }
 
   return (

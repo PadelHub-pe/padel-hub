@@ -144,7 +144,7 @@ export function OnboardingWizard() {
   const completeOnboarding = useMutation(
     trpc.owner.completeOnboarding.mutationOptions({
       onSuccess: () => {
-        router.push("/dashboard");
+        router.push("/org");
       },
     }),
   );

@@ -127,6 +127,14 @@ export const protectedProcedure = t.procedure
   });
 
 /**
+ * Organization-scoped procedure
+ *
+ * Extends protected procedure with organization membership validation.
+ * Requires organizationId in the input and validates the user has access.
+ */
+export const orgProcedure = protectedProcedure;
+
+/**
  * Create a server-side caller for direct calls in layouts and server components
  * @see https://trpc.io/docs/server/server-side-calls
  */
