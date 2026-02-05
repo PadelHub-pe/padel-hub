@@ -109,6 +109,52 @@ pnpm turbo gen init   # Scaffold new package from templates
 
 ## Key Patterns
 
+### Date Handling
+- Use `date-fns` and `date-fns-tz` for all date manipulation and formatting
+- Default timezone: `America/Lima` (PET, UTC-5)
+- Store dates in database as timestamps
+- Format dates for display using `format()` from date-fns with Spanish locale
+- Use `startOfDay()`, `endOfDay()`, `addDays()` for date range calculations
+- Example:
+  ```typescript
+  import { format, startOfDay, addDays } from "date-fns";
+  import { es } from "date-fns/locale";
+  import { toZonedTime } from "date-fns-tz";
+
+  const TIMEZONE = "America/Lima";
+  const limaDate = toZonedTime(new Date(), TIMEZONE);
+  const formatted = format(limaDate, "dd/MM/yyyy", { locale: es });
+  ```
+
+### Tables (Web Dashboard)
+- Use TanStack Table (`@tanstack/react-table`) for all data tables in the Next.js dashboard
+- Reusable DataTable component: `apps/nextjs/src/components/ui/data-table.tsx`
+- Define columns in separate `*-columns.tsx` files for each table
+- Pattern:
+  ```typescript
+  // Define column definitions
+  import type { ColumnDef } from "@tanstack/react-table";
+
+  export interface MyDataRow {
+    id: string;
+    // ... fields
+  }
+
+  export function getMyDataColumns(): ColumnDef<MyDataRow>[] {
+    return [
+      { accessorKey: "id", header: "ID", cell: ({ row }) => row.original.id },
+      // ... more columns
+    ];
+  }
+
+  // Use in component
+  import { DataTable } from "~/components/ui/data-table";
+  import { getMyDataColumns } from "./my-data-columns";
+
+  const columns = useMemo(() => getMyDataColumns(), []);
+  return <DataTable columns={columns} data={data} onRowClick={handleClick} />;
+  ```
+
 ### tRPC Procedures
 - Use `publicProcedure` for unauthenticated endpoints
 - Use `protectedProcedure` for authenticated endpoints (defined in `packages/api/src/trpc.ts`)

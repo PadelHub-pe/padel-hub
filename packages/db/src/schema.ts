@@ -100,12 +100,34 @@ export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
   courts: many(courts),
   operatingHours: many(operatingHours),
   timeSlotTemplates: many(timeSlotTemplates),
+  bookings: many(bookings),
 }));
 
 /**
  * Court type enum
  */
 export const courtTypeEnum = pgEnum("court_type", ["indoor", "outdoor"]);
+
+/**
+ * Booking status enum
+ */
+export const bookingStatusEnum = pgEnum("booking_status", [
+  "pending",
+  "confirmed",
+  "in_progress",
+  "completed",
+  "cancelled",
+]);
+
+/**
+ * Cancelled by enum
+ */
+export const cancelledByEnum = pgEnum("cancelled_by", ["user", "owner", "system"]);
+
+/**
+ * Payment method enum
+ */
+export const paymentMethodEnum = pgEnum("payment_method", ["cash", "card", "app"]);
 
 /**
  * Court status enum
@@ -145,6 +167,7 @@ export const courtsRelations = relations(courts, ({ one, many }) => ({
     references: [facilities.id],
   }),
   timeSlotTemplates: many(timeSlotTemplates),
+  bookings: many(bookings),
 }));
 
 /**
@@ -198,6 +221,71 @@ export const timeSlotTemplatesRelations = relations(timeSlotTemplates, ({ one })
   }),
 }));
 
+/**
+ * Bookings table - reservations for court time slots
+ */
+export const bookings = pgTable("bookings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: varchar("code", { length: 20 }).notNull().unique(), // PH-2026-XXXX
+
+  // References
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  courtId: uuid("court_id")
+    .notNull()
+    .references(() => courts.id, { onDelete: "cascade" }),
+  facilityId: uuid("facility_id")
+    .notNull()
+    .references(() => facilities.id, { onDelete: "cascade" }),
+
+  // Booking time
+  date: timestamp("date", { mode: "date" }).notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+
+  // Pricing
+  priceInCents: integer("price_in_cents").notNull(),
+  isPeakRate: boolean("is_peak_rate").default(false).notNull(),
+  paymentMethod: paymentMethodEnum("payment_method"),
+
+  // Status
+  status: bookingStatusEnum("status").default("pending").notNull(),
+
+  // Cancellation
+  cancelledBy: cancelledByEnum("cancelled_by"),
+  cancellationReason: text("cancellation_reason"),
+  cancelledAt: timestamp("cancelled_at"),
+
+  // Customer info (for manual/walk-in bookings)
+  customerName: varchar("customer_name", { length: 100 }),
+  customerPhone: varchar("customer_phone", { length: 20 }),
+  customerEmail: varchar("customer_email", { length: 255 }),
+
+  // Meta
+  notes: text("notes"),
+  isManualBooking: boolean("is_manual_booking").default(false).notNull(),
+  confirmedAt: timestamp("confirmed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const bookingsRelations = relations(bookings, ({ one }) => ({
+  user: one(user, {
+    fields: [bookings.userId],
+    references: [user.id],
+  }),
+  court: one(courts, {
+    fields: [bookings.courtId],
+    references: [courts.id],
+  }),
+  facility: one(facilities, {
+    fields: [bookings.facilityId],
+    references: [facilities.id],
+  }),
+}));
+
 // =============================================================================
 // Insert Schemas for Validation
 // =============================================================================
@@ -241,5 +329,34 @@ export const CreateCourtSchema = createInsertSchema(courts, {
 });
 
 export const UpdateCourtSchema = CreateCourtSchema.partial();
+
+export const CreateBookingSchema = createInsertSchema(bookings, {
+  code: z.string().min(1).max(20),
+  priceInCents: z.number().int().min(0),
+  customerName: z.string().max(100).optional(),
+  customerPhone: z.string().max(20).optional(),
+  customerEmail: z.string().email().optional(),
+  notes: z.string().max(500).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  cancelledAt: true,
+  confirmedAt: true,
+});
+
+export const CreateManualBookingSchema = z.object({
+  courtId: z.string().uuid(),
+  date: z.date(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  priceInCents: z.number().int().min(0),
+  isPeakRate: z.boolean().default(false),
+  paymentMethod: z.enum(["cash", "card", "app"]).optional(),
+  customerName: z.string().min(1).max(100),
+  customerPhone: z.string().max(20).optional(),
+  customerEmail: z.string().email().optional().or(z.literal("")),
+  notes: z.string().max(500).optional(),
+});
 
 export * from "./auth-schema";

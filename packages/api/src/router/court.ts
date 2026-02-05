@@ -1,10 +1,11 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { and, count, eq } from "drizzle-orm";
+import { addDays, startOfDay } from "date-fns";
+import { and, count, eq, gte, lt } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import type { db as DbType } from "@wifo/db/client";
-import { courts, ownerAccounts } from "@wifo/db/schema";
+import { bookings, courts, ownerAccounts } from "@wifo/db/schema";
 
 import { protectedProcedure } from "../trpc";
 
@@ -72,16 +73,40 @@ export const courtRouter = {
   list: protectedProcedure.query(async ({ ctx }) => {
     const { facilityId } = await getOwnerFacility(ctx);
 
+    // Get today's date range using date-fns
+    const today = startOfDay(new Date());
+    const tomorrow = startOfDay(addDays(new Date(), 1));
+
     const courtsList = await ctx.db.query.courts.findMany({
       where: eq(courts.facilityId, facilityId),
       orderBy: (courts, { asc }) => [asc(courts.createdAt)],
     });
 
-    // TODO: Add todayBookings count when bookings table exists
-    // For now, return mock data
+    // Get today's booking counts per court
+    const bookingCounts = await ctx.db
+      .select({
+        courtId: bookings.courtId,
+        count: count(),
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.facilityId, facilityId),
+          gte(bookings.date, today),
+          lt(bookings.date, tomorrow),
+        ),
+      )
+      .groupBy(bookings.courtId);
+
+    // Create a map of court ID to booking count
+    const countMap = new Map<string, number>();
+    bookingCounts.forEach((bc) => {
+      countMap.set(bc.courtId, bc.count);
+    });
+
     return courtsList.map((court) => ({
       ...court,
-      todayBookings: Math.floor(Math.random() * 15), // Mock data
+      todayBookings: countMap.get(court.id) ?? 0,
     }));
   }),
 
@@ -90,6 +115,10 @@ export const courtRouter = {
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const { facilityId } = await getOwnerFacility(ctx);
+
+    // Get today's date range using date-fns
+    const today = startOfDay(new Date());
+    const tomorrow = startOfDay(addDays(new Date(), 1));
 
     const courtsList = await ctx.db.query.courts.findMany({
       where: eq(courts.facilityId, facilityId),
@@ -100,15 +129,24 @@ export const courtRouter = {
     const maintenance = courtsList.filter((c) => c.status === "maintenance").length;
     const inactive = courtsList.filter((c) => c.status === "inactive").length;
 
-    // TODO: Get real bookings count when bookings table exists
-    const todayBookings = Math.floor(Math.random() * 30) + 10; // Mock data
+    // Get today's total bookings count
+    const [bookingResult] = await ctx.db
+      .select({ count: count() })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.facilityId, facilityId),
+          gte(bookings.date, today),
+          lt(bookings.date, tomorrow),
+        ),
+      );
 
     return {
       total,
       active,
       maintenance,
       inactive,
-      todayBookings,
+      todayBookings: bookingResult?.count ?? 0,
     };
   }),
 
