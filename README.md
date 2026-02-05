@@ -1,284 +1,428 @@
-# create-t3-turbo
+# PadelHub
 
-> [!NOTE]
->
-> create-t3-turbo now includes the option to use Tanstack Start for the web app!
+A two-sided platform connecting padel players with court facilities in Lima, Peru.
 
-## Installation
+- **Web Dashboard** (Next.js): Court owner dashboard for facility management, reservations, and analytics
+- **Mobile App** (Expo): Player-facing app for court discovery, booking, and open match coordination
 
-> [!NOTE]
->
-> Make sure to follow the system requirements specified in [`package.json#engines`](./package.json#L4) before proceeding.
+---
 
-There are two ways of initializing an app using the `create-t3-turbo` starter. You can either use this repository as a template:
+## Table of Contents
 
-![use-as-template](https://github.com/t3-oss/create-t3-turbo/assets/51714798/bb6c2e5d-d8b6-416e-aeb3-b3e50e2ca994)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Local Development](#local-development)
+- [Project Structure](#project-structure)
+- [Development Workflow](#development-workflow)
+- [Common Tasks](#common-tasks)
+- [Troubleshooting](#troubleshooting)
 
-or use Turbo's CLI to init your project (use PNPM as package manager):
+---
 
-```bash
-npx create-turbo@latest -e https://github.com/t3-oss/create-t3-turbo
-```
+## Prerequisites
 
-## About
+Before you begin, ensure you have the following installed:
 
-Ever wondered how to migrate your T3 application into a monorepo? Stop right here! This is the perfect starter repo to get you running with the perfect stack!
+| Tool | Version | Installation |
+|------|---------|--------------|
+| **Node.js** | ^22.21.0 | [nodejs.org](https://nodejs.org) or `nvm install 22` |
+| **pnpm** | ^10.19.0 | `npm install -g pnpm@10.19.0` |
+| **Docker Desktop** | Latest | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop) |
+| **Supabase CLI** | Latest | `brew install supabase/tap/supabase` |
+| **Git** | Latest | [git-scm.com](https://git-scm.com) |
 
-It uses [Turborepo](https://turborepo.com) and contains:
-
-```text
-.github
-  └─ workflows
-        └─ CI with pnpm cache setup
-.vscode
-  └─ Recommended extensions and settings for VSCode users
-apps
-  ├─ expo
-  │   ├─ Expo SDK 54
-  │   ├─ React Native 0.81 using React 19
-  │   ├─ Navigation using Expo Router
-  │   ├─ Tailwind CSS v4 using NativeWind v5
-  │   └─ Typesafe API calls using tRPC
-  ├─ nextjs
-  │   ├─ Next.js 15
-  │   ├─ React 19
-  │   ├─ Tailwind CSS v4
-  │   └─ E2E Typesafe API Server & Client
-  └─ tanstack-start
-      ├─ Tanstack Start v1 (rc)
-      ├─ React 19
-      ├─ Tailwind CSS v4
-      └─ E2E Typesafe API Server & Client
-packages
-  ├─ api
-  │   └─ tRPC v11 router definition
-  ├─ auth
-  │   └─ Authentication using better-auth.
-  ├─ db
-  │   └─ Typesafe db calls using Drizzle & Supabase
-  └─ ui
-      └─ Start of a UI package for the webapp using shadcn-ui
-tooling
-  ├─ eslint
-  │   └─ shared, fine-grained, eslint presets
-  ├─ prettier
-  │   └─ shared prettier configuration
-  ├─ tailwind
-  │   └─ shared tailwind theme and configuration
-  └─ typescript
-      └─ shared tsconfig you can extend from
-```
-
-## Quick Start
-
-> **Note**
-> The [db](./packages/db) package is preconfigured to use Supabase and is **edge-bound** with the [Vercel Postgres](https://github.com/vercel/storage/tree/main/packages/postgres) driver. If you're using something else, make the necessary modifications to the [schema](./packages/db/src/schema.ts) as well as the [client](./packages/db/src/index.ts) and the [drizzle config](./packages/db/drizzle.config.ts). If you want to switch to non-edge database driver, remove `export const runtime = "edge";` [from all pages and api routes](https://github.com/t3-oss/create-t3-turbo/issues/634#issuecomment-1730240214).
-
-To get it running, follow the steps below:
-
-### 1. Setup dependencies
-
-> [!NOTE]
->
-> While the repo does contain both a Next.js and Tanstack Start version of a web app, you can pick which one you like to use and delete the other folder before starting the setup.
+### Verify Installation
 
 ```bash
-# Install dependencies
-pnpm i
+node --version    # Should output v22.x.x
+pnpm --version    # Should output 10.x.x
+docker --version  # Should output Docker version x.x.x
+supabase --version # Should output x.x.x
+```
 
-# Configure environment variables
-# There is an `.env.example` in the root directory you can use for reference
+---
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-org/padel-hub.git
+cd padel-hub
+```
+
+### 2. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Set Up Environment Variables
+
+```bash
 cp .env.example .env
+```
 
-# Push the Drizzle schema to the database
+The default `.env` is configured for local development. No changes needed for local setup.
+
+### 4. Start Local Supabase
+
+Make sure Docker Desktop is running, then:
+
+```bash
+pnpm supabase:start
+```
+
+This starts the following local services:
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **API** | http://127.0.0.1:54321 | Supabase API endpoint |
+| **Database** | postgresql://postgres:postgres@127.0.0.1:54322/postgres | PostgreSQL database |
+| **Studio** | http://127.0.0.1:54323 | Database admin UI |
+| **Inbucket** | http://127.0.0.1:54324 | Email testing inbox |
+
+> **First time?** This will download Docker images (~2-3 GB). Subsequent starts are much faster.
+
+### 5. Push Database Schema
+
+```bash
 pnpm db:push
 ```
 
-### 2. Generate Better Auth Schema
+This creates all the database tables defined in `packages/db/src/schema.ts`.
 
-This project uses [Better Auth](https://www.better-auth.com) for authentication. The auth schema needs to be generated using the Better Auth CLI before you can use the authentication features.
+### 6. Generate Auth Schema
 
 ```bash
-# Generate the Better Auth schema
-pnpm --filter @wifo/auth generate
+pnpm auth:generate
 ```
 
-This command runs the Better Auth CLI with the following configuration:
+This generates the Better Auth tables for authentication.
 
-- **Config file**: `packages/auth/script/auth-cli.ts` - A CLI-only configuration file (isolated from src to prevent imports)
-- **Output**: `packages/db/src/auth-schema.ts` - Generated Drizzle schema for authentication tables
+### 7. Seed Sample Data
 
-The generation process:
+```bash
+pnpm db:seed
+```
 
-1. Reads the Better Auth configuration from `packages/auth/script/auth-cli.ts`
-2. Generates the appropriate database schema based on your auth setup
-3. Outputs a Drizzle-compatible schema file to the `@wifo/db` package
+This populates the database with sample data for development:
+- 1 owner account (email: `owner@padelhub.pe`, password: `password123`)
+- 1 facility with 4 courts
+- 10 sample bookings with various statuses
 
-> **Note**: The `auth-cli.ts` file is placed in the `script/` directory (instead of `src/`) to prevent accidental imports from other parts of the codebase. This file is exclusively for CLI schema generation and should **not** be used directly in your application. For runtime authentication, use the configuration from `packages/auth/src/index.ts`.
+### 8. Start the Development Server
 
-For more information about the Better Auth CLI, see the [official documentation](https://www.better-auth.com/docs/concepts/cli#generate).
+```bash
+pnpm dev:next
+```
 
-### 3. Configure Expo `dev`-script
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-#### Use iOS Simulator
+---
 
-1. Make sure you have XCode and XCommand Line Tools installed [as shown on expo docs](https://docs.expo.dev/workflow/ios-simulator).
+## Local Development
 
-   > **NOTE:** If you just installed XCode, or if you have updated it, you need to open the simulator manually once. Run `npx expo start` from `apps/expo`, and then enter `I` to launch Expo Go. After the manual launch, you can run `pnpm dev` in the root directory.
+### Starting Your Development Session
 
-   ```diff
-   +  "dev": "expo start --ios",
+```bash
+# 1. Start Docker Desktop (if not running)
+
+# 2. Start Supabase
+pnpm supabase:start
+
+# 3. Start the Next.js dev server
+pnpm dev:next
+```
+
+### Stopping Your Development Session
+
+```bash
+# Stop the dev server (Ctrl+C)
+
+# Stop Supabase containers
+pnpm supabase:stop
+```
+
+### Useful Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev:next` | Start Next.js development server |
+| `pnpm supabase:start` | Start local Supabase containers |
+| `pnpm supabase:stop` | Stop local Supabase containers |
+| `pnpm supabase:status` | Check Supabase status and URLs |
+| `pnpm db:push` | Push schema changes to database |
+| `pnpm db:seed` | Seed database with sample data |
+| `pnpm db:studio` | Open Drizzle Studio (database UI) |
+| `pnpm db:reset` | Reset database (drop all data, re-run migrations and seed) |
+| `pnpm lint` | Run ESLint |
+| `pnpm lint:fix` | Fix ESLint issues |
+| `pnpm typecheck` | Run TypeScript type checking |
+| `pnpm format` | Check Prettier formatting |
+| `pnpm format:fix` | Fix formatting issues |
+
+### Accessing the Database
+
+**Option 1: Supabase Studio (Recommended)**
+
+Open [http://127.0.0.1:54323](http://127.0.0.1:54323) in your browser for a visual database admin.
+
+**Option 2: Drizzle Studio**
+
+```bash
+pnpm db:studio
+```
+
+**Option 3: Direct Connection**
+
+Use any PostgreSQL client with:
+- Host: `127.0.0.1`
+- Port: `54322`
+- Database: `postgres`
+- User: `postgres`
+- Password: `postgres`
+
+### Viewing Test Emails
+
+When the app sends emails (e.g., password reset), they're captured by Inbucket instead of being sent.
+
+Open [http://127.0.0.1:54324](http://127.0.0.1:54324) to view captured emails.
+
+---
+
+## Project Structure
+
+```
+padel-hub/
+├── apps/
+│   ├── nextjs/              # Court Owner Dashboard (Web)
+│   │   ├── src/
+│   │   │   ├── app/         # Next.js App Router pages
+│   │   │   │   ├── (auth)/  # Authentication pages (login, register)
+│   │   │   │   └── (dashboard)/ # Dashboard pages (protected)
+│   │   │   ├── components/  # Shared React components
+│   │   │   └── trpc/        # tRPC client setup
+│   │   └── public/          # Static assets
+│   └── expo/                # Player Mobile App (not covered here)
+│
+├── packages/
+│   ├── api/                 # tRPC API Router
+│   │   └── src/
+│   │       ├── router/      # Route handlers (booking.ts, court.ts, etc.)
+│   │       ├── root.ts      # Root router combining all routes
+│   │       └── trpc.ts      # tRPC context and procedures
+│   │
+│   ├── auth/                # Authentication (Better Auth)
+│   │   └── src/
+│   │       └── index.ts     # Auth configuration
+│   │
+│   ├── db/                  # Database (Drizzle ORM)
+│   │   └── src/
+│   │       ├── schema.ts    # Database schema definitions
+│   │       ├── client.ts    # Database client
+│   │       └── seed.ts      # Seed data script
+│   │
+│   ├── ui/                  # Shared UI Components (shadcn/ui)
+│   │   └── src/
+│   │       └── *.tsx        # Button, Input, Dialog, etc.
+│   │
+│   └── validators/          # Shared Zod Schemas
+│
+├── supabase/                # Supabase Local Configuration
+│   └── config.toml          # Local Supabase settings
+│
+├── tooling/                 # Shared Tooling Configs
+│   ├── eslint/
+│   ├── prettier/
+│   ├── tailwind/
+│   └── typescript/
+│
+├── .env.example             # Environment variables template
+├── CLAUDE.md                # AI assistant instructions
+├── package.json             # Root package.json with scripts
+└── turbo.json               # Turborepo configuration
+```
+
+---
+
+## Development Workflow
+
+### Making Database Schema Changes
+
+1. **Edit the schema** in `packages/db/src/schema.ts`
+
+2. **Push changes to the database**:
+   ```bash
+   pnpm db:push
    ```
 
-2. Run `pnpm dev` at the project root folder.
-
-#### Use Android Emulator
-
-1. Install Android Studio tools [as shown on expo docs](https://docs.expo.dev/workflow/android-studio-emulator).
-
-2. Change the `dev` script at `apps/expo/package.json` to open the Android emulator.
-
-   ```diff
-   +  "dev": "expo start --android",
+3. **If you added auth-related tables**, regenerate the auth schema:
+   ```bash
+   pnpm auth:generate
    ```
 
-3. Run `pnpm dev` at the project root folder.
+### Adding a New API Endpoint
 
-### 4. Configuring Better-Auth to work with Expo
+1. **Create or edit a router** in `packages/api/src/router/`
 
-In order to get Better-Auth to work with Expo, you must either:
+2. **Register the router** in `packages/api/src/root.ts` (if new)
 
-#### Deploy the Auth Proxy (RECOMMENDED)
+3. **Use in your component**:
+   ```typescript
+   const trpc = useTRPC();
+   const { data } = useSuspenseQuery(trpc.yourRouter.yourProcedure.queryOptions());
+   ```
 
-Better-auth comes with an [auth proxy plugin](https://www.better-auth.com/docs/plugins/oauth-proxy). By deploying the Next.js app, you can get OAuth working in preview deployments and development for Expo apps.
-
-By using the proxy plugin, the Next.js apps will forward any auth requests to the proxy server, which will handle the OAuth flow and then redirect back to the Next.js app. This makes it easy to get OAuth working since you'll have a stable URL that is publicly accessible and doesn't change for every deployment and doesn't rely on what port the app is running on. So if port 3000 is taken and your Next.js app starts at port 3001 instead, your auth should still work without having to reconfigure the OAuth provider.
-
-#### Add your local IP to your OAuth provider
-
-You can alternatively add your local IP (e.g. `192.168.x.y:$PORT`) to your OAuth provider. This may not be as reliable as your local IP may change when you change networks. Some OAuth providers may also only support a single callback URL for each app making this approach unviable for some providers (e.g. GitHub).
-
-### 5a. When it's time to add a new UI component
-
-Run the `ui-add` script to add a new UI component using the interactive `shadcn/ui` CLI:
+### Adding UI Components
 
 ```bash
 pnpm ui-add
 ```
 
-When the component(s) has been installed, you should be good to go and start using it in your app.
+This opens an interactive CLI to add shadcn/ui components to `packages/ui`.
 
-### 5b. When it's time to add a new package
+### Creating a New Page
 
-To add a new package, simply run `pnpm turbo gen init` in the monorepo root. This will prompt you for a package name as well as if you want to install any dependencies to the new package (of course you can also do this yourself later).
+1. Create a new folder in `apps/nextjs/src/app/(dashboard)/your-page/`
 
-The generator sets up the `package.json`, `tsconfig.json` and a `index.ts`, as well as configures all the necessary configurations for tooling around your package such as formatting, linting and typechecking. When the package is created, you're ready to go build out the package.
+2. Add `page.tsx` for the route
 
-## FAQ
+3. Add `_components/` folder for page-specific components
 
-### Does the starter include Solito?
+### Patterns to Follow
 
-No. Solito will not be included in this repo. It is a great tool if you want to share code between your Next.js and Expo app. However, the main purpose of this repo is not the integration between Next.js and Expo — it's the code splitting of your T3 App into a monorepo. The Expo app is just a bonus example of how you can utilize the monorepo with multiple apps but can just as well be any app such as Vite, Electron, etc.
+- **Tables**: Use TanStack Table via `~/components/ui/data-table.tsx`
+- **Dates**: Use `date-fns` with Spanish locale (`es`) and Lima timezone
+- **Forms**: Use React Hook Form with Zod validation
+- **State**: Use TanStack Query for server state, React state for UI state
 
-Integrating Solito into this repo isn't hard, and there are a few [official templates](https://github.com/nandorojo/solito/tree/master/example-monorepos) by the creators of Solito that you can use as a reference.
+---
 
-### Does this pattern leak backend code to my client applications?
+## Common Tasks
 
-No, it does not. The `api` package should only be a production dependency in the Next.js application where it's served. The Expo app, and all other apps you may add in the future, should only add the `api` package as a dev dependency. This lets you have full typesafety in your client applications, while keeping your backend code safe.
+### Reset the Database
 
-If you need to share runtime code between the client and server, such as input validation schemas, you can create a separate `shared` package for this and import it on both sides.
+If you need a fresh database:
 
-## Deployment
+```bash
+pnpm db:reset
+```
 
-### Next.js
+This drops all tables, re-runs migrations, and seeds sample data.
 
-#### Prerequisites
+### Update Sample Data
 
-> **Note**
-> Please note that the Next.js application with tRPC must be deployed in order for the Expo app to communicate with the server in a production environment.
+Edit `packages/db/src/seed.ts` and run:
 
-#### Deploy to Vercel
+```bash
+pnpm db:seed
+```
 
-Let's deploy the Next.js application to [Vercel](https://vercel.com). If you've never deployed a Turborepo app there, don't worry, the steps are quite straightforward. You can also read the [official Turborepo guide](https://vercel.com/docs/concepts/monorepos/turborepo) on deploying to Vercel.
+### Check for Type Errors
 
-1. Create a new project on Vercel, select the `apps/nextjs` folder as the root directory. Vercel's zero-config system should handle all configurations for you.
+```bash
+pnpm typecheck
+```
 
-2. Add your `POSTGRES_URL` environment variable.
+### Format Code
 
-3. Done! Your app should successfully deploy. Assign your domain and use that instead of `localhost` for the `url` in the Expo app so that your Expo app can communicate with your backend when you are not in development.
+```bash
+pnpm format:fix
+```
 
-### Auth Proxy
+### Lint Code
 
-The auth proxy comes as a better-auth plugin. This is required for the Next.js app to be able to authenticate users in preview deployments. The auth proxy is not used for OAuth request in production deployments. The easiest way to get it running is to deploy the Next.js app to vercel.
+```bash
+pnpm lint:fix
+```
 
-### Expo
+---
 
-Deploying your Expo application works slightly differently compared to Next.js on the web. Instead of "deploying" your app online, you need to submit production builds of your app to app stores, like [Apple App Store](https://www.apple.com/app-store) and [Google Play](https://play.google.com/store/apps). You can read the full [guide to distributing your app](https://docs.expo.dev/distribution/introduction), including best practices, in the Expo docs.
+## Troubleshooting
 
-1. Make sure to modify the `getBaseUrl` function to point to your backend's production URL:
+### Supabase won't start
 
-   <https://github.com/t3-oss/create-t3-turbo/blob/656965aff7db271e5e080242c4a3ce4dad5d25f8/apps/expo/src/utils/api.tsx#L20-L37>
+**Check Docker is running:**
+```bash
+docker ps
+```
+If you see "Cannot connect to the Docker daemon", start Docker Desktop.
 
-2. Let's start by setting up [EAS Build](https://docs.expo.dev/build/introduction), which is short for Expo Application Services. The build service helps you create builds of your app, without requiring a full native development setup. The commands below are a summary of [Creating your first build](https://docs.expo.dev/build/setup).
+**Check if ports are in use:**
+```bash
+lsof -i :54321
+lsof -i :54322
+```
+Kill any processes using these ports or stop other Supabase instances.
 
-   ```bash
-   # Install the EAS CLI
-   pnpm add -g eas-cli
+**Reset Supabase:**
+```bash
+pnpm supabase:stop
+docker system prune -f  # Clean up Docker (optional)
+pnpm supabase:start
+```
 
-   # Log in with your Expo account
-   eas login
+### Database connection errors
 
-   # Configure your Expo app
-   cd apps/expo
-   eas build:configure
-   ```
+**Verify Supabase is running:**
+```bash
+pnpm supabase:status
+```
 
-3. After the initial setup, you can create your first build. You can build for Android and iOS platforms and use different [`eas.json` build profiles](https://docs.expo.dev/build-reference/eas-json) to create production builds or development, or test builds. Let's make a production build for iOS.
+**Check your `.env` file:**
+```bash
+# Should be:
+POSTGRES_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+```
 
-   ```bash
-   eas build --platform ios --profile production
-   ```
+### Schema push fails
 
-   > If you don't specify the `--profile` flag, EAS uses the `production` profile by default.
+**Reset and try again:**
+```bash
+pnpm db:reset
+pnpm db:push
+```
 
-4. Now that you have your first production build, you can submit this to the stores. [EAS Submit](https://docs.expo.dev/submit/introduction) can help you send the build to the stores.
+### "Module not found" errors
 
-   ```bash
-   eas submit --platform ios --latest
-   ```
+**Rebuild packages:**
+```bash
+pnpm clean
+pnpm install
+pnpm build
+```
 
-   > You can also combine build and submit in a single command, using `eas build ... --auto-submit`.
+### Type errors after schema changes
 
-5. Before you can get your app in the hands of your users, you'll have to provide additional information to the app stores. This includes screenshots, app information, privacy policies, etc. _While still in preview_, [EAS Metadata](https://docs.expo.dev/eas/metadata) can help you with most of this information.
+**Regenerate types:**
+```bash
+pnpm db:push
+pnpm auth:generate
+```
 
-6. Once everything is approved, your users can finally enjoy your app. Let's say you spotted a small typo; you'll have to create a new build, submit it to the stores, and wait for approval before you can resolve this issue. In these cases, you can use EAS Update to quickly send a small bugfix to your users without going through this long process. Let's start by setting up EAS Update.
+---
 
-   The steps below summarize the [Getting started with EAS Update](https://docs.expo.dev/eas-update/getting-started/#configure-your-project) guide.
+## Environment Variables
 
-   ```bash
-   # Add the `expo-updates` library to your Expo app
-   cd apps/expo
-   pnpm expo install expo-updates
+| Variable | Description | Default (Local) |
+|----------|-------------|-----------------|
+| `POSTGRES_URL` | Database connection string | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| `AUTH_SECRET` | Better Auth secret key | `supersecret` |
 
-   # Configure EAS Update
-   eas update:configure
-   ```
+For production, you'll need:
+- A Supabase cloud project connection string
+- A secure `AUTH_SECRET` (generate with `openssl rand -base64 32`)
+- OAuth credentials for Google/Apple sign-in
 
-7. Before we can send out updates to your app, you have to create a new build and submit it to the app stores. For every change that includes native APIs, you have to rebuild the app and submit the update to the app stores. See steps 2 and 3.
+---
 
-8. Now that everything is ready for updates, let's create a new update for `production` builds. With the `--auto` flag, EAS Update uses your current git branch name and commit message for this update. See [How EAS Update works](https://docs.expo.dev/eas-update/how-eas-update-works/#publishing-an-update) for more information.
+## Additional Resources
 
-   ```bash
-   cd apps/expo
-   eas update --auto
-   ```
-
-   > Your OTA (Over The Air) updates must always follow the app store's rules. You can't change your app's primary functionality without getting app store approval. But this is a fast way to update your app for minor changes and bug fixes.
-
-9. Done! Now that you have created your production build, submitted it to the stores, and installed EAS Update, you are ready for anything!
-
-## References
-
-The stack originates from [create-t3-app](https://github.com/t3-oss/create-t3-app).
-
-A [blog post](https://jumr.dev/blog/t3-turbo) where I wrote how to migrate a T3 app into this.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [tRPC Documentation](https://trpc.io/docs)
+- [Drizzle ORM Documentation](https://orm.drizzle.team)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Better Auth Documentation](https://www.better-auth.com/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [shadcn/ui Documentation](https://ui.shadcn.com)

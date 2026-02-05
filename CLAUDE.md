@@ -178,7 +178,36 @@ Required in `.env` (copy from `.env.example`):
 ```bash
 pnpm install
 cp .env.example .env  # Configure environment variables
+pnpm supabase:start   # Start local Supabase (Docker required)
 pnpm db:push          # Push schema to database
 pnpm auth:generate    # Generate auth schema
+pnpm db:seed          # Seed sample data
 pnpm dev              # Start development
 ```
+
+## Local Development with Supabase
+
+### Prerequisites
+- Docker Desktop must be running
+- Supabase CLI installed (`brew install supabase/tap/supabase`)
+
+### Commands
+```bash
+pnpm supabase:start   # Start local Supabase containers
+pnpm supabase:stop    # Stop local Supabase containers
+pnpm supabase:status  # Check status and get local URLs
+pnpm db:reset         # Reset database and run migrations + seed
+```
+
+### Local URLs (when running)
+| Service | URL |
+|---------|-----|
+| API | http://127.0.0.1:54321 |
+| Database | postgresql://postgres:postgres@127.0.0.1:54322/postgres |
+| Studio | http://127.0.0.1:54323 |
+| Inbucket (emails) | http://127.0.0.1:54324 |
+
+### Switching between Local and Production
+Update `POSTGRES_URL` in your `.env` file:
+- **Local**: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+- **Production**: Use the Supabase cloud connection string
