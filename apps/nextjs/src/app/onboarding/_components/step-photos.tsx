@@ -1,8 +1,6 @@
 "use client";
 
-export interface PhotosData {
-  photos: string[];
-}
+import type { PhotosData } from "./onboarding-wizard";
 
 interface StepPhotosProps {
   data: PhotosData;

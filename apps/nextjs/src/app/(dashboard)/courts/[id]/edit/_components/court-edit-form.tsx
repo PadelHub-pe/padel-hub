@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { toast } from "@wifo/ui/toast";
-
 import { Button } from "@wifo/ui/button";
+import { Form } from "@wifo/ui/form";
+import { toast } from "@wifo/ui/toast";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 import { BasicInfoSection } from "../../_components/basic-info-section";
@@ -19,15 +21,20 @@ interface CourtEditFormProps {
   id: string;
 }
 
-interface CourtFormData {
-  name: string;
-  status: "active" | "maintenance" | "inactive";
-  description: string;
-  type: "indoor" | "outdoor";
-  priceInCents: number | null;
-  peakPriceInCents: number | null;
-  imageUrl: string;
-}
+const courtEditSchema = z.object({
+  name: z
+    .string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(50, "El nombre no puede exceder 50 caracteres"),
+  status: z.enum(["active", "maintenance", "inactive"]),
+  description: z.string().max(500, "La descripción no puede exceder 500 caracteres").optional(),
+  type: z.enum(["indoor", "outdoor"]),
+  priceInSoles: z.string().optional(),
+  peakPriceInSoles: z.string().optional(),
+  imageUrl: z.string().url("URL de imagen inválida").or(z.literal("")),
+});
+
+export type CourtEditFormValues = z.infer<typeof courtEditSchema>;
 
 export function CourtEditForm({ id }: CourtEditFormProps) {
   const router = useRouter();
@@ -37,16 +44,18 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
     trpc.court.getById.queryOptions({ id }),
   );
 
-  const [formData, setFormData] = useState<CourtFormData>(() => ({
-    name: court.name,
-    status: court.status,
-    description: court.description ?? "",
-    type: court.type,
-    priceInCents: court.priceInCents,
-    peakPriceInCents: court.peakPriceInCents,
-    imageUrl: court.imageUrl ?? "",
-  }));
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const form = useForm<CourtEditFormValues>({
+    resolver: standardSchemaResolver(courtEditSchema),
+    defaultValues: {
+      name: court.name,
+      status: court.status,
+      description: court.description ?? "",
+      type: court.type,
+      priceInSoles: court.priceInCents !== null ? String(court.priceInCents / 100) : "",
+      peakPriceInSoles: court.peakPriceInCents !== null ? String(court.peakPriceInCents / 100) : "",
+      imageUrl: court.imageUrl ?? "",
+    },
+  });
 
   const updateMutation = useMutation(
     trpc.court.update.mutationOptions({
@@ -55,7 +64,9 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
         router.push(`/courts/${id}`);
       },
       onError: (error) => {
-        toast.error(error.message || "Error al guardar los cambios");
+        form.setError("root", {
+          message: error.message || "Error al guardar los cambios",
+        });
       },
     }),
   );
@@ -72,60 +83,32 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
     }),
   );
 
-  function validateForm(): boolean {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim() || formData.name.length < 2) {
-      newErrors.name = "El nombre debe tener al menos 2 caracteres";
-    }
-    if (formData.name.length > 50) {
-      newErrors.name = "El nombre no puede exceder 50 caracteres";
-    }
-    if (formData.description.length > 500) {
-      newErrors.description = "La descripción no puede exceder 500 caracteres";
-    }
-    if (formData.imageUrl && !isValidUrl(formData.imageUrl)) {
-      newErrors.imageUrl = "URL de imagen inválida";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }
-
-  function handleSave() {
-    if (!validateForm()) return;
+  function onSubmit(values: CourtEditFormValues) {
+    const priceInCents =
+      values.priceInSoles && values.priceInSoles !== ""
+        ? Math.round(parseFloat(values.priceInSoles) * 100)
+        : undefined;
+    const peakPriceInCents =
+      values.peakPriceInSoles && values.peakPriceInSoles !== ""
+        ? Math.round(parseFloat(values.peakPriceInSoles) * 100)
+        : undefined;
 
     updateMutation.mutate({
       id,
       data: {
-        name: formData.name,
-        type: formData.type,
-        status: formData.status,
-        description: formData.description || undefined,
-        priceInCents: formData.priceInCents ?? undefined,
-        peakPriceInCents: formData.peakPriceInCents ?? undefined,
-        imageUrl: formData.imageUrl || undefined,
+        name: values.name,
+        type: values.type,
+        status: values.status,
+        description: values.description ?? undefined,
+        priceInCents,
+        peakPriceInCents,
+        imageUrl: values.imageUrl || undefined,
       },
     });
   }
 
   function handleDelete() {
     deleteMutation.mutate({ id });
-  }
-
-  function handleChange<K extends keyof CourtFormData>(
-    field: K,
-    value: CourtFormData[K],
-  ) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
   }
 
   return (
@@ -143,71 +126,44 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
         <span className="text-gray-900">Editar</span>
       </nav>
 
-      {/* Header */}
-      <header className="mt-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Editar {court.name}
-        </h1>
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
-            <Link href={`/courts/${id}`}>Cancelar</Link>
-          </Button>
-          <Button onClick={handleSave} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
-          </Button>
-        </div>
-      </header>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          {/* Header */}
+          <header className="mt-4 flex items-center justify-between">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Editar {court.name}
+            </h1>
+            <div className="flex gap-3">
+              <Button variant="outline" asChild>
+                <Link href={`/courts/${id}`}>Cancelar</Link>
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+            </div>
+          </header>
 
-      {/* Form Sections */}
-      <div className="mt-8 space-y-6">
-        <BasicInfoSection
-          name={formData.name}
-          status={formData.status}
-          description={formData.description}
-          errors={errors}
-          onChange={(field, value) => {
-            if (field === "status") {
-              handleChange("status", value as "active" | "maintenance" | "inactive");
-            } else {
-              handleChange(field, value);
-            }
-          }}
-        />
+          {form.formState.errors.root && (
+            <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+              {form.formState.errors.root.message}
+            </div>
+          )}
 
-        <CourtTypeSection
-          type={formData.type}
-          onChange={(type) => handleChange("type", type)}
-        />
+          {/* Form Sections */}
+          <div className="mt-8 space-y-6">
+            <BasicInfoSection control={form.control} />
+            <CourtTypeSection control={form.control} />
+            <PricingSection control={form.control} />
+            <PhotoSection control={form.control} />
 
-        <PricingSection
-          priceInCents={formData.priceInCents}
-          peakPriceInCents={formData.peakPriceInCents}
-          errors={errors}
-          onChange={handleChange}
-        />
-
-        <PhotoSection
-          imageUrl={formData.imageUrl}
-          errors={errors}
-          onChange={(url) => handleChange("imageUrl", url)}
-        />
-
-        <DangerZoneSection
-          courtName={court.name}
-          isDeleting={deleteMutation.isPending}
-          onDelete={handleDelete}
-        />
-      </div>
+            <DangerZoneSection
+              courtName={court.name}
+              isDeleting={deleteMutation.isPending}
+              onDelete={handleDelete}
+            />
+          </div>
+        </form>
+      </Form>
     </div>
   );
-}
-
-function isValidUrl(url: string): boolean {
-  if (!url) return true;
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 }

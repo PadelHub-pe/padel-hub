@@ -6,10 +6,9 @@ import { Button } from "@wifo/ui/button";
 
 interface EditHeaderProps {
   isSaving: boolean;
-  onSave: () => void;
 }
 
-export function EditHeader({ isSaving, onSave }: EditHeaderProps) {
+export function EditHeader({ isSaving }: EditHeaderProps) {
   return (
     <header className="flex items-center justify-between">
       <div>
@@ -24,7 +23,7 @@ export function EditHeader({ isSaving, onSave }: EditHeaderProps) {
         <Button variant="outline" asChild>
           <Link href="/facility">Cancelar</Link>
         </Button>
-        <Button onClick={onSave} disabled={isSaving}>
+        <Button type="submit" disabled={isSaving}>
           {isSaving ? "Guardando..." : "Guardar Cambios"}
         </Button>
       </div>

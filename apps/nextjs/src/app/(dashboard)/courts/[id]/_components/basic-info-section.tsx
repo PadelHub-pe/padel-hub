@@ -1,8 +1,16 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,25 +19,17 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 import { Textarea } from "@wifo/ui/textarea";
+import { useWatch } from "react-hook-form";
+
+import type { CourtEditFormValues } from "../edit/_components/court-edit-form";
 
 interface BasicInfoSectionProps {
-  name: string;
-  status: "active" | "maintenance" | "inactive";
-  description: string;
-  errors: Record<string, string>;
-  onChange: (
-    field: "name" | "status" | "description",
-    value: string,
-  ) => void;
+  control: Control<CourtEditFormValues>;
 }
 
-export function BasicInfoSection({
-  name,
-  status,
-  description,
-  errors,
-  onChange,
-}: BasicInfoSectionProps) {
+export function BasicInfoSection({ control }: BasicInfoSectionProps) {
+  const description = useWatch({ control, name: "description" }) ?? "";
+
   return (
     <Card>
       <CardHeader>
@@ -40,75 +40,81 @@ export function BasicInfoSection({
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Court Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              Nombre de la cancha <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Cancha 1"
-              value={name}
-              onChange={(e) => onChange("name", e.target.value)}
-              className={errors.name ? "border-red-500" : ""}
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name}</p>
+          <FormField
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Nombre de la cancha <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="text" placeholder="Cancha 1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* Status */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Estado</Label>
-            <Select
-              value={status}
-              onValueChange={(value) => onChange("status", value)}
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder="Selecciona el estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
-                    Activa
-                  </span>
-                </SelectItem>
-                <SelectItem value="maintenance">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
-                    Mantenimiento
-                  </span>
-                </SelectItem>
-                <SelectItem value="inactive">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
-                    Inactiva
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            control={control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Estado</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona el estado" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="active">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                        Activa
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="maintenance">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        Mantenimiento
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="inactive">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-red-500" />
+                        Inactiva
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         {/* Description */}
-        <div className="space-y-2">
-          <Label htmlFor="description">Descripción</Label>
-          <Textarea
-            id="description"
-            placeholder="Cancha profesional con paredes de cristal panorámico y sistema de iluminación LED."
-            value={description}
-            onChange={(e) => onChange("description", e.target.value)}
-            rows={3}
-            className={errors.description ? "border-red-500" : ""}
-          />
-          {errors.description && (
-            <p className="text-sm text-red-500">{errors.description}</p>
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descripción</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Cancha profesional con paredes de cristal panorámico y sistema de iluminación LED."
+                  rows={3}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>{description.length}/500 caracteres</FormDescription>
+            </FormItem>
           )}
-          <p className="text-xs text-gray-500">
-            {description.length}/500 caracteres
-          </p>
-        </div>
+        />
       </CardContent>
     </Card>
   );

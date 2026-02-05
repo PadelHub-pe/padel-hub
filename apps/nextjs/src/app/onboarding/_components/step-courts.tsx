@@ -1,10 +1,15 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { useState } from "react";
 import { Button } from "@wifo/ui/button";
+import { FormField, FormItem, FormMessage } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 import { RadioGroup, RadioGroupItem } from "@wifo/ui/radio-group";
+import { useWatch } from "react-hook-form";
+
+import type { CourtsFormValues } from "./onboarding-wizard";
 
 export interface Court {
   id: string;
@@ -12,164 +17,167 @@ export interface Court {
   type: "indoor" | "outdoor";
 }
 
-export interface CourtsData {
-  courts: Court[];
-}
-
 interface StepCourtsProps {
-  data: CourtsData;
-  onChange: (data: CourtsData) => void;
-  errors: Record<string, string>;
+  control: Control<CourtsFormValues>;
 }
 
-export function StepCourts({ data, onChange, errors }: StepCourtsProps) {
+export function StepCourts({ control }: StepCourtsProps) {
+  const courts = useWatch({ control, name: "courts" });
   const [newCourt, setNewCourt] = useState<Omit<Court, "id">>({
     name: "",
     type: "indoor",
   });
 
-  function handleAddCourt() {
-    if (!newCourt.name.trim()) return;
-    if (data.courts.length >= 6) return;
-
-    const court: Court = {
-      id: crypto.randomUUID(),
-      name: newCourt.name.trim(),
-      type: newCourt.type,
-    };
-
-    onChange({ courts: [...data.courts, court] });
-    setNewCourt({ name: "", type: "indoor" });
-  }
-
-  function handleRemoveCourt(id: string) {
-    onChange({ courts: data.courts.filter((c) => c.id !== id) });
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddCourt();
-    }
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">Canchas</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Agrega las canchas de padel de tu local (máximo 6).
-        </p>
-      </div>
+    <FormField
+      control={control}
+      name="courts"
+      render={({ field }) => {
+        function handleAddCourt() {
+          if (!newCourt.name.trim()) return;
+          if (courts.length >= 6) return;
 
-      {/* Add Court Form */}
-      <div className="rounded-lg border bg-gray-50 p-4">
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            {/* Court Name */}
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="courtName">Nombre de la cancha</Label>
-              <Input
-                id="courtName"
-                type="text"
-                placeholder="Cancha 1"
-                value={newCourt.name}
-                onChange={(e) =>
-                  setNewCourt({ ...newCourt, name: e.target.value })
-                }
-                onKeyDown={handleKeyDown}
-              />
-            </div>
+          const court: Court = {
+            id: crypto.randomUUID(),
+            name: newCourt.name.trim(),
+            type: newCourt.type,
+          };
 
-            {/* Add Button */}
-            <Button
-              type="button"
-              onClick={handleAddCourt}
-              disabled={!newCourt.name.trim() || data.courts.length >= 6}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <PlusIcon className="mr-1 h-4 w-4" />
-              Agregar
-            </Button>
-          </div>
+          field.onChange([...courts, court]);
+          setNewCourt({ name: "", type: "indoor" });
+        }
 
-          {/* Court Type */}
-          <div className="space-y-2">
-            <Label>Tipo de cancha</Label>
-            <RadioGroup
-              value={newCourt.type}
-              onValueChange={(value) =>
-                setNewCourt({ ...newCourt, type: value as "indoor" | "outdoor" })
-              }
-              className="flex gap-6"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="indoor" id="type-indoor" />
-                <Label htmlFor="type-indoor" className="cursor-pointer font-normal">
-                  Indoor (techada)
-                </Label>
+        function handleRemoveCourt(id: string) {
+          field.onChange(courts.filter((c) => c.id !== id));
+        }
+
+        function handleKeyDown(e: React.KeyboardEvent) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddCourt();
+          }
+        }
+
+        return (
+          <FormItem>
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Canchas</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Agrega las canchas de padel de tu local (máximo 6).
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="outdoor" id="type-outdoor" />
-                <Label htmlFor="type-outdoor" className="cursor-pointer font-normal">
-                  Outdoor (al aire libre)
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </div>
 
-      {/* Error message */}
-      {errors.courts && (
-        <p className="text-sm text-red-500">{errors.courts}</p>
-      )}
+              {/* Add Court Form */}
+              <div className="rounded-lg border bg-gray-50 p-4">
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                    {/* Court Name */}
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="courtName">Nombre de la cancha</Label>
+                      <Input
+                        id="courtName"
+                        type="text"
+                        placeholder="Cancha 1"
+                        value={newCourt.name}
+                        onChange={(e) =>
+                          setNewCourt({ ...newCourt, name: e.target.value })
+                        }
+                        onKeyDown={handleKeyDown}
+                      />
+                    </div>
 
-      {/* Courts List */}
-      {data.courts.length > 0 ? (
-        <div className="space-y-3">
-          <Label>Canchas agregadas ({data.courts.length}/6)</Label>
-          <div className="space-y-2">
-            {data.courts.map((court, index) => (
-              <div
-                key={court.id}
-                className="flex items-center justify-between rounded-lg border bg-white p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-medium text-blue-600">
-                    {index + 1}
+                    {/* Add Button */}
+                    <Button
+                      type="button"
+                      onClick={handleAddCourt}
+                      disabled={!newCourt.name.trim() || courts.length >= 6}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <PlusIcon className="mr-1 h-4 w-4" />
+                      Agregar
+                    </Button>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{court.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {court.type === "indoor" ? "Techada" : "Al aire libre"}
-                    </p>
+
+                  {/* Court Type */}
+                  <div className="space-y-2">
+                    <Label>Tipo de cancha</Label>
+                    <RadioGroup
+                      value={newCourt.type}
+                      onValueChange={(value) =>
+                        setNewCourt({ ...newCourt, type: value as "indoor" | "outdoor" })
+                      }
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="indoor" id="type-indoor" />
+                        <Label htmlFor="type-indoor" className="cursor-pointer font-normal">
+                          Indoor (techada)
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="outdoor" id="type-outdoor" />
+                        <Label htmlFor="type-outdoor" className="cursor-pointer font-normal">
+                          Outdoor (al aire libre)
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveCourt(court.id)}
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
               </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-          <CourtIcon className="mx-auto mb-3 h-12 w-12 text-gray-400" />
-          <p className="text-sm text-gray-500">
-            Aún no has agregado ninguna cancha.
-            <br />
-            Usa el formulario de arriba para agregar al menos una.
-          </p>
-        </div>
-      )}
-    </div>
+
+              {/* Error message */}
+              <FormMessage />
+
+              {/* Courts List */}
+              {courts.length > 0 ? (
+                <div className="space-y-3">
+                  <Label>Canchas agregadas ({courts.length}/6)</Label>
+                  <div className="space-y-2">
+                    {courts.map((court, index) => (
+                      <div
+                        key={court.id}
+                        className="flex items-center justify-between rounded-lg border bg-white p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-medium text-blue-600">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{court.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {court.type === "indoor" ? "Techada" : "Al aire libre"}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveCourt(court.id)}
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                  <CourtIcon className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                  <p className="text-sm text-gray-500">
+                    Aún no has agregado ninguna cancha.
+                    <br />
+                    Usa el formulario de arriba para agregar al menos una.
+                  </p>
+                </div>
+              )}
+            </div>
+          </FormItem>
+        );
+      }}
+    />
   );
 }
 

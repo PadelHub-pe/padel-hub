@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "@wifo/ui/toast";
-
+import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,32 +25,47 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 import { Textarea } from "@wifo/ui/textarea";
-import { cn } from "@wifo/ui";
+import { toast } from "@wifo/ui/toast";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 
-interface CourtFormData {
-  name: string;
-  status: "active" | "maintenance" | "inactive";
-  description: string;
-  type: "indoor" | "outdoor";
-  priceInCents: number | null;
-  peakPriceInCents: number | null;
-  imageUrl: string;
-}
+const courtSchema = z.object({
+  name: z
+    .string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(50, "El nombre no puede exceder 50 caracteres"),
+  status: z.enum(["active", "maintenance", "inactive"]),
+  description: z
+    .string()
+    .max(500, "La descripción no puede exceder 500 caracteres")
+    .transform((val) => val || undefined)
+    .optional(),
+  type: z.enum(["indoor", "outdoor"]),
+  priceInSoles: z.string().min(1, "La tarifa estándar es requerida"),
+  peakPriceInSoles: z.string().optional(),
+  imageUrl: z
+    .string()
+    .url("URL de imagen inválida")
+    .or(z.literal(""))
+    .transform((val) => val || undefined),
+});
+
+type CourtFormValues = z.infer<typeof courtSchema>;
 
 const courtTypes = [
   {
     value: "indoor" as const,
     label: "Indoor",
     description: "Cancha techada",
-    icon: "🏠",
+    icon: "\u{1F3E0}",
   },
   {
     value: "outdoor" as const,
     label: "Outdoor",
     description: "Al aire libre",
-    icon: "☀️",
+    icon: "\u{2600}\u{FE0F}",
   },
 ];
 
@@ -51,16 +73,18 @@ export function CourtCreateForm() {
   const router = useRouter();
   const trpc = useTRPC();
 
-  const [formData, setFormData] = useState<CourtFormData>({
-    name: "",
-    status: "active",
-    description: "",
-    type: "indoor",
-    priceInCents: null,
-    peakPriceInCents: null,
-    imageUrl: "",
+  const form = useForm<CourtFormValues>({
+    resolver: standardSchemaResolver(courtSchema),
+    defaultValues: {
+      name: "",
+      status: "active",
+      description: "",
+      type: "indoor",
+      priceInSoles: "",
+      peakPriceInSoles: "",
+      imageUrl: "",
+    },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createMutation = useMutation(
     trpc.court.create.mutationOptions({
@@ -69,76 +93,36 @@ export function CourtCreateForm() {
         router.push(`/courts/${court.id}`);
       },
       onError: (error) => {
-        toast.error(error.message || "Error al crear la cancha");
+        form.setError("root", {
+          message: error.message || "Error al crear la cancha",
+        });
       },
     }),
   );
 
-  function validateForm(): boolean {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim() || formData.name.length < 2) {
-      newErrors.name = "El nombre debe tener al menos 2 caracteres";
-    }
-    if (formData.name.length > 50) {
-      newErrors.name = "El nombre no puede exceder 50 caracteres";
-    }
-    if (formData.description.length > 500) {
-      newErrors.description = "La descripción no puede exceder 500 caracteres";
-    }
-    if (formData.imageUrl && !isValidUrl(formData.imageUrl)) {
-      newErrors.imageUrl = "URL de imagen inválida";
-    }
-    if (formData.priceInCents === null) {
-      newErrors.priceInCents = "La tarifa estándar es requerida";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }
-
-  function handleSave() {
-    if (!validateForm()) return;
+  function onSubmit(values: CourtFormValues) {
+    const priceInCents = values.priceInSoles
+      ? Math.round(parseFloat(values.priceInSoles) * 100)
+      : undefined;
+    const peakPriceInCents =
+      values.peakPriceInSoles && values.peakPriceInSoles !== ""
+        ? Math.round(parseFloat(values.peakPriceInSoles) * 100)
+        : undefined;
 
     createMutation.mutate({
-      name: formData.name,
-      type: formData.type,
-      status: formData.status,
-      description: formData.description || undefined,
-      priceInCents: formData.priceInCents ?? undefined,
-      peakPriceInCents: formData.peakPriceInCents ?? undefined,
-      imageUrl: formData.imageUrl || undefined,
+      name: values.name,
+      type: values.type,
+      status: values.status,
+      description: values.description,
+      priceInCents,
+      peakPriceInCents,
+      imageUrl: values.imageUrl,
     });
   }
 
-  function handleChange<K extends keyof CourtFormData>(
-    field: K,
-    value: CourtFormData[K],
-  ) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  }
-
-  function handlePriceChange(field: "priceInCents" | "peakPriceInCents", value: string) {
-    if (value === "") {
-      handleChange(field, null);
-    } else {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        handleChange(field, Math.round(numValue * 100));
-      }
-    }
-  }
-
-  const standardPrice = formData.priceInCents !== null ? formData.priceInCents / 100 : "";
-  const peakPrice = formData.peakPriceInCents !== null ? formData.peakPriceInCents / 100 : "";
+  const imageUrl = form.watch("imageUrl");
+  const description = form.watch("description") ?? "";
+  const type = form.watch("type");
 
   return (
     <div className="p-8">
@@ -151,258 +135,296 @@ export function CourtCreateForm() {
         <span className="text-gray-900">Nueva Cancha</span>
       </nav>
 
-      {/* Header */}
-      <header className="mt-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Nueva Cancha</h1>
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/courts">Cancelar</Link>
-          </Button>
-          <Button onClick={handleSave} disabled={createMutation.isPending}>
-            {createMutation.isPending ? "Creando..." : "Crear Cancha"}
-          </Button>
-        </div>
-      </header>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          {/* Header */}
+          <header className="mt-4 flex items-center justify-between">
+            <h1 className="text-2xl font-semibold text-gray-900">Nueva Cancha</h1>
+            <div className="flex gap-3">
+              <Button variant="outline" asChild>
+                <Link href="/courts">Cancelar</Link>
+              </Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Creando..." : "Crear Cancha"}
+              </Button>
+            </div>
+          </header>
 
-      {/* Form Sections */}
-      <div className="mt-8 space-y-6">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Información Básica
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  Nombre de la cancha <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Cancha 1"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  className={errors.name ? "border-red-500" : ""}
+          {form.formState.errors.root && (
+            <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+              {form.formState.errors.root.message}
+            </div>
+          )}
+
+          {/* Form Sections */}
+          <div className="mt-8 space-y-6">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Información Básica
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Nombre de la cancha <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input type="text" placeholder="Cancha 1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona el estado" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-green-500" />
+                                Activa
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="maintenance">
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                                Mantenimiento
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="inactive">
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-red-500" />
+                                Inactiva
+                              </span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descripción</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Cancha profesional con paredes de cristal panorámico y sistema de iluminación LED."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <FormDescription>
+                        {description.length}/500 caracteres
+                      </FormDescription>
+                    </FormItem>
+                  )}
                 />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name}</p>
-                )}
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Estado</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    handleChange("status", value as "active" | "maintenance" | "inactive")
-                  }
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Selecciona el estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-green-500" />
-                        Activa
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="maintenance">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-500" />
-                        Mantenimiento
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="inactive">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />
-                        Inactiva
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Court Type */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Tipo de Cancha
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="grid grid-cols-2 gap-4">
+                        {courtTypes.map((courtType) => (
+                          <button
+                            key={courtType.value}
+                            type="button"
+                            onClick={() => field.onChange(courtType.value)}
+                            className={cn(
+                              "flex flex-col items-center rounded-lg border-2 p-4 transition-all",
+                              type === courtType.value
+                                ? "border-primary bg-primary/5 text-primary"
+                                : "border-gray-200 text-gray-700 hover:bg-gray-50",
+                            )}
+                          >
+                            <span className="text-3xl">{courtType.icon}</span>
+                            <span
+                              className={cn(
+                                "mt-2 font-medium",
+                                type === courtType.value
+                                  ? "text-primary"
+                                  : "text-gray-900",
+                              )}
+                            >
+                              {courtType.label}
+                            </span>
+                            <span className="mt-0.5 text-xs text-gray-500">
+                              {courtType.description}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
-              <Textarea
-                id="description"
-                placeholder="Cancha profesional con paredes de cristal panorámico y sistema de iluminación LED."
-                value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                rows={3}
-                className={errors.description ? "border-red-500" : ""}
-              />
-              {errors.description && (
-                <p className="text-sm text-red-500">{errors.description}</p>
-              )}
-              <p className="text-xs text-gray-500">
-                {formData.description.length}/500 caracteres
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Pricing */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Precios
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="priceInSoles"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Tarifa Estándar <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            S/
+                          </span>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="80.00"
+                              className="pl-9"
+                              {...field}
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                        <FormDescription>
+                          Precio por hora (horario regular)
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
 
-        {/* Court Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Tipo de Cancha
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {courtTypes.map((courtType) => (
-                <button
-                  key={courtType.value}
-                  type="button"
-                  onClick={() => handleChange("type", courtType.value)}
+                  <FormField
+                    control={form.control}
+                    name="peakPriceInSoles"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tarifa Horario Pico</FormLabel>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            S/
+                          </span>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="100.00"
+                              className="pl-9"
+                              {...field}
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                        <FormDescription>
+                          Precio por hora (horario pico)
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Photo */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Foto de la Cancha
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div
                   className={cn(
-                    "flex flex-col items-center rounded-lg border-2 p-4 transition-all",
-                    formData.type === courtType.value
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-gray-200 text-gray-700 hover:bg-gray-50",
+                    "relative h-48 overflow-hidden rounded-lg border-2 border-dashed",
+                    imageUrl ? "border-transparent" : "border-gray-300 bg-gray-50",
                   )}
                 >
-                  <span className="text-3xl">{courtType.icon}</span>
-                  <span
-                    className={cn(
-                      "mt-2 font-medium",
-                      formData.type === courtType.value ? "text-primary" : "text-gray-900",
-                    )}
-                  >
-                    {courtType.label}
-                  </span>
-                  <span className="mt-0.5 text-xs text-gray-500">
-                    {courtType.description}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pricing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Precios
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="standardRate">
-                  Tarifa Estándar <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    S/
-                  </span>
-                  <Input
-                    id="standardRate"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="80.00"
-                    value={standardPrice}
-                    onChange={(e) => handlePriceChange("priceInCents", e.target.value)}
-                    className={cn("pl-9", errors.priceInCents ? "border-red-500" : "")}
-                  />
+                  {imageUrl ? (
+                    <div
+                      className="h-full w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${imageUrl})` }}
+                    />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center text-gray-400">
+                      <ImageIcon className="h-12 w-12" />
+                      <p className="mt-2 text-sm">Vista previa de imagen</p>
+                      <p className="text-xs">Resolución mínima: 800x600px</p>
+                    </div>
+                  )}
                 </div>
-                {errors.priceInCents && (
-                  <p className="text-sm text-red-500">{errors.priceInCents}</p>
-                )}
-                <p className="text-xs text-gray-500">Precio por hora (horario regular)</p>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="peakRate">Tarifa Horario Pico</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    S/
-                  </span>
-                  <Input
-                    id="peakRate"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="100.00"
-                    value={peakPrice}
-                    onChange={(e) => handlePriceChange("peakPriceInCents", e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">Precio por hora (horario pico)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Photo */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Foto de la Cancha
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div
-              className={cn(
-                "relative h-48 overflow-hidden rounded-lg border-2 border-dashed",
-                formData.imageUrl ? "border-transparent" : "border-gray-300 bg-gray-50",
-              )}
-            >
-              {formData.imageUrl ? (
-                <div
-                  className="h-full w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${formData.imageUrl})` }}
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL de la imagen</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="url"
+                          placeholder="https://ejemplo.com/imagen-cancha.jpg"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <FormDescription>
+                        Formatos soportados: JPG, PNG, WebP
+                      </FormDescription>
+                    </FormItem>
+                  )}
                 />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center text-gray-400">
-                  <ImageIcon className="h-12 w-12" />
-                  <p className="mt-2 text-sm">Vista previa de imagen</p>
-                  <p className="text-xs">Resolución mínima: 800×600px</p>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl">URL de la imagen</Label>
-              <Input
-                id="imageUrl"
-                type="url"
-                placeholder="https://ejemplo.com/imagen-cancha.jpg"
-                value={formData.imageUrl}
-                onChange={(e) => handleChange("imageUrl", e.target.value)}
-                className={errors.imageUrl ? "border-red-500" : ""}
-              />
-              {errors.imageUrl && (
-                <p className="text-sm text-red-500">{errors.imageUrl}</p>
-              )}
-              <p className="text-xs text-gray-500">
-                Formatos soportados: JPG, PNG, WebP
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        </form>
+      </Form>
     </div>
   );
-}
-
-function isValidUrl(url: string): boolean {
-  if (!url) return true;
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function ImageIcon({ className }: { className?: string }) {

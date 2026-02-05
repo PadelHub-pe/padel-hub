@@ -1,29 +1,24 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
 import { Textarea } from "@wifo/ui/textarea";
 
+import type { FacilityFormValues } from "./facility-edit-form";
+
 interface BasicInfoFormProps {
-  name: string;
-  phone: string;
-  email: string;
-  website: string;
-  description: string;
-  errors: Record<string, string>;
-  onChange: (field: string, value: string) => void;
+  control: Control<FacilityFormValues>;
 }
 
-export function BasicInfoForm({
-  name,
-  phone,
-  email,
-  website,
-  description,
-  errors,
-  onChange,
-}: BasicInfoFormProps) {
+export function BasicInfoForm({ control }: BasicInfoFormProps) {
   return (
     <Card>
       <CardHeader>
@@ -34,84 +29,95 @@ export function BasicInfoForm({
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Facility Name */}
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="name">
-              Nombre del local <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Padel Club Miraflores"
-              value={name}
-              onChange={(e) => onChange("name", e.target.value)}
-              className={errors.name ? "border-red-500" : ""}
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name}</p>
+          <FormField
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>
+                  Nombre del local <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Padel Club Miraflores"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">
-              Teléfono del local <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+51 1 234 5678"
-              value={phone}
-              onChange={(e) => onChange("phone", e.target.value)}
-              className={errors.phone ? "border-red-500" : ""}
-            />
-            {errors.phone && (
-              <p className="text-sm text-red-500">{errors.phone}</p>
+          <FormField
+            control={control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Teléfono del local <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="tel" placeholder="+51 1 234 5678" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Correo electrónico</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="info@miclub.pe"
-              value={email}
-              onChange={(e) => onChange("email", e.target.value)}
-              className={errors.email ? "border-red-500" : ""}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email}</p>
+          <FormField
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Correo electrónico</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="info@miclub.pe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* Website */}
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="website">Sitio web</Label>
-            <Input
-              id="website"
-              type="url"
-              placeholder="https://www.miclub.pe"
-              value={website}
-              onChange={(e) => onChange("website", e.target.value)}
-              className={errors.website ? "border-red-500" : ""}
-            />
-            {errors.website && (
-              <p className="text-sm text-red-500">{errors.website}</p>
+          <FormField
+            control={control}
+            name="website"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Sitio web</FormLabel>
+                <FormControl>
+                  <Input
+                    type="url"
+                    placeholder="https://www.miclub.pe"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* Description */}
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="description">Descripción</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe tu centro de padel, instalaciones, servicios especiales, etc."
-              value={description}
-              onChange={(e) => onChange("description", e.target.value)}
-              rows={3}
-            />
-          </div>
+          <FormField
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Descripción</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe tu centro de padel, instalaciones, servicios especiales, etc."
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       </CardContent>
     </Card>

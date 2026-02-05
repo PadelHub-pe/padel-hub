@@ -1,6 +1,15 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { Checkbox } from "@wifo/ui/checkbox";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 import { RadioGroup, RadioGroupItem } from "@wifo/ui/radio-group";
@@ -11,6 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wifo/ui/select";
+import { useWatch } from "react-hook-form";
+
+import type { ScheduleFormValues } from "./onboarding-wizard";
 
 const DAYS_OF_WEEK = [
   { value: 1, label: "Lunes" },
@@ -50,29 +62,12 @@ export interface OperatingHour {
   isClosed: boolean;
 }
 
-export interface ScheduleData {
-  operatingHours: OperatingHour[];
-  defaultDurationMinutes: "60" | "90" | "120";
-  defaultPriceInSoles: string;
-}
-
 interface StepScheduleProps {
-  data: ScheduleData;
-  onChange: (data: ScheduleData) => void;
-  errors: Record<string, string>;
+  control: Control<ScheduleFormValues>;
 }
 
-export function StepSchedule({ data, onChange, errors }: StepScheduleProps) {
-  function handleHourChange(
-    dayOfWeek: number,
-    field: keyof OperatingHour,
-    value: string | boolean
-  ) {
-    const newHours = data.operatingHours.map((hour) =>
-      hour.dayOfWeek === dayOfWeek ? { ...hour, [field]: value } : hour
-    );
-    onChange({ ...data, operatingHours: newHours });
-  }
+export function StepSchedule({ control }: StepScheduleProps) {
+  const operatingHours = useWatch({ control, name: "operatingHours" });
 
   return (
     <div className="space-y-6">
@@ -87,148 +82,176 @@ export function StepSchedule({ data, onChange, errors }: StepScheduleProps) {
       </div>
 
       {/* Operating Hours */}
-      <div className="space-y-4">
-        <Label>Horarios de operación</Label>
-        <div className="space-y-2">
-          {DAYS_OF_WEEK.map((day) => {
-            const hour = data.operatingHours.find(
-              (h) => h.dayOfWeek === day.value
-            );
-            if (!hour) return null;
+      <FormField
+        control={control}
+        name="operatingHours"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Horarios de operación</FormLabel>
+            <div className="mt-2 space-y-2">
+              {DAYS_OF_WEEK.map((day) => {
+                const hourIndex = operatingHours.findIndex(
+                  (h) => h.dayOfWeek === day.value,
+                );
+                const hour = operatingHours[hourIndex];
+                if (!hour) return null;
 
-            return (
-              <div
-                key={day.value}
-                className="flex flex-col gap-3 rounded-lg border bg-white p-3 sm:flex-row sm:items-center"
-              >
-                {/* Day name */}
-                <div className="w-24 font-medium text-gray-700">{day.label}</div>
+                function handleHourChange(
+                  fieldKey: keyof OperatingHour,
+                  value: string | boolean,
+                ) {
+                  const newHours: OperatingHour[] = operatingHours.map((h, i) =>
+                    i === hourIndex ? { ...h, [fieldKey]: value } : h,
+                  );
+                  field.onChange(newHours);
+                }
 
-                {/* Closed checkbox */}
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id={`closed-${day.value}`}
-                    checked={hour.isClosed}
-                    onCheckedChange={(checked) =>
-                      handleHourChange(day.value, "isClosed", checked === true)
-                    }
-                  />
-                  <Label
-                    htmlFor={`closed-${day.value}`}
-                    className="cursor-pointer text-sm font-normal text-gray-600"
+                return (
+                  <div
+                    key={day.value}
+                    className="flex flex-col gap-3 rounded-lg border bg-white p-3 sm:flex-row sm:items-center"
                   >
-                    Cerrado
-                  </Label>
-                </div>
+                    {/* Day name */}
+                    <div className="w-24 font-medium text-gray-700">
+                      {day.label}
+                    </div>
 
-                {/* Time selects */}
-                {!hour.isClosed && (
-                  <div className="flex flex-1 items-center gap-2">
-                    <Select
-                      value={hour.openTime}
-                      onValueChange={(value) =>
-                        handleHourChange(day.value, "openTime", value)
-                      }
-                    >
-                      <SelectTrigger className="w-full sm:w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIME_OPTIONS.map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <span className="text-gray-500">a</span>
-                    <Select
-                      value={hour.closeTime}
-                      onValueChange={(value) =>
-                        handleHourChange(day.value, "closeTime", value)
-                      }
-                    >
-                      <SelectTrigger className="w-full sm:w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIME_OPTIONS.map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {/* Closed checkbox */}
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`closed-${day.value}`}
+                        checked={hour.isClosed}
+                        onCheckedChange={(checked) =>
+                          handleHourChange("isClosed", checked === true)
+                        }
+                      />
+                      <Label
+                        htmlFor={`closed-${day.value}`}
+                        className="cursor-pointer text-sm font-normal text-gray-600"
+                      >
+                        Cerrado
+                      </Label>
+                    </div>
+
+                    {/* Time selects */}
+                    {!hour.isClosed && (
+                      <div className="flex flex-1 items-center gap-2">
+                        <Select
+                          value={hour.openTime}
+                          onValueChange={(value) =>
+                            handleHourChange("openTime", value)
+                          }
+                        >
+                          <SelectTrigger className="w-full sm:w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIME_OPTIONS.map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="text-gray-500">a</span>
+                        <Select
+                          value={hour.closeTime}
+                          onValueChange={(value) =>
+                            handleHourChange("closeTime", value)
+                          }
+                        >
+                          <SelectTrigger className="w-full sm:w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIME_OPTIONS.map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                );
+              })}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {/* Slot Duration */}
-      <div className="space-y-3">
-        <Label>Duración por defecto de cada turno</Label>
-        <RadioGroup
-          value={data.defaultDurationMinutes}
-          onValueChange={(value) =>
-            onChange({
-              ...data,
-              defaultDurationMinutes: value as "60" | "90" | "120",
-            })
-          }
-          className="flex flex-wrap gap-4"
-        >
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="60" id="duration-60" />
-            <Label htmlFor="duration-60" className="cursor-pointer font-normal">
-              60 minutos
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="90" id="duration-90" />
-            <Label htmlFor="duration-90" className="cursor-pointer font-normal">
-              90 minutos (recomendado)
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="120" id="duration-120" />
-            <Label htmlFor="duration-120" className="cursor-pointer font-normal">
-              120 minutos
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+      <FormField
+        control={control}
+        name="defaultDurationMinutes"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Duración por defecto de cada turno</FormLabel>
+            <FormControl>
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="mt-2 flex flex-wrap gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="60" id="duration-60" />
+                  <Label htmlFor="duration-60" className="cursor-pointer font-normal">
+                    60 minutos
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="90" id="duration-90" />
+                  <Label htmlFor="duration-90" className="cursor-pointer font-normal">
+                    90 minutos (recomendado)
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="120" id="duration-120" />
+                  <Label htmlFor="duration-120" className="cursor-pointer font-normal">
+                    120 minutos
+                  </Label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {/* Default Price */}
-      <div className="space-y-2">
-        <Label htmlFor="price">
-          Precio por turno (en Soles) <span className="text-red-500">*</span>
-        </Label>
-        <div className="relative max-w-xs">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-            S/
-          </span>
-          <Input
-            id="price"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="80"
-            value={data.defaultPriceInSoles}
-            onChange={(e) =>
-              onChange({ ...data, defaultPriceInSoles: e.target.value })
-            }
-            className={`pl-9 ${errors.price ? "border-red-500" : ""}`}
-          />
-        </div>
-        {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
-        <p className="text-sm text-gray-500">
-          Podrás configurar precios por horario más tarde desde tu panel de
-          control.
-        </p>
-      </div>
+      <FormField
+        control={control}
+        name="defaultPriceInSoles"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              Precio por turno (en Soles) <span className="text-red-500">*</span>
+            </FormLabel>
+            <div className="relative max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                S/
+              </span>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="80"
+                  className="pl-9"
+                  {...field}
+                />
+              </FormControl>
+            </div>
+            <FormMessage />
+            <FormDescription>
+              Podrás configurar precios por horario más tarde desde tu panel de
+              control.
+            </FormDescription>
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

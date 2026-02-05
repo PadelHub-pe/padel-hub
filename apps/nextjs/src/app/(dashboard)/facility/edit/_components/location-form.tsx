@@ -1,24 +1,23 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
+
+import type { FacilityFormValues } from "./facility-edit-form";
 
 interface LocationFormProps {
-  street: string;
-  district: string;
-  city: string;
-  errors: Record<string, string>;
-  onChange: (field: string, value: string) => void;
+  control: Control<FacilityFormValues>;
 }
 
-export function LocationForm({
-  street,
-  district,
-  city,
-  errors,
-  onChange,
-}: LocationFormProps) {
+export function LocationForm({ control }: LocationFormProps) {
   return (
     <Card>
       <CardHeader>
@@ -29,58 +28,59 @@ export function LocationForm({
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Address */}
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="street">
-              Dirección <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="street"
-              type="text"
-              placeholder="Av. José Pardo 620"
-              value={street}
-              onChange={(e) => onChange("street", e.target.value)}
-              className={errors.street ? "border-red-500" : ""}
-            />
-            {errors.street && (
-              <p className="text-sm text-red-500">{errors.street}</p>
+          <FormField
+            control={control}
+            name="address.street"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>
+                  Dirección <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Av. José Pardo 620"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* District */}
-          <div className="space-y-2">
-            <Label htmlFor="district">
-              Distrito <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="district"
-              type="text"
-              placeholder="Miraflores"
-              value={district}
-              onChange={(e) => onChange("district", e.target.value)}
-              className={errors.district ? "border-red-500" : ""}
-            />
-            {errors.district && (
-              <p className="text-sm text-red-500">{errors.district}</p>
+          <FormField
+            control={control}
+            name="address.district"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Distrito <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="text" placeholder="Miraflores" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           {/* City */}
-          <div className="space-y-2">
-            <Label htmlFor="city">
-              Ciudad <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="city"
-              type="text"
-              placeholder="Lima"
-              value={city}
-              onChange={(e) => onChange("city", e.target.value)}
-              className={errors.city ? "border-red-500" : ""}
-            />
-            {errors.city && (
-              <p className="text-sm text-red-500">{errors.city}</p>
+          <FormField
+            control={control}
+            name="address.city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Ciudad <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="text" placeholder="Lima" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
         </div>
 
         {/* Map Placeholder */}

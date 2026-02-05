@@ -1,49 +1,25 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { Checkbox } from "@wifo/ui/checkbox";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
 import { Textarea } from "@wifo/ui/textarea";
 
 import { AMENITIES } from "~/lib/constants/amenities";
-
-export interface FacilityInfoData {
-  name: string;
-  description: string;
-  address: string;
-  district: string;
-  city: string;
-  phone: string;
-  email: string;
-  website: string;
-  amenities: string[];
-}
+import type { FacilityInfoFormValues } from "./onboarding-wizard";
 
 interface StepFacilityInfoProps {
-  data: FacilityInfoData;
-  onChange: (data: FacilityInfoData) => void;
-  errors: Record<string, string>;
+  control: Control<FacilityInfoFormValues>;
 }
 
-export function StepFacilityInfo({
-  data,
-  onChange,
-  errors,
-}: StepFacilityInfoProps) {
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = e.target;
-    onChange({ ...data, [name]: value });
-  }
-
-  function handleAmenityChange(amenityId: string, checked: boolean) {
-    const newAmenities = checked
-      ? [...data.amenities, amenityId]
-      : data.amenities.filter((id) => id !== amenityId);
-    onChange({ ...data, amenities: newAmenities });
-  }
-
+export function StepFacilityInfo({ control }: StepFacilityInfoProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -57,164 +33,178 @@ export function StepFacilityInfo({
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Facility Name */}
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="name">
-            Nombre del local <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Padel Club Miraflores"
-            value={data.name}
-            onChange={handleChange}
-            className={errors.name ? "border-red-500" : ""}
-          />
-          {errors.name && (
-            <p className="text-sm text-red-500">{errors.name}</p>
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>
+                Nombre del local <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  placeholder="Padel Club Miraflores"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* Description */}
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="description">Descripción</Label>
-          <Textarea
-            id="description"
-            name="description"
-            placeholder="Describe tu centro de padel, instalaciones, servicios especiales, etc."
-            value={data.description}
-            onChange={handleChange}
-            rows={3}
-          />
-        </div>
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Descripción</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Describe tu centro de padel, instalaciones, servicios especiales, etc."
+                  rows={3}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Address */}
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="address">
-            Dirección <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="address"
-            name="address"
-            type="text"
-            placeholder="Av. José Pardo 620"
-            value={data.address}
-            onChange={handleChange}
-            className={errors.address ? "border-red-500" : ""}
-          />
-          {errors.address && (
-            <p className="text-sm text-red-500">{errors.address}</p>
+        <FormField
+          control={control}
+          name="address"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>
+                Dirección <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input type="text" placeholder="Av. José Pardo 620" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* District */}
-        <div className="space-y-2">
-          <Label htmlFor="district">
-            Distrito <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="district"
-            name="district"
-            type="text"
-            placeholder="Miraflores"
-            value={data.district}
-            onChange={handleChange}
-            className={errors.district ? "border-red-500" : ""}
-          />
-          {errors.district && (
-            <p className="text-sm text-red-500">{errors.district}</p>
+        <FormField
+          control={control}
+          name="district"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Distrito <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input type="text" placeholder="Miraflores" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* City */}
-        <div className="space-y-2">
-          <Label htmlFor="city">Ciudad</Label>
-          <Input
-            id="city"
-            name="city"
-            type="text"
-            placeholder="Lima"
-            value={data.city}
-            onChange={handleChange}
-          />
-        </div>
+        <FormField
+          control={control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ciudad</FormLabel>
+              <FormControl>
+                <Input type="text" placeholder="Lima" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Phone */}
-        <div className="space-y-2">
-          <Label htmlFor="phone">
-            Teléfono del local <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            placeholder="+51 1 234 5678"
-            value={data.phone}
-            onChange={handleChange}
-            className={errors.phone ? "border-red-500" : ""}
-          />
-          {errors.phone && (
-            <p className="text-sm text-red-500">{errors.phone}</p>
+        <FormField
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Teléfono del local <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="+51 1 234 5678" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* Email */}
-        <div className="space-y-2">
-          <Label htmlFor="email">Correo electrónico</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="info@miclub.pe"
-            value={data.email}
-            onChange={handleChange}
-            className={errors.email ? "border-red-500" : ""}
-          />
-          {errors.email && (
-            <p className="text-sm text-red-500">{errors.email}</p>
+        <FormField
+          control={control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Correo electrónico</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="info@miclub.pe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* Website */}
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="website">Sitio web</Label>
-          <Input
-            id="website"
-            name="website"
-            type="url"
-            placeholder="https://www.miclub.pe"
-            value={data.website}
-            onChange={handleChange}
-            className={errors.website ? "border-red-500" : ""}
-          />
-          {errors.website && (
-            <p className="text-sm text-red-500">{errors.website}</p>
+        <FormField
+          control={control}
+          name="website"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Sitio web</FormLabel>
+              <FormControl>
+                <Input
+                  type="url"
+                  placeholder="https://www.miclub.pe"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* Amenities */}
-        <div className="space-y-3 sm:col-span-2">
-          <Label>Servicios y comodidades</Label>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {AMENITIES.map((amenity) => (
-              <div key={amenity.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={`amenity-${amenity.id}`}
-                  checked={data.amenities.includes(amenity.id)}
-                  onCheckedChange={(checked) =>
-                    handleAmenityChange(amenity.id, checked === true)
-                  }
-                />
-                <Label
-                  htmlFor={`amenity-${amenity.id}`}
-                  className="cursor-pointer text-sm font-normal"
-                >
-                  {amenity.label}
-                </Label>
+        <FormField
+          control={control}
+          name="amenities"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Servicios y comodidades</FormLabel>
+              <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {AMENITIES.map((amenity) => (
+                  <div key={amenity.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`amenity-${amenity.id}`}
+                      checked={field.value.includes(amenity.id)}
+                      onCheckedChange={(checked) => {
+                        const newValue = checked
+                          ? [...field.value, amenity.id]
+                          : field.value.filter((id) => id !== amenity.id);
+                        field.onChange(newValue);
+                      }}
+                    />
+                    <FormLabel
+                      htmlFor={`amenity-${amenity.id}`}
+                      className="cursor-pointer text-sm font-normal"
+                    >
+                      {amenity.label}
+                    </FormLabel>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

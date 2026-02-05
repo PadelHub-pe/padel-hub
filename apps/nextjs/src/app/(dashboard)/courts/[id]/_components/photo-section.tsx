@@ -1,17 +1,28 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { cn } from "@wifo/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
+import { useWatch } from "react-hook-form";
+
+import type { CourtEditFormValues } from "../edit/_components/court-edit-form";
 
 interface PhotoSectionProps {
-  imageUrl: string;
-  errors: Record<string, string>;
-  onChange: (url: string) => void;
+  control: Control<CourtEditFormValues>;
 }
 
-export function PhotoSection({ imageUrl, errors, onChange }: PhotoSectionProps) {
+export function PhotoSection({ control }: PhotoSectionProps) {
+  const imageUrl = useWatch({ control, name: "imageUrl" });
+
   return (
     <Card>
       <CardHeader>
@@ -36,29 +47,30 @@ export function PhotoSection({ imageUrl, errors, onChange }: PhotoSectionProps) 
             <div className="flex h-full flex-col items-center justify-center text-gray-400">
               <ImageIcon className="h-12 w-12" />
               <p className="mt-2 text-sm">Vista previa de imagen</p>
-              <p className="text-xs">Resolución mínima: 800×600px</p>
+              <p className="text-xs">Resolución mínima: 800x600px</p>
             </div>
           )}
         </div>
 
         {/* Image URL Input */}
-        <div className="space-y-2">
-          <Label htmlFor="imageUrl">URL de la imagen</Label>
-          <Input
-            id="imageUrl"
-            type="url"
-            placeholder="https://ejemplo.com/imagen-cancha.jpg"
-            value={imageUrl}
-            onChange={(e) => onChange(e.target.value)}
-            className={errors.imageUrl ? "border-red-500" : ""}
-          />
-          {errors.imageUrl && (
-            <p className="text-sm text-red-500">{errors.imageUrl}</p>
+        <FormField
+          control={control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL de la imagen</FormLabel>
+              <FormControl>
+                <Input
+                  type="url"
+                  placeholder="https://ejemplo.com/imagen-cancha.jpg"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>Formatos soportados: JPG, PNG, WebP</FormDescription>
+            </FormItem>
           )}
-          <p className="text-xs text-gray-500">
-            Formatos soportados: JPG, PNG, WebP
-          </p>
-        </div>
+        />
       </CardContent>
     </Card>
   );

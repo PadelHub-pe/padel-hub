@@ -1,27 +1,18 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import { Checkbox } from "@wifo/ui/checkbox";
-import { Label } from "@wifo/ui/label";
+import { FormField, FormItem, FormLabel } from "@wifo/ui/form";
 
 import { AMENITIES } from "~/lib/constants/amenities";
+import type { FacilityFormValues } from "./facility-edit-form";
 
 interface AmenitiesFormProps {
-  selectedAmenities: string[];
-  onChange: (amenities: string[]) => void;
+  control: Control<FacilityFormValues>;
 }
 
-export function AmenitiesForm({
-  selectedAmenities,
-  onChange,
-}: AmenitiesFormProps) {
-  function handleAmenityChange(amenityId: string, checked: boolean) {
-    const newAmenities = checked
-      ? [...selectedAmenities, amenityId]
-      : selectedAmenities.filter((id) => id !== amenityId);
-    onChange(newAmenities);
-  }
-
+export function AmenitiesForm({ control }: AmenitiesFormProps) {
   return (
     <Card>
       <CardHeader>
@@ -30,26 +21,37 @@ export function AmenitiesForm({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {AMENITIES.map((amenity) => (
-            <div key={amenity.id} className="flex items-center gap-2">
-              <Checkbox
-                id={`amenity-${amenity.id}`}
-                checked={selectedAmenities.includes(amenity.id)}
-                onCheckedChange={(checked) =>
-                  handleAmenityChange(amenity.id, checked === true)
-                }
-              />
-              <Label
-                htmlFor={`amenity-${amenity.id}`}
-                className="cursor-pointer text-sm font-normal"
-              >
-                <span className="mr-1">{amenity.icon}</span>
-                {amenity.label}
-              </Label>
-            </div>
-          ))}
-        </div>
+        <FormField
+          control={control}
+          name="amenities"
+          render={({ field }) => (
+            <FormItem>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {AMENITIES.map((amenity) => (
+                  <div key={amenity.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`amenity-${amenity.id}`}
+                      checked={field.value.includes(amenity.id)}
+                      onCheckedChange={(checked) => {
+                        const newValue = checked
+                          ? [...field.value, amenity.id]
+                          : field.value.filter((id) => id !== amenity.id);
+                        field.onChange(newValue);
+                      }}
+                    />
+                    <FormLabel
+                      htmlFor={`amenity-${amenity.id}`}
+                      className="cursor-pointer text-sm font-normal"
+                    >
+                      <span className="mr-1">{amenity.icon}</span>
+                      {amenity.label}
+                    </FormLabel>
+                  </div>
+                ))}
+              </div>
+            </FormItem>
+          )}
+        />
       </CardContent>
     </Card>
   );

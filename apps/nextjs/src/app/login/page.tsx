@@ -1,56 +1,76 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { signIn } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@wifo/ui/card";
 import { Checkbox } from "@wifo/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { Label } from "@wifo/ui/label";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Ingresa un email válido"),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+  rememberMe: z.boolean().default(false),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+  const form = useForm<LoginFormValues>({
+    resolver: standardSchemaResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
 
+  async function onSubmit(values: LoginFormValues) {
     try {
       const result = await signIn.email({
-        email,
-        password,
-        rememberMe,
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe,
       });
 
       if (result.error) {
-        setError(result.error.message ?? "Email or password is incorrect");
+        form.setError("root", {
+          message: result.error.message ?? "Email or password is incorrect",
+        });
       } else {
         router.push("/dashboard");
       }
     } catch {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
+      form.setError("root", {
+        message: "An unexpected error occurred. Please try again.",
+      });
     }
   }
 
   async function handleGoogleSignIn() {
-    setError(null);
     try {
       await signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
       });
     } catch {
-      setError("Failed to sign in with Google. Please try again.");
+      form.setError("root", {
+        message: "Failed to sign in with Google. Please try again.",
+      });
     }
   }
 
@@ -95,73 +115,93 @@ export default function LoginPage() {
             <CardDescription>Sign in to your owner dashboard</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email field */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="owner@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {/* Email field */}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email address</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="owner@example.com"
+                          autoComplete="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              {/* Password field */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  minLength={8}
+                {/* Password field */}
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Password</FormLabel>
+                        <Link
+                          href="/forgot-password"
+                          className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="********"
+                          autoComplete="current-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              {/* Remember me */}
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                {/* Remember me */}
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal cursor-pointer">
+                        Remember me for 30 days
+                      </FormLabel>
+                    </FormItem>
+                  )}
                 />
-                <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                  Remember me for 30 days
-                </Label>
-              </div>
 
-              {/* Error message */}
-              {error && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-                  {error}
-                </div>
-              )}
+                {/* Root error message */}
+                {form.formState.errors.root && (
+                  <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+                    {form.formState.errors.root.message}
+                  </div>
+                )}
 
-              {/* Submit button */}
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                size="lg"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
+                {/* Submit button */}
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </Form>
 
             {/* Divider */}
             <div className="relative my-6">

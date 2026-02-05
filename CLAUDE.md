@@ -155,6 +155,82 @@ pnpm turbo gen init   # Scaffold new package from templates
   return <DataTable columns={columns} data={data} onRowClick={handleClick} />;
   ```
 
+### Forms (Web Dashboard)
+- Use React Hook Form (`react-hook-form`) with Zod validation for all forms
+- Form components available from `@wifo/ui/form`
+- Pattern:
+  ```typescript
+  import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+  import { useForm } from "react-hook-form";
+  import { z } from "zod";
+  import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+  } from "@wifo/ui/form";
+  import { Input } from "@wifo/ui/input";
+  import { Button } from "@wifo/ui/button";
+
+  // 1. Define schema with Zod
+  const myFormSchema = z.object({
+    name: z.string().min(2, "El nombre es requerido"),
+    email: z.string().email("Email inválido"),
+  });
+
+  type MyFormValues = z.infer<typeof myFormSchema>;
+
+  // 2. Create form with useForm hook
+  function MyFormComponent() {
+    const form = useForm<MyFormValues>({
+      resolver: standardSchemaResolver(myFormSchema),
+      defaultValues: { name: "", email: "" },
+    });
+
+    async function onSubmit(values: MyFormValues) {
+      // Handle submission
+      // Use form.setError("root", { message: "..." }) for API errors
+    }
+
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre</FormLabel>
+                <FormControl>
+                  <Input placeholder="Juan Pérez" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Root error for API/server errors */}
+          {form.formState.errors.root && (
+            <div className="text-sm text-red-500">
+              {form.formState.errors.root.message}
+            </div>
+          )}
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+        </form>
+      </Form>
+    );
+  }
+  ```
+- Key features:
+  - `standardSchemaResolver` integrates Zod v4 schemas with react-hook-form (Zod v4 implements Standard Schema)
+  - `FormMessage` automatically displays field errors
+  - Use `form.setError("root", ...)` for server/API errors
+  - Use `form.formState.isSubmitting` for loading states
+  - Error messages should be in Spanish
+
 ### tRPC Procedures
 - Use `publicProcedure` for unauthenticated endpoints
 - Use `protectedProcedure` for authenticated endpoints (defined in `packages/api/src/trpc.ts`)
