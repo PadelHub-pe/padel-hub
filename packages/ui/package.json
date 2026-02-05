@@ -20,7 +20,10 @@
     "./table": "./src/table.tsx",
     "./theme": "./src/theme.tsx",
     "./textarea": "./src/textarea.tsx",
-    "./toast": "./src/toast.tsx"
+    "./toast": "./src/toast.tsx",
+    "./sheet": "./src/sheet.tsx",
+    "./dialog": "./src/dialog.tsx",
+    "./popover": "./src/popover.tsx"
   },
   "license": "MIT",
   "scripts": {
