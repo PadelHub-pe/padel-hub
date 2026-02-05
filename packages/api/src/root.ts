@@ -7,6 +7,7 @@ import { facilityRouter } from "./router/facility";
 import { orgRouter } from "./router/org";
 import { ownerRouter } from "./router/owner";
 import { postRouter } from "./router/post";
+import { scheduleRouter } from "./router/schedule";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   org: orgRouter,
   owner: ownerRouter,
   post: postRouter,
+  schedule: scheduleRouter,
 });
 
 // export type definition of API

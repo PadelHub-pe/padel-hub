@@ -30,11 +30,6 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
           href: `${base}/courts`,
           icon: CourtsIcon,
         },
-        {
-          label: "Horarios",
-          href: `${base}/schedule`,
-          icon: ScheduleIcon,
-        },
       ],
     },
     {
@@ -55,6 +50,11 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
     {
       title: "CONFIGURACIÓN",
       items: [
+        {
+          label: "Horarios",
+          href: `${base}/schedule`,
+          icon: ScheduleIcon,
+        },
         {
           label: "Precios",
           href: `${base}/pricing`,

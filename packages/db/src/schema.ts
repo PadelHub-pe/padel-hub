@@ -185,6 +185,8 @@ export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
   operatingHours: many(operatingHours),
   timeSlotTemplates: many(timeSlotTemplates),
   bookings: many(bookings),
+  peakPeriods: many(peakPeriods),
+  blockedSlots: many(blockedSlots),
 }));
 
 /**
@@ -212,6 +214,17 @@ export const cancelledByEnum = pgEnum("cancelled_by", ["user", "owner", "system"
  * Payment method enum
  */
 export const paymentMethodEnum = pgEnum("payment_method", ["cash", "card", "app"]);
+
+/**
+ * Blocked slot reason enum
+ */
+export const blockedReasonEnum = pgEnum("blocked_reason", [
+  "maintenance",
+  "private_event",
+  "tournament",
+  "weather",
+  "other",
+]);
 
 /**
  * Court status enum
@@ -273,6 +286,69 @@ export const operatingHoursRelations = relations(operatingHours, ({ one }) => ({
   facility: one(facilities, {
     fields: [operatingHours.facilityId],
     references: [facilities.id],
+  }),
+}));
+
+/**
+ * Peak Periods - time ranges with markup pricing
+ * Facility-level configuration for peak hour pricing
+ */
+export const peakPeriods = pgTable("peak_periods", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  facilityId: uuid("facility_id")
+    .notNull()
+    .references(() => facilities.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  daysOfWeek: jsonb("days_of_week").$type<number[]>().notNull(), // [0-6], 0=Sunday
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  markupPercent: integer("markup_percent").notNull().default(25),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const peakPeriodsRelations = relations(peakPeriods, ({ one }) => ({
+  facility: one(facilities, {
+    fields: [peakPeriods.facilityId],
+    references: [facilities.id],
+  }),
+}));
+
+/**
+ * Blocked Slots - time ranges blocked for maintenance, events, etc.
+ * If courtId is null, the block applies to all courts
+ */
+export const blockedSlots = pgTable("blocked_slots", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  facilityId: uuid("facility_id")
+    .notNull()
+    .references(() => facilities.id, { onDelete: "cascade" }),
+  courtId: uuid("court_id").references(() => courts.id, { onDelete: "cascade" }), // null = all courts
+  date: timestamp("date", { mode: "date" }).notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  reason: blockedReasonEnum("reason").notNull(),
+  notes: text("notes"),
+  createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const blockedSlotsRelations = relations(blockedSlots, ({ one }) => ({
+  facility: one(facilities, {
+    fields: [blockedSlots.facilityId],
+    references: [facilities.id],
+  }),
+  court: one(courts, {
+    fields: [blockedSlots.courtId],
+    references: [courts.id],
+  }),
+  creator: one(user, {
+    fields: [blockedSlots.createdBy],
+    references: [user.id],
   }),
 }));
 
@@ -465,6 +541,28 @@ export const CreateOrganizationMemberSchema = createInsertSchema(
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const CreatePeakPeriodSchema = createInsertSchema(peakPeriods, {
+  name: z.string().min(1).max(100),
+  daysOfWeek: z.array(z.number().min(0).max(6)).min(1),
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  markupPercent: z.number().int().min(0).max(200),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isActive: true,
+});
+
+export const CreateBlockedSlotSchema = createInsertSchema(blockedSlots, {
+  courtId: z.string().uuid().optional().nullable(),
+  notes: z.string().max(500).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  createdBy: true,
 });
 
 export * from "./auth-schema";

@@ -1,35 +1,48 @@
+import { Suspense } from "react";
+
+import { ScheduleView } from "./_components/schedule-view";
+
 export default function FacilitySchedulePage() {
+  // Note: Prefetch disabled temporarily - client fetches with proper auth context
+  // The client component uses useParams to get facilityId
+
   return (
-    <div className="p-8">
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 py-16">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-          <ClockIcon className="h-6 w-6 text-gray-400" />
-        </div>
-        <h3 className="mt-4 text-lg font-medium text-gray-900">
-          Horarios
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Próximamente podrás gestionar los horarios de operación aquí.
-        </p>
-      </div>
-    </div>
+    <Suspense fallback={<SchedulePageSkeleton />}>
+      <ScheduleView />
+    </Suspense>
   );
 }
 
-function ClockIcon({ className }: { className?: string }) {
+function SchedulePageSkeleton() {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-      />
-    </svg>
+    <div className="p-8">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-64 animate-pulse rounded bg-gray-200" />
+          <div className="mt-2 h-4 w-96 animate-pulse rounded bg-gray-200" />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-32 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-9 w-48 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-9 w-36 animate-pulse rounded-lg bg-gray-200" />
+        </div>
+      </div>
+
+      {/* Cards skeleton */}
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="h-96 animate-pulse rounded-xl border bg-white" />
+        <div className="h-96 animate-pulse rounded-xl border bg-white" />
+      </div>
+
+      {/* Grid skeleton */}
+      <div className="mt-8">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
+        </div>
+        <div className="h-96 animate-pulse rounded-xl border bg-white" />
+      </div>
+    </div>
   );
 }
