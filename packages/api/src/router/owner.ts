@@ -179,11 +179,19 @@ export const ownerRouter = {
     }
 
     // Create new facility
+    const slug = input.name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
     const [facility] = await ctx.db
       .insert(facilities)
       .values({
         ownerId: ownerAccount.id,
         name: input.name,
+        slug,
         description: input.description ?? null,
         address: input.address,
         district: input.district,

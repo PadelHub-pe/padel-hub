@@ -116,7 +116,8 @@ async function seed() {
       id: facilityId,
       ownerId: ownerAccountId,
       name: "Padel Club Lima",
-      description: "El mejor club de padel en Lima con canchas de primer nivel",
+      slug: "padel-club-lima",
+      description: "El mejor club de padel en Lima con canchas de primer nivel. Contamos con 4 canchas profesionales, estacionamiento amplio, vestuarios completos y una cafeteria con vista a las canchas.",
       address: "Av. Javier Prado Este 1234",
       district: "San Isidro",
       city: "Lima",
@@ -128,6 +129,117 @@ async function seed() {
     });
 
     console.log("✅ Created facility: Padel Club Lima\n");
+
+    // Create additional facilities across Lima districts
+    const additionalFacilities = [
+      {
+        name: "Mad Padel Indoor",
+        slug: "mad-padel-indoor",
+        description: "Primer club de padel indoor en Lima. Canchas climatizadas con iluminacion LED de ultima generacion. Ideal para jugar a cualquier hora del dia.",
+        address: "Calle Los Alamos 456",
+        district: "Miraflores",
+        phone: "+51987654321",
+        email: "info@madpadelindoor.pe",
+        amenities: ["estacionamiento", "vestuarios", "cafeteria", "aire_acondicionado", "iluminacion_led"],
+        courtData: [
+          { name: "Cancha Indoor 1", type: "indoor" as const, price: 9000, peak: 12000 },
+          { name: "Cancha Indoor 2", type: "indoor" as const, price: 9000, peak: 12000 },
+          { name: "Cancha Indoor 3", type: "indoor" as const, price: 9000, peak: 12000 },
+        ],
+      },
+      {
+        name: "Peru Padel Center",
+        slug: "peru-padel-center",
+        description: "Centro de padel con las mejores instalaciones en Surco. Canchas outdoor con iluminacion nocturna y una tienda de equipamiento profesional.",
+        address: "Av. El Polo 789",
+        district: "Surco",
+        phone: "+51976543210",
+        email: "reservas@perupadelcenter.pe",
+        website: "https://perupadelcenter.pe",
+        amenities: ["estacionamiento", "vestuarios", "tienda", "iluminacion_led", "wifi"],
+        courtData: [
+          { name: "Cancha 1", type: "outdoor" as const, price: 7000, peak: 9000 },
+          { name: "Cancha 2", type: "outdoor" as const, price: 7000, peak: 9000 },
+          { name: "Cancha 3", type: "indoor" as const, price: 8500, peak: 11000 },
+        ],
+      },
+      {
+        name: "Igma Padel Center",
+        slug: "igma-padel-center",
+        description: "Club de padel con ambiente familiar en La Molina. Ofrecemos clases para todos los niveles y torneos semanales tipo americano.",
+        address: "Calle Las Palmeras 321",
+        district: "La Molina",
+        phone: "+51965432109",
+        amenities: ["estacionamiento", "vestuarios", "cafeteria", "tienda", "clases"],
+        courtData: [
+          { name: "Cancha Principal", type: "outdoor" as const, price: 6500, peak: 8500 },
+          { name: "Cancha 2", type: "outdoor" as const, price: 6500, peak: 8500 },
+        ],
+      },
+      {
+        name: "Padel Beach Barranco",
+        slug: "padel-beach-barranco",
+        description: "Canchas de padel con vista al mar en el corazon de Barranco. Disfruta del mejor padel en un ambiente unico con terraza y bar.",
+        address: "Malecon Armendariz 567",
+        district: "Barranco",
+        phone: "+51954321098",
+        email: "hola@padelbeach.pe",
+        amenities: ["estacionamiento", "vestuarios", "bar", "terraza", "wifi"],
+        courtData: [
+          { name: "Cancha Mar", type: "outdoor" as const, price: 7500, peak: 10000 },
+          { name: "Cancha Sol", type: "outdoor" as const, price: 7500, peak: 10000 },
+          { name: "Cancha Arena", type: "outdoor" as const, price: 7500, peak: 10000 },
+        ],
+      },
+      {
+        name: "Elite Padel San Borja",
+        slug: "elite-padel-san-borja",
+        description: "Centro deportivo de alto rendimiento enfocado en padel. Canchas de competicion con graderias y sistema de video para analisis de juego.",
+        address: "Av. San Borja Sur 890",
+        district: "San Borja",
+        phone: "+51943210987",
+        email: "contacto@elitepadel.pe",
+        amenities: ["estacionamiento", "vestuarios", "cafeteria", "tienda", "video_analisis", "graderias"],
+        courtData: [
+          { name: "Cancha Central", type: "indoor" as const, price: 10000, peak: 13000 },
+          { name: "Cancha 2", type: "indoor" as const, price: 9000, peak: 12000 },
+          { name: "Cancha 3", type: "outdoor" as const, price: 7000, peak: 9000 },
+          { name: "Cancha 4", type: "outdoor" as const, price: 7000, peak: 9000 },
+        ],
+      },
+    ];
+
+    for (const fac of additionalFacilities) {
+      const facId = randomUUID();
+      await db.insert(facilities).values({
+        id: facId,
+        ownerId: ownerAccountId,
+        name: fac.name,
+        slug: fac.slug,
+        description: fac.description,
+        address: fac.address,
+        district: fac.district,
+        city: "Lima",
+        phone: fac.phone,
+        email: fac.email ?? null,
+        website: fac.website ?? null,
+        amenities: fac.amenities,
+        isActive: true,
+      });
+
+      for (const court of fac.courtData) {
+        await db.insert(courts).values({
+          id: randomUUID(),
+          facilityId: facId,
+          name: court.name,
+          type: court.type,
+          priceInCents: court.price,
+          peakPriceInCents: court.peak,
+        });
+      }
+    }
+
+    console.log(`✅ Created ${additionalFacilities.length} additional facilities with courts\n`);
 
     // Create courts
     const courtData = [

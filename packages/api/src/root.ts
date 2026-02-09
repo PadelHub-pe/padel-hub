@@ -6,6 +6,8 @@ import { dashboardRouter } from "./router/dashboard";
 import { facilityRouter } from "./router/facility";
 import { ownerRouter } from "./router/owner";
 import { postRouter } from "./router/post";
+import { publicFacilityRouter } from "./router/public-facility";
+import { publicLeadRouter } from "./router/public-lead";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -17,6 +19,8 @@ export const appRouter = createTRPCRouter({
   facility: facilityRouter,
   owner: ownerRouter,
   post: postRouter,
+  publicFacility: publicFacilityRouter,
+  publicLead: publicLeadRouter,
 });
 
 // export type definition of API

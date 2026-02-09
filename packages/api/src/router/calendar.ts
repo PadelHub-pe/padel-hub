@@ -51,12 +51,12 @@ async function getOwnerFacility(ctx: {
  * Get operating hours for a specific day of week
  */
 function getOperatingHoursForDay(
-  operatingHoursList: Array<{
+  operatingHoursList: {
     dayOfWeek: number;
     openTime: string;
     closeTime: string;
     isClosed: boolean;
-  }>,
+  }[],
   dayOfWeek: number,
 ) {
   const hours = operatingHoursList.find((h) => h.dayOfWeek === dayOfWeek);
@@ -67,7 +67,7 @@ function getOperatingHoursForDay(
  * Calculate utilization percentage based on booked hours vs available hours
  */
 function calculateUtilization(
-  bookingsList: Array<{ startTime: string; endTime: string }>,
+  bookingsList: { startTime: string; endTime: string }[],
   courtCount: number,
   openTime: string,
   closeTime: string,
@@ -102,7 +102,7 @@ async function getPeakPeriods(
   db: typeof DbType,
   facilityId: string,
   dayOfWeek: number,
-): Promise<Array<{ startTime: string; endTime: string }>> {
+): Promise<{ startTime: string; endTime: string }[]> {
   const templates = await db.query.timeSlotTemplates.findMany({
     where: and(
       eq(timeSlotTemplates.facilityId, facilityId),

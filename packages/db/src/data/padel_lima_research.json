@@ -1,0 +1,3006 @@
+{
+  "report_metadata": {
+    "title": "Investigación de Mercado: Instalaciones de Pádel en Lima, Perú",
+    "industry": "Deportes / Pádel",
+    "geographic_scope": "Lima Metropolitana, Perú (todos los distritos)",
+    "research_date": "2026-02-08",
+    "language": "es",
+    "prepared_for": null,
+    "depth_level": "deep_dive",
+    "total_businesses_found": 17,
+    "research_purpose": "lead_generation"
+  },
+  "global_enums": {
+    "districts": [
+      "Miraflores",
+      "Santiago de Surco",
+      "Surquillo",
+      "San Borja",
+      "La Molina",
+      "San Miguel",
+      "Chorrillos",
+      "Barranco",
+      "Jesús María",
+      "Magdalena del Mar"
+    ],
+    "core_offerings": [
+      "Alquiler de canchas",
+      "Academia / Clases",
+      "Torneos y ligas",
+      "Alquiler de palas y pelotas",
+      "Eventos corporativos",
+      "Tienda especializada",
+      "Cafetería / Bar"
+    ],
+    "amenities": [
+      "Estacionamiento",
+      "Camerinos con duchas",
+      "Cafetería",
+      "Tienda pro-shop",
+      "Zona social / terraza",
+      "Alquiler de equipamiento",
+      "Graderías",
+      "Zona de parrilla"
+    ],
+    "differentiators": [
+      "Primer club indoor del país",
+      "Primer centro de pádel del Perú",
+      "Pistas fabricadas en España",
+      "Superficie Mondo profesional",
+      "Canchas Adidas",
+      "App propia de reservas",
+      "Sistema Matchpoint",
+      "Cancha con cámaras de grabación",
+      "Ubicación frente al mar",
+      "Cancha pública municipal",
+      "Primera cancha de singles en Perú"
+    ],
+    "facility_types": [
+      "outdoor",
+      "indoor",
+      "mixto"
+    ],
+    "booking_platforms": [
+      "Matchpoint",
+      "Playtomic",
+      "App propia",
+      "WhatsApp",
+      "Reserva web propia"
+    ]
+  },
+  "market_overview": {
+    "description": "Lima es la capital del pádel en Perú y la costa del Pacífico. El deporte ha experimentado un crecimiento exponencial desde 2022, pasando de un puñado de canchas a aproximadamente 190 canchas a nivel nacional. La ciudad cuenta con más de 17 centros dedicados o que incluyen canchas de pádel, concentrados principalmente en Surco, Miraflores, San Borja, La Molina y Surquillo.",
+    "estimated_market_size": "~190 canchas a nivel nacional (dato de nov 2024)",
+    "key_trends": [
+      "Crecimiento acelerado del deporte desde 2022",
+      "Apertura de sedes indoor como diferenciador premium",
+      "Expansión de cadenas como One Padel (4 sedes) y Mad Padel (2 sedes) a provincias",
+      "Integración de apps propias y plataformas de reservas online",
+      "Inclusión de tiendas especializadas en palas dentro de los clubes",
+      "Municipalidades construyendo canchas públicas (ej. Chorrillos, Surco)"
+    ],
+    "growth_drivers": [
+      "Tendencia global del pádel impulsada por figuras como Messi y Neymar",
+      "Formato social ideal (4 jugadores, partidos cortos) para el público peruano",
+      "Inversión privada creciente en infraestructura deportiva",
+      "Clima de Lima permite jugar outdoor casi todo el año"
+    ],
+    "entry_barriers": [
+      "Alto costo de instalación de canchas profesionales",
+      "Necesidad de terrenos amplios (mínimo 1,500 m2 por sede)",
+      "Permisos municipales y zonificación",
+      "Competencia creciente de cadenas establecidas"
+    ],
+    "regulatory_notes": "Casos reportados de cierre municipal de sedes (ej. Mad Padel La Molina). Se requieren licencias de funcionamiento y cumplimiento de normas de zonificación.",
+    "customer_demographics": "Adultos jóvenes y de mediana edad (25-50 años), NSE medio-alto y alto, concentrados en distritos modernos. Crecimiento en academias para niños y adolescentes.",
+    "pricing_benchmarks": {
+      "low_end": "S/. 80-120 por hora (horario diurno, canchas básicas)",
+      "mid_range": "S/. 120-160 por hora (horario prime)",
+      "high_end": "S/. 160-200+ por hora (indoor, premium)",
+      "notes": "Precios varían significativamente por horario (día vs noche). Ref: Eureka Sports cobra S/120 de día y S/160 desde las 6pm por 90 min."
+    }
+  },
+  "businesses": [
+    {
+      "id": "biz_001",
+      "brand_id": "brand_onepadel",
+      "brand_name": "One Padel",
+      "venue_name": "One Padel - Manuel Olguín (Surco)",
+      "research_context": "lead",
+      "website": "https://onepadel.pe/",
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": 2022,
+      "location": {
+        "address": "Av. Manuel Olguín 245, Santiago de Surco 15023",
+        "district": "Santiago de Surco",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.086118,
+        "longitude": -76.973061,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": "+51 959 881 552",
+        "phone_type": "whatsapp",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": "info@onepadel.pe",
+        "social_media": {
+          "facebook": null,
+          "instagram": "https://www.instagram.com/onepadelperu/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 4,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar (10x20m)",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar (10x20m)",
+            "features": []
+          },
+          {
+            "name": "Cancha #3",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar (10x20m)",
+            "features": []
+          },
+          {
+            "name": "Cancha #4",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar (10x20m)",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "estacionamiento",
+          "camerinos_con_duchas",
+          "cafetería",
+          "tienda_especializada",
+          "terraza"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Academia / Clases",
+          "Torneos",
+          "Eventos corporativos"
+        ],
+        "specializations": [
+          "Primer centro de pádel del Perú"
+        ],
+        "differentiators": [
+          "Tienda especializada",
+          "Cafetería y terraza social",
+          "Sede original de la marca"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-22:30",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.4,
+        "google_review_count": 22,
+        "other_platforms": [],
+        "sentiment_summary": "Buenas canchas y ambiente; quejas puntuales sobre servicio al cliente en tienda."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 4,
+        "target_market": "Adultos jóvenes, deportistas, familias",
+        "market_share_estimate": "Líder del mercado (21 canchas nacional)",
+        "years_in_market": 3
+      },
+      "digital_presence": {
+        "website_quality": "Profesional",
+        "has_online_booking": true,
+        "booking_platform": "Plataforma propia",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo",
+        "estimated_monthly_traffic": null
+      },
+      "swot": {
+        "strengths": [
+          "Marca pionera y líder",
+          "4 sedes estratégicas",
+          "Infraestructura completa"
+        ],
+        "weaknesses": [
+          "Quejas de servicio al cliente en tienda"
+        ],
+        "opportunities": [
+          "Expansión a provincias",
+          "Primera cancha singles"
+        ],
+        "threats": [
+          "Competencia creciente",
+          "Riesgo de cierres municipales"
+        ]
+      },
+      "sources": [
+        "Google Maps",
+        "https://depor.com/full-deportes/one-padel-abren-primer-centro-de-padel-en-el-peru-noticia/",
+        "https://gestion.pe/economia/empresas/one-padel-y-sus-planes-de-expansion-en-lima-y-regiones-abriran-nueva-sede-en-el-2025-deportes-modelos-de-negocio-noticia/"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_002",
+      "brand_id": "brand_onepadel",
+      "brand_name": "One Padel",
+      "venue_name": "One Padel - Domingo Orué (Surquillo)",
+      "research_context": "lead",
+      "website": "https://onepadel.pe/",
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": 2023,
+      "location": {
+        "address": "Pje. Recabarraca s/n, Altura cdra. 3 Av. Domingo Orué, Surquillo 15047",
+        "district": "Surquillo",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.107056,
+        "longitude": -77.023392,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": "info@onepadel.pe",
+        "social_media": {
+          "facebook": null,
+          "instagram": "https://www.instagram.com/onepadelperu/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 5,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #3",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #4",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #5",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "estacionamiento"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clases"
+        ],
+        "specializations": [],
+        "differentiators": [
+          "Ubicación límite Miraflores/Surquillo",
+          "Estacionamiento siempre disponible"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-00:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 5.0,
+        "google_review_count": 5,
+        "other_platforms": [],
+        "sentiment_summary": "Excelentes reseñas aunque pocas. Destacan canchas y estacionamiento."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 4,
+        "target_market": "Adultos jóvenes",
+        "market_share_estimate": null,
+        "years_in_market": 2
+      },
+      "digital_presence": {
+        "website_quality": "Profesional",
+        "has_online_booking": true,
+        "booking_platform": "Plataforma propia",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://blogs.upc.edu.pe/vida-universitaria/2024/10/01/one-padel/"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_003",
+      "brand_id": "brand_onepadel",
+      "brand_name": "One Padel",
+      "venue_name": "One Padel - Centro Naval / adidas X3 (San Borja)",
+      "research_context": "lead",
+      "website": "https://onepadel.pe/",
+      "booking_url": "https://playtomic.com/clubs/one-padel-by-adidas",
+      "google_maps_url": null,
+      "founded_year": 2023,
+      "location": {
+        "address": "Av. San Luis 2347, San Borja 15037 (Centro Naval)",
+        "district": "San Borja",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": null,
+        "longitude": null,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": "info@onepadel.pe",
+        "social_media": {
+          "facebook": null,
+          "instagram": "https://www.instagram.com/onepadelperu/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 3,
+        "unit_details": [
+          {
+            "name": "Cancha Adidas #1",
+            "type": "indoor",
+            "surface": "Adidas",
+            "size": "estándar",
+            "features": [
+              "Cancha Adidas indoor"
+            ]
+          },
+          {
+            "name": "Cancha Adidas #2",
+            "type": "indoor",
+            "surface": "Adidas",
+            "size": "estándar",
+            "features": [
+              "Cancha Adidas indoor"
+            ]
+          },
+          {
+            "name": "Cancha Adidas #3",
+            "type": "indoor",
+            "surface": "Adidas",
+            "size": "estándar",
+            "features": [
+              "Cancha Adidas indoor"
+            ]
+          }
+        ],
+        "amenities": [
+          "estacionamiento",
+          "camerinos"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clínicas de alto rendimiento",
+          "Clases particulares",
+          "Torneos y ligas"
+        ],
+        "specializations": [
+          "Canchas Adidas indoor",
+          "Alto rendimiento"
+        ],
+        "differentiators": [
+          "3 canchas indoor Adidas",
+          "Dentro del Club Naval"
+        ]
+      },
+      "hours": {
+        "human_readable": "N/D",
+        "hours_data": []
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": null,
+        "google_review_count": null,
+        "other_platforms": [
+          {
+            "platform": "Playtomic",
+            "rating": null,
+            "review_count": null
+          }
+        ],
+        "sentiment_summary": null
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 4,
+        "target_market": "Jugadores competitivos",
+        "market_share_estimate": null,
+        "years_in_market": 2
+      },
+      "digital_presence": {
+        "website_quality": "Profesional",
+        "has_online_booking": true,
+        "booking_platform": "Playtomic",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "https://playtomic.com/clubs/one-padel-by-adidas",
+        "https://blogs.upc.edu.pe/vida-universitaria/2024/10/01/one-padel/"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_004",
+      "brand_id": "brand_onepadel",
+      "brand_name": "One Padel",
+      "venue_name": "One Padel - Trigal / Benavides (Surco)",
+      "research_context": "lead",
+      "website": "https://onepadel.pe/",
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": 2024,
+      "location": {
+        "address": "C. Los Antares 298 / Cruce Av. Velasco Astete con Benavides, Santiago de Surco 15038",
+        "district": "Santiago de Surco",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.126721,
+        "longitude": -76.987887,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": "info@onepadel.pe",
+        "social_media": {
+          "facebook": null,
+          "instagram": "https://www.instagram.com/onepadelperu/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 8,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #3",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #4",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #5",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #6",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #7",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha Singles",
+            "type": "outdoor",
+            "surface": null,
+            "size": "singles",
+            "features": [
+              "Primera cancha de singles en Perú"
+            ]
+          }
+        ],
+        "amenities": [
+          "estacionamiento",
+          "camerinos",
+          "cafetería",
+          "tienda_especializada",
+          "zona_social",
+          "zona_parrilla"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clases",
+          "Torneos",
+          "Eventos corporativos"
+        ],
+        "specializations": [
+          "Sede más grande de One Padel",
+          "Primera cancha singles del país"
+        ],
+        "differentiators": [
+          "8 canchas incluyendo singles",
+          "Sede más grande del Perú"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-23:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 3.9,
+        "google_review_count": 7,
+        "other_platforms": [],
+        "sentiment_summary": "Reseñas mixtas: buenas instalaciones pero quejas sobre duplicidad de reservas y canchas con arena resbalosa."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 4,
+        "target_market": "Todos los niveles",
+        "market_share_estimate": null,
+        "years_in_market": 1
+      },
+      "digital_presence": {
+        "website_quality": "Profesional",
+        "has_online_booking": true,
+        "booking_platform": "Plataforma propia",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://elcomercio.pe/respuestas/one-padel-anuncia-apertura-de-la-sede-de-padel-mas-grande-del-peru-noticia/",
+        "https://gestion.pe/economia/empresas/one-padel-y-sus-planes-de-expansion-en-lima-y-regiones-abriran-nueva-sede-en-el-2025-deportes-modelos-de-negocio-noticia/"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_005",
+      "brand_id": "brand_madpadel",
+      "brand_name": "Mad Padel",
+      "venue_name": "Mad Padel - Surco Indoor",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": "https://playtomic.com/clubs/mad-padel-indoor-surco-barranco",
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Jirón Venegas 896, Santiago de Surco 15049 (límite Barranco/Surco)",
+        "district": "Santiago de Surco",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.140787,
+        "longitude": -77.012598,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": null,
+        "unit_details": [],
+        "amenities": [
+          "estacionamiento_privado",
+          "camerinos",
+          "zona_social"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clases",
+          "Torneos"
+        ],
+        "specializations": [
+          "Primer club indoor del país",
+          "Pistas fabricadas en España",
+          "9+ metros de altura"
+        ],
+        "differentiators": [
+          "Canchas indoor importadas de España",
+          "Más de 9 metros de altura",
+          "Staff altamente capacitado"
+        ]
+      },
+      "hours": {
+        "human_readable": "N/D (no publicado)",
+        "hours_data": []
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": "Premium (referencia: 'caro para Perú' según reseñas)",
+        "tiers": [],
+        "currency": "PEN",
+        "source": "Reseñas Google",
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.7,
+        "google_review_count": 23,
+        "other_platforms": [
+          {
+            "platform": "Playtomic",
+            "rating": null,
+            "review_count": null
+          }
+        ],
+        "sentiment_summary": "Excelentes canchas indoor, personal amigable. Considerado premium y algo caro."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 2,
+        "target_market": "Jugadores intermedio-avanzado",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A",
+        "has_online_booking": true,
+        "booking_platform": "Playtomic",
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://playtomic.com/clubs/mad-padel-indoor-surco-barranco"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_006",
+      "brand_id": "brand_madpadel",
+      "brand_name": "Mad Padel",
+      "venue_name": "Mad Padel - La Molina",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. Melgarejo 147, La Molina 15026",
+        "district": "La Molina",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.074734,
+        "longitude": -76.936277,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": "whatsapp",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 6,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #3",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #4",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #5",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #6",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "estacionamiento_28_espacios",
+          "tienda_padel_express",
+          "cafetería",
+          "terraza"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clases",
+          "Tienda Padel Express"
+        ],
+        "specializations": [],
+        "differentiators": [
+          "28 espacios de estacionamiento",
+          "Tienda Padel Express",
+          "Cafetería con terraza amplia"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-23:59",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "23:59",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.2,
+        "google_review_count": 11,
+        "other_platforms": [
+          {
+            "platform": "Playtomic",
+            "rating": null,
+            "review_count": null
+          }
+        ],
+        "sentiment_summary": "Instalaciones modernas con 6 canchas. Reportado cierre temporal por municipalidad. Problemas con reembolsos."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 2,
+        "target_market": "Residentes La Molina y zona este",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A",
+        "has_online_booking": true,
+        "booking_platform": "Playtomic",
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://www.ulima.edu.pe/promociones/deportes/mad-padel-peru"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_007",
+      "brand_id": "brand_igma",
+      "brand_name": "IGMA Pádel Center",
+      "venue_name": "IGMA Pádel Center",
+      "research_context": "lead",
+      "website": "https://igmapadel-pe.matchpoint.com.es/",
+      "booking_url": "https://igmapadel-pe.matchpoint.com.es/Booking/Grid.aspx",
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Yoy Lima Box Park, Santiago de Surco 15023",
+        "district": "Santiago de Surco",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.089824,
+        "longitude": -76.979978,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": "avalverde@igmasports.com",
+        "social_media": {
+          "facebook": "https://www.facebook.com/profile.php?id=100090937105746",
+          "instagram": "https://www.instagram.com/igmapadel/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 6,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #3",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #4",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #5",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #6",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "estacionamiento_amplio",
+          "alquiler_palas"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Campeonatos",
+          "Alquiler de palas"
+        ],
+        "specializations": [
+          "Sistema Matchpoint"
+        ],
+        "differentiators": [
+          "Ubicación en Yoy Lima Box Park",
+          "App propia (Google Play y App Store)",
+          "Sistema Matchpoint"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-00:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "00:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.7,
+        "google_review_count": 20,
+        "other_platforms": [],
+        "sentiment_summary": "Canchas muy buenas, personal amigable, buen sistema de reservas. Falta camerinos."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Zona Surco/Monterrico",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "Profesional (Matchpoint)",
+        "has_online_booking": true,
+        "booking_platform": "Matchpoint",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://igmapadel-pe.matchpoint.com.es/"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_008",
+      "brand_id": "brand_padelcenter",
+      "brand_name": "Perú Padel Center",
+      "venue_name": "Padel Center Miraflores (Mendiburu)",
+      "research_context": "lead",
+      "website": "https://perupadelcenter-pe.matchpoint.com.es/",
+      "booking_url": "https://perupadelcenter-pe.matchpoint.com.es/",
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. Gral. Mendiburu 671, Miraflores 15074",
+        "district": "Miraflores",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.114168,
+        "longitude": -77.046248,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": "+51 934 377 679",
+        "phone_type": "both",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": "https://www.instagram.com/perupadelcenter/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 2,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "camerinos_con_duchas_y_lockers",
+          "cafetería",
+          "tienda_pro_shop"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Academia para adultos y niños",
+          "Tienda especializada"
+        ],
+        "specializations": [
+          "Academia con instructores certificados"
+        ],
+        "differentiators": [
+          "Ubicación premium en Miraflores",
+          "10K seguidores Instagram",
+          "Sistema Matchpoint"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Vie 6:00-22:30, Sáb 7:30-22:30, Dom 9:00-21:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "09:00",
+            "close": "21:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.5,
+        "google_review_count": 21,
+        "other_platforms": [],
+        "sentiment_summary": "Lugar bien mantenido y limpio. Entrenador Victor muy valorado. Quejas sobre reservas por WhatsApp."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 2,
+        "target_market": "Residentes y visitantes de Miraflores",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "Profesional (Matchpoint)",
+        "has_online_booking": true,
+        "booking_platform": "Matchpoint",
+        "has_ecommerce": false,
+        "social_media_activity": "Muy activo (10K IG)",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://perupadelcenter-pe.matchpoint.com.es/",
+        "https://www.instagram.com/perupadelcenter/"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_009",
+      "brand_id": "brand_bohemia",
+      "brand_name": "Bohemia Padel Club",
+      "venue_name": "Bohemia Padel Club",
+      "research_context": "lead",
+      "website": "https://bohemiapadel.com/",
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": 2024,
+      "location": {
+        "address": "Av. San Borja Sur 1228, San Borja 15037",
+        "district": "San Borja",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.103283,
+        "longitude": -76.989795,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": "+51 975 613 680",
+        "phone_type": "whatsapp",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": "https://www.facebook.com/bohemiapadelclub/",
+          "instagram": "https://www.instagram.com/bohemiapadelclub/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": "https://www.tiktok.com/@bohemiapadelclub/",
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": null,
+        "unit_details": [],
+        "amenities": [
+          "estacionamiento_gratuito",
+          "camerinos_con_duchas_agua_caliente",
+          "alquiler_palas_y_pelotas"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clases personalizadas",
+          "Alquiler de palas y pelotas"
+        ],
+        "specializations": [
+          "Comunidad WhatsApp para encontrar partners"
+        ],
+        "differentiators": [
+          "App propia (Play Store y App Store)",
+          "Comunidad WhatsApp para emparejar jugadores",
+          "Frente al Pentagonito",
+          "Estacionamiento gratuito"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-22:30",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "22:30",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 5.0,
+        "google_review_count": 4,
+        "other_platforms": [],
+        "sentiment_summary": "Canchas de medida oficial, buena ubicación, estacionamiento amplio."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Residentes San Borja / Chacarilla",
+        "market_share_estimate": null,
+        "years_in_market": 1
+      },
+      "digital_presence": {
+        "website_quality": "Profesional",
+        "has_online_booking": true,
+        "booking_platform": "App propia + WhatsApp",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo (FB, IG, TikTok)",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://bohemiapadel.com/"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_010",
+      "brand_id": "brand_maspadel",
+      "brand_name": "Más Padel Perú",
+      "venue_name": "Más Padel - San Miguel",
+      "research_context": "lead",
+      "website": "https://www.maspadelperu.com/",
+      "booking_url": "https://www.maspadelperu.com/reservas",
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. Bertolotto 611, San Miguel 15086",
+        "district": "San Miguel",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.092503,
+        "longitude": -77.081746,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 4,
+        "unit_details": [
+          {
+            "name": "Cancha Panorámica #1",
+            "type": "outdoor",
+            "surface": "panorámica",
+            "size": "estándar",
+            "features": [
+              "Cancha panorámica"
+            ]
+          },
+          {
+            "name": "Cancha Panorámica #2",
+            "type": "outdoor",
+            "surface": "panorámica",
+            "size": "estándar",
+            "features": [
+              "Cancha panorámica"
+            ]
+          },
+          {
+            "name": "Cancha Panorámica #3",
+            "type": "outdoor",
+            "surface": "panorámica",
+            "size": "estándar",
+            "features": [
+              "Cancha panorámica"
+            ]
+          },
+          {
+            "name": "Cancha Panorámica #4",
+            "type": "outdoor",
+            "surface": "panorámica",
+            "size": "estándar",
+            "features": [
+              "Cancha panorámica"
+            ]
+          }
+        ],
+        "amenities": [
+          "estacionamiento_25_espacios",
+          "complejo_1320m2"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Academia",
+          "Torneos",
+          "Tienda online (Babolat y Tecnifibre)",
+          "Programa Más Puntos"
+        ],
+        "specializations": [
+          "Venta exclusiva online Babolat y Tecnifibre en Perú"
+        ],
+        "differentiators": [
+          "4 canchas panorámicas",
+          "Exclusividad Babolat y Tecnifibre",
+          "1,320 m2",
+          "Programa fidelización"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-23:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [
+          "Packs disponibles en web"
+        ],
+        "currency": "PEN",
+        "source": "https://www.maspadelperu.com/pricing-plans/list",
+        "is_estimated": false
+      },
+      "reviews": {
+        "google_rating": 5.0,
+        "google_review_count": 2,
+        "other_platforms": [],
+        "sentiment_summary": "Muy pocas reseñas pero positivas."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "San Miguel y zona oeste",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "Profesional (Wix, tienda integrada)",
+        "has_online_booking": true,
+        "booking_platform": "Reserva web propia",
+        "has_ecommerce": true,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://www.maspadelperu.com/"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_011",
+      "brand_id": "brand_clubpadellima",
+      "brand_name": "Club Padel Lima",
+      "venue_name": "Club Padel Lima (La Once)",
+      "research_context": "lead",
+      "website": "https://www.laonce.com.pe/padel/",
+      "booking_url": "https://playtomic.com/clubs/club-de-padel-lima",
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. Tomás Marsano 630-A, Surquillo 15048",
+        "district": "Surquillo",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.112028,
+        "longitude": -77.012795,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": "+51 979 955 772",
+        "phone_type": "both",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 3,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": "Mondo",
+            "size": "estándar",
+            "features": [
+              "Superficie Mondo profesional"
+            ]
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": "Mondo",
+            "size": "estándar",
+            "features": [
+              "Superficie Mondo profesional"
+            ]
+          },
+          {
+            "name": "Cancha #3",
+            "type": "outdoor",
+            "surface": "Mondo",
+            "size": "estándar",
+            "features": [
+              "Superficie Mondo profesional",
+              "Cámaras de grabación"
+            ]
+          }
+        ],
+        "amenities": []
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas",
+          "Clases"
+        ],
+        "specializations": [
+          "Superficie Mondo (estándar WPT)"
+        ],
+        "differentiators": [
+          "Superficie Mondo profesional",
+          "Cancha con cámara para grabar",
+          "Dueño conecta jugadores de nivel similar"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Vie 6:00-8:00 y 16:00-23:00, Sáb-Dom 6:00-22:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "22:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "22:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 3.7,
+        "google_review_count": 3,
+        "other_platforms": [
+          {
+            "platform": "Playtomic",
+            "rating": null,
+            "review_count": null
+          }
+        ],
+        "sentiment_summary": "Canchas en excelente condición (Mondo). Dueño muy amable."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Jugadores que valoran calidad de superficie",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "Básica",
+        "has_online_booking": true,
+        "booking_platform": "Playtomic",
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://www.laonce.com.pe/padel/",
+        "https://playtomic.com/clubs/club-de-padel-lima"
+      ],
+      "data_confidence": "high"
+    },
+    {
+      "id": "biz_012",
+      "brand_id": "brand_insidecourt",
+      "brand_name": "Inside Court Padel",
+      "venue_name": "Inside Court Padel",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "La Molina 15026",
+        "district": "La Molina",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.082549,
+        "longitude": -76.910588,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": null,
+        "unit_details": [],
+        "amenities": []
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas"
+        ],
+        "specializations": [],
+        "differentiators": []
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-23:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.2,
+        "google_review_count": 6,
+        "other_platforms": [],
+        "sentiment_summary": "Reseñas mixtas. Críticas sobre mala superficie."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Residentes La Molina",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A",
+        "has_online_booking": null,
+        "booking_platform": null,
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps"
+      ],
+      "data_confidence": "low"
+    },
+    {
+      "id": "biz_013",
+      "brand_id": "brand_villapadel",
+      "brand_name": "Club Pádel Tenis Villa",
+      "venue_name": "Club Pádel Tenis Villa",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Chorrillos 15067 (zona Villa)",
+        "district": "Chorrillos",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.208965,
+        "longitude": -77.000057,
+        "service_area": "Lima Sur"
+      },
+      "contact": {
+        "phone": "+51 952 109 714",
+        "phone_type": "both",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 2,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "cafetería",
+          "terraza"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas (pádel y tenis)"
+        ],
+        "specializations": [
+          "Pádel y tenis"
+        ],
+        "differentiators": [
+          "Instalaciones modernas",
+          "Terraza con vista",
+          "También canchas de tenis"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 7:00-23:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "07:00",
+            "close": "23:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 5.0,
+        "google_review_count": 4,
+        "other_platforms": [],
+        "sentiment_summary": "Excelentes canchas y acabados modernos."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Chorrillos / Villa",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A",
+        "has_online_booking": null,
+        "booking_platform": null,
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps",
+        "https://padellands.com/pistas-de-padel/otros-paises/peru/"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_014",
+      "brand_id": "brand_eureka",
+      "brand_name": "Eureka Sports",
+      "venue_name": "Eureka Sports - San Borja",
+      "research_context": "lead",
+      "website": "https://eurekasports.pe/",
+      "booking_url": "https://reservatucancha.eurekasports.pe/",
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. del Aire 150, San Borja",
+        "district": "San Borja",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": null,
+        "longitude": null,
+        "service_area": "San Borja"
+      },
+      "contact": {
+        "phone": "+51 982 405 663",
+        "phone_type": "whatsapp",
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": "https://www.instagram.com/eureka_sportsoficial/",
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 2,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "estacionamiento_vigilado",
+          "alquiler_palas"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas (pádel, fútbol, vóley)",
+          "Academia de pádel"
+        ],
+        "specializations": [
+          "Complejo multideportivo"
+        ],
+        "differentiators": [
+          "2 cuadras de estación La Cultura",
+          "Complejo multideportivo",
+          "Academia L-V 6pm-10pm"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 7:30-22:30",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "07:30",
+            "close": "22:30",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_session",
+        "price_range": "S/. 120 (día) - S/. 160 (noche) por 90 min",
+        "tiers": [
+          "Día (7:30-18:00): S/. 120 / 90 min",
+          "Noche (18:00-22:30): S/. 160 / 90 min",
+          "Alquiler pala: S/. 10"
+        ],
+        "currency": "PEN",
+        "source": "TikTok @comoquierovivir",
+        "is_estimated": false
+      },
+      "reviews": {
+        "google_rating": null,
+        "google_review_count": null,
+        "other_platforms": [],
+        "sentiment_summary": null
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Público general, familias",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "Profesional",
+        "has_online_booking": true,
+        "booking_platform": "Reserva web propia",
+        "has_ecommerce": false,
+        "social_media_activity": "Activo (3K IG)",
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "https://eurekasports.pe/",
+        "https://www.instagram.com/eureka_sportsoficial/",
+        "TikTok @comoquierovivir"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_015",
+      "brand_id": "brand_padelmalecón",
+      "brand_name": "Pádel Malecón Villa",
+      "venue_name": "Pádel Malecón Villa",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Ca. Costanera 211, Lima 15087 (Malecón de Villa)",
+        "district": "Chorrillos",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.211196,
+        "longitude": -77.019497,
+        "service_area": "Chorrillos / Lima Sur"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 1,
+        "unit_details": [
+          {
+            "name": "Cancha pública",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": [
+              "Primera cancha pública de pádel en Perú",
+              "Vista al mar"
+            ]
+          }
+        ],
+        "amenities": []
+      },
+      "services": {
+        "core_offerings": [
+          "Cancha pública de pádel"
+        ],
+        "specializations": [
+          "Primera cancha pública del Perú"
+        ],
+        "differentiators": [
+          "Frente al mar",
+          "Acceso público/gratuito",
+          "Complejo deportivo municipal"
+        ]
+      },
+      "hours": {
+        "human_readable": "Abierto 24 horas",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "00:00",
+            "close": "23:59",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": null,
+        "price_range": "Gratuito",
+        "tiers": [],
+        "currency": "PEN",
+        "source": "Google Maps reviews",
+        "is_estimated": false
+      },
+      "reviews": {
+        "google_rating": 5.0,
+        "google_review_count": 4,
+        "other_platforms": [],
+        "sentiment_summary": "Excelente adición al malecón. Ubicación frente al mar única."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Público general",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A (municipal)",
+        "has_online_booking": false,
+        "booking_platform": null,
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_016",
+      "brand_id": "brand_eleven",
+      "brand_name": "Eleven Sports Complex",
+      "venue_name": "Eleven Sports Complex",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. Tomás Marsano 630, Surquillo 15048",
+        "district": "Surquillo",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.109539,
+        "longitude": -77.014492,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": 2,
+        "unit_details": [
+          {
+            "name": "Cancha #1",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          },
+          {
+            "name": "Cancha #2",
+            "type": "outdoor",
+            "surface": null,
+            "size": "estándar",
+            "features": []
+          }
+        ],
+        "amenities": [
+          "canchas_futbol",
+          "piscina"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas (pádel, fútbol)",
+          "Piscina"
+        ],
+        "specializations": [
+          "Complejo multideportivo grande"
+        ],
+        "differentiators": [
+          "Pádel + piscina en mismo lugar",
+          "Complejo deportivo grande y conocido"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Dom 6:00-23:30",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "06:00",
+            "close": "23:30",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 4.3,
+        "google_review_count": 2829,
+        "other_platforms": [],
+        "sentiment_summary": "Complejo grande y popular para fútbol. Pádel secundario (solo 2 canchas)."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Público deportivo general",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A",
+        "has_online_booking": null,
+        "booking_platform": null,
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps"
+      ],
+      "data_confidence": "medium"
+    },
+    {
+      "id": "biz_017",
+      "brand_id": "brand_clubadidasx3",
+      "brand_name": "Club adidas X3",
+      "venue_name": "Club adidas X3 - Padel (Miraflores)",
+      "research_context": "lead",
+      "website": null,
+      "booking_url": null,
+      "google_maps_url": null,
+      "founded_year": null,
+      "location": {
+        "address": "Av. Paseo de la República 5840, Miraflores 15074",
+        "district": "Miraflores",
+        "city": "Lima",
+        "state_province": "Lima",
+        "country": "Perú",
+        "latitude": -12.124457,
+        "longitude": -77.024747,
+        "service_area": "Lima Metropolitana"
+      },
+      "contact": {
+        "phone": null,
+        "phone_type": null,
+        "secondary_phone": null,
+        "secondary_phone_type": null,
+        "email": null,
+        "social_media": {
+          "facebook": null,
+          "instagram": null,
+          "linkedin": null,
+          "twitter": null,
+          "tiktok": null,
+          "youtube": null
+        }
+      },
+      "facility": {
+        "unit_label": "cancha",
+        "total_units": null,
+        "unit_details": [],
+        "amenities": [
+          "estacionamiento"
+        ]
+      },
+      "services": {
+        "core_offerings": [
+          "Alquiler de canchas"
+        ],
+        "specializations": [
+          "Canchas marca Adidas"
+        ],
+        "differentiators": [
+          "Respaldo marca Adidas",
+          "Av. Paseo de la República"
+        ]
+      },
+      "hours": {
+        "human_readable": "Lun-Vie 6:00-23:00, Sáb 7:30-23:00, Dom 7:30-21:00",
+        "hours_data": [
+          {
+            "day": "monday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "tuesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "wednesday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "thursday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "friday",
+            "open": "06:00",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "saturday",
+            "open": "07:30",
+            "close": "23:00",
+            "is_closed": false
+          },
+          {
+            "day": "sunday",
+            "open": "07:30",
+            "close": "21:00",
+            "is_closed": false
+          }
+        ]
+      },
+      "pricing": {
+        "model": "per_hour",
+        "price_range": null,
+        "tiers": [],
+        "currency": "PEN",
+        "source": null,
+        "is_estimated": true
+      },
+      "reviews": {
+        "google_rating": 5.0,
+        "google_review_count": 3,
+        "other_platforms": [],
+        "sentiment_summary": "Lugar cómodo, limpio, moderno. Buen servicio."
+      },
+      "market_position": {
+        "estimated_employees": null,
+        "number_of_locations": 1,
+        "target_market": "Residentes Miraflores",
+        "market_share_estimate": null,
+        "years_in_market": null
+      },
+      "digital_presence": {
+        "website_quality": "N/A",
+        "has_online_booking": null,
+        "booking_platform": null,
+        "has_ecommerce": false,
+        "social_media_activity": null,
+        "estimated_monthly_traffic": null
+      },
+      "swot": null,
+      "sources": [
+        "Google Maps"
+      ],
+      "data_confidence": "low"
+    }
+  ],
+  "comparative_analysis": {
+    "pricing_comparison": "Los precios en Lima varían entre S/. 80-200 por hora dependiendo del horario y tipo de cancha. Las canchas indoor (Mad Padel Surco) son las más caras. Las canchas outdoor estándar promedian S/. 120-160. Existe una cancha pública gratuita en el Malecón de Villa.",
+    "service_coverage_matrix": {
+      "services": [
+        "Alquiler",
+        "Academia",
+        "Tienda",
+        "Cafetería",
+        "Reserva online",
+        "Torneos"
+      ],
+      "matrix": [
+        {
+          "business_id": "biz_001",
+          "name": "One Padel Surco",
+          "coverage": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "business_id": "biz_005",
+          "name": "Mad Padel Indoor",
+          "coverage": [
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "business_id": "biz_007",
+          "name": "IGMA Pádel",
+          "coverage": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "business_id": "biz_008",
+          "name": "Padel Center Miraflores",
+          "coverage": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        {
+          "business_id": "biz_009",
+          "name": "Bohemia Padel",
+          "coverage": [
+            true,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        },
+        {
+          "business_id": "biz_010",
+          "name": "Más Padel",
+          "coverage": [
+            true,
+            true,
+            true,
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "business_id": "biz_011",
+          "name": "Club Padel Lima",
+          "coverage": [
+            true,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      ]
+    },
+    "geographic_coverage": "Oferta concentrada en Surco (6 sedes), San Borja (3), Surquillo (2), Miraflores (2) y La Molina (2). Lima Norte sin oferta = oportunidad grande.",
+    "ratings_summary": "Mejor calificados con volumen: IGMA (4.7/20) y Mad Padel Surco (4.7/23). One Padel Surco (4.4/22) y Padel Center (4.5/21) con buen balance rating/volumen.",
+    "top_performers": {
+      "best_rated": "IGMA Pádel Center (4.7, 20 reseñas) y Mad Padel Surco (4.7, 23 reseñas)",
+      "most_affordable": "Pádel Malecón Villa (gratuito)",
+      "most_established": "One Padel (pionero 2022, 4 sedes, 21 canchas)",
+      "largest_facility": "One Padel Trigal (8 canchas) y Mad Padel La Molina (6 canchas)",
+      "best_digital_presence": "Padel Center Miraflores (10K IG, Matchpoint) y Más Padel (e-commerce)"
+    }
+  },
+  "opportunities_and_gaps": [
+    {
+      "gap": "Sin oferta de pádel en Lima Norte (Independencia, Los Olivos, Comas, SMP)",
+      "evidence": "Ninguna de las 17 instalaciones se ubica al norte del centro de Lima",
+      "potential_impact": "high"
+    },
+    {
+      "gap": "Muy pocas canchas indoor en Lima",
+      "evidence": "Solo Mad Padel Surco y One Padel Centro Naval ofrecen indoor. Clima húmedo en invierno.",
+      "potential_impact": "high"
+    },
+    {
+      "gap": "Falta plataforma unificada de reservas multi-club",
+      "evidence": "Cada club usa su propia plataforma (Matchpoint, Playtomic, WhatsApp, app propia).",
+      "potential_impact": "medium"
+    },
+    {
+      "gap": "Lima Este (Ate, Santa Anita, Chaclacayo) sin cobertura",
+      "evidence": "Ningún resultado encontrado en estos distritos.",
+      "potential_impact": "medium"
+    },
+    {
+      "gap": "Pocos clubes con e-commerce integrado",
+      "evidence": "Solo Más Padel tiene tienda online integrada. Otros venden en tienda física.",
+      "potential_impact": "medium"
+    },
+    {
+      "gap": "Escasez de canchas públicas/municipales",
+      "evidence": "Solo 1 cancha pública encontrada (Malecón Villa) + 1 del Complejo Chacarilla de Surco.",
+      "potential_impact": "high"
+    }
+  ],
+  "methodology": {
+    "sources_used": [
+      "Google Maps / Places API",
+      "Web scraping de sitios de clubes",
+      "Plataformas de reservas (Playtomic, Matchpoint)",
+      "Redes sociales (Instagram, TikTok)",
+      "Prensa (Gestión, El Comercio, Depor)",
+      "Directorios especializados (Padel Lands, Padel House)"
+    ],
+    "search_queries": [
+      "canchas de padel en Lima Peru",
+      "padel club Lima",
+      "padel indoor Lima",
+      "padel [distrito] Lima",
+      "directorio padel Lima 2025"
+    ],
+    "limitations": [
+      "Precios específicos difíciles de obtener (muchos solo por consulta)",
+      "Números de canchas no siempre confirmados oficialmente",
+      "Contactos de algunas sedes no publicados",
+      "Algunos clubes privados/sociales no incluidos (Lima Golf, Lima Cricket, etc.)",
+      "Información de Mad Padel limitada (sin web propia encontrada)"
+    ],
+    "data_freshness": "Febrero 2026. Los datos de reseñas y horarios provienen de Google Maps consultado en esta fecha."
+  }
+}

@@ -75,6 +75,7 @@ export const facilities = pgTable("facilities", {
     .notNull()
     .references(() => ownerAccounts.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 250 }).notNull().unique(),
   description: text("description"),
   address: varchar("address", { length: 500 }).notNull(),
   district: varchar("district", { length: 100 }).notNull(),
@@ -287,6 +288,39 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
 }));
 
 // =============================================================================
+// Website Lead Capture
+// =============================================================================
+
+/**
+ * Waitlist Leads - players interested in PadelHub before full launch
+ */
+export const waitlistLeads = pgTable("waitlist_leads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  district: varchar("district", { length: 100 }),
+  source: varchar("source", { length: 50 }).notNull(), // homepage, directory, facility, footer
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/**
+ * Owner Inquiries - court owners interested in onboarding
+ */
+export const ownerInquiries = pgTable("owner_inquiries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  businessName: varchar("business_name", { length: 200 }).notNull(),
+  contactName: varchar("contact_name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  courtCount: integer("court_count"),
+  district: varchar("district", { length: 100 }),
+  message: text("message"),
+  status: varchar("status", { length: 20 }).default("new").notNull(), // new, contacted, converted
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// =============================================================================
 // Insert Schemas for Validation
 // =============================================================================
 
@@ -302,6 +336,7 @@ export const CreateOwnerAccountSchema = createInsertSchema(ownerAccounts, {
 
 export const CreateFacilitySchema = createInsertSchema(facilities, {
   name: z.string().min(3).max(200),
+  slug: z.string().min(2).max(250),
   address: z.string().min(5).max(500),
   district: z.string().min(2).max(100),
   city: z.string().min(2).max(100),
@@ -357,6 +392,31 @@ export const CreateManualBookingSchema = z.object({
   customerPhone: z.string().max(20).optional(),
   customerEmail: z.string().email().optional().or(z.literal("")),
   notes: z.string().max(500).optional(),
+});
+
+export const CreateWaitlistLeadSchema = createInsertSchema(waitlistLeads, {
+  name: z.string().max(100).optional(),
+  email: z.string().email("Email invalido"),
+  phone: z.string().max(20).optional(),
+  district: z.string().max(100).optional(),
+  source: z.string().min(1).max(50),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const CreateOwnerInquirySchema = createInsertSchema(ownerInquiries, {
+  businessName: z.string().min(2, "Nombre del negocio es requerido").max(200),
+  contactName: z.string().min(2, "Nombre de contacto es requerido").max(100),
+  email: z.string().email("Email invalido"),
+  phone: z.string().min(6, "Telefono es requerido").max(20),
+  courtCount: z.number().int().min(1).optional(),
+  district: z.string().max(100).optional(),
+  message: z.string().max(1000).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  status: true,
 });
 
 export * from "./auth-schema";
