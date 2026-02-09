@@ -3,6 +3,7 @@ import {
   boolean,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   text,
@@ -67,6 +68,16 @@ export const ownerAccountsRelations = relations(ownerAccounts, ({ one, many }) =
 }));
 
 /**
+ * Social media links for a facility
+ */
+export interface FacilitySocialMedia {
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  youtube?: string;
+}
+
+/**
  * Facilities table - represents a padel venue/club
  */
 export const facilities = pgTable("facilities", {
@@ -81,9 +92,20 @@ export const facilities = pgTable("facilities", {
   district: varchar("district", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }).notNull().default("Lima"),
   phone: varchar("phone", { length: 20 }).notNull(),
+  whatsappPhone: varchar("whatsapp_phone", { length: 20 }),
   email: varchar("email", { length: 255 }),
   website: varchar("website", { length: 255 }),
+  bookingUrl: varchar("booking_url", { length: 500 }),
+  bookingPlatform: varchar("booking_platform", { length: 100 }),
+  latitude: numeric("latitude", { precision: 10, scale: 7 }),
+  longitude: numeric("longitude", { precision: 10, scale: 7 }),
+  googleMapsUrl: varchar("google_maps_url", { length: 500 }),
+  googleRating: numeric("google_rating", { precision: 2, scale: 1 }),
+  googleReviewCount: integer("google_review_count"),
+  foundedYear: integer("founded_year"),
+  socialMedia: jsonb("social_media").$type<FacilitySocialMedia>().default({}),
   amenities: jsonb("amenities").$type<string[]>().default([]),
+  coreOfferings: jsonb("core_offerings").$type<string[]>().default([]),
   photos: jsonb("photos").$type<string[]>().default([]),
   isActive: boolean("is_active").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

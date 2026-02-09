@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
+
 import { Card, CardContent } from "@wifo/ui/card";
 
 import { DISTRICT_SLUGS } from "~/lib/constants";
-import { formatPricePEN, getMinPrice, countCourtsByType } from "~/lib/format";
+import { countCourtsByType, formatPricePEN, getMinPrice } from "~/lib/format";
 import { CourtTypeBadge } from "./court-type-badge";
 
 interface FacilityCardProps {
@@ -34,14 +36,19 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
 
   return (
     <Link href={href} className="group block">
-      <Card className="h-full overflow-hidden rounded-xl border transition-all duration-200 group-hover:border-primary/20 group-hover:shadow-lg">
+      <Card className="group-hover:border-primary/20 flex h-full flex-col overflow-hidden rounded-xl border transition-all duration-200 group-hover:shadow-lg">
         {/* Photo placeholder */}
         <div className="bg-muted relative aspect-[16/10] overflow-hidden">
           {facility.photos && facility.photos.length > 0 ? (
             <div className="bg-muted flex h-full items-center justify-center">
-              <span className="text-muted-foreground text-sm">
-                {facility.photos[0]}
-              </span>
+              <Image
+                key={facility.photos[0]}
+                src={facility.photos[0] || ""}
+                alt="Cancha de padel en Lima"
+                fill
+                className={`object-cover transition-opacity duration-700 ease-in-out`}
+                quality={85}
+              />
             </div>
           ) : (
             <div className="flex h-full items-center justify-center">
@@ -62,9 +69,9 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
           )}
 
           {/* Badges overlay */}
-          <div className="absolute left-2 top-2 flex gap-1">
+          <div className="absolute top-2 left-2 flex gap-1">
             {isNew && (
-              <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-white">
+              <span className="bg-secondary rounded-md px-2 py-0.5 text-xs font-semibold text-white">
                 Nuevo
               </span>
             )}
@@ -74,13 +81,13 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
 
           {/* Price badge on image */}
           {minPrice !== null && (
-            <div className="absolute bottom-2 right-2 rounded-md bg-background/90 px-2 py-1 text-sm font-bold text-secondary backdrop-blur-sm">
+            <div className="bg-background/90 text-secondary absolute right-2 bottom-2 rounded-md px-2 py-1 text-sm font-bold backdrop-blur-sm">
               {formatPricePEN(minPrice)}
             </div>
           )}
         </div>
 
-        <CardContent className="p-4">
+        <CardContent className="flex flex-1 flex-col p-4">
           <h3 className="group-hover:text-primary mb-1 line-clamp-1 font-semibold transition-colors">
             {facility.name}
           </h3>
@@ -110,30 +117,32 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
             </span>
           </div>
 
-          {facility.description && (
-            <p className="text-muted-foreground hidden line-clamp-2 text-xs sm:block">
-              {facility.description}
-            </p>
-          )}
+          <p className="text-muted-foreground hidden h-8 overflow-hidden text-xs leading-4 sm:block [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            {facility.description ?? "\u00A0"}
+          </p>
 
           {/* Amenities preview */}
-          {facility.amenities && facility.amenities.length > 0 && (
-            <div className="text-muted-foreground mt-2 hidden flex-wrap gap-1.5 text-xs sm:mt-3 sm:flex">
-              {facility.amenities.slice(0, 3).map((amenity) => (
-                <span
-                  key={amenity}
-                  className="rounded-md bg-muted px-1.5 py-0.5 capitalize"
-                >
-                  {amenity.replace(/_/g, " ")}
-                </span>
-              ))}
-              {facility.amenities.length > 3 && (
-                <span className="text-muted-foreground/70">
-                  +{facility.amenities.length - 3} mas
-                </span>
-              )}
-            </div>
-          )}
+          <div className="text-muted-foreground mt-auto hidden flex-wrap gap-1.5 pt-2 text-xs sm:flex">
+            {facility.amenities && facility.amenities.length > 0 ? (
+              <>
+                {facility.amenities.slice(0, 3).map((amenity) => (
+                  <span
+                    key={amenity}
+                    className="bg-muted rounded-md px-1.5 py-0.5 capitalize"
+                  >
+                    {amenity.replace(/_/g, " ")}
+                  </span>
+                ))}
+                {facility.amenities.length > 3 && (
+                  <span className="text-muted-foreground/70">
+                    +{facility.amenities.length - 3} mas
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="invisible rounded-md px-1.5 py-0.5">&nbsp;</span>
+            )}
+          </div>
         </CardContent>
       </Card>
     </Link>

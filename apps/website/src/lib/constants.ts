@@ -9,6 +9,8 @@ export const LIMA_DISTRICTS = [
   "La Molina",
   "Barranco",
   "San Borja",
+  "Surquillo",
+  "San Miguel",
   "Pueblo Libre",
   "Jesus Maria",
   "Magdalena",
@@ -78,6 +80,8 @@ export const DISTRICT_SLUGS: Record<string, string> = {
   "La Molina": "la-molina",
   Barranco: "barranco",
   "San Borja": "san-borja",
+  Surquillo: "surquillo",
+  "San Miguel": "san-miguel",
   "Pueblo Libre": "pueblo-libre",
   "Jesus Maria": "jesus-maria",
   Magdalena: "magdalena",
@@ -100,6 +104,8 @@ export const AMENITIES = {
   clases: { label: "Clases", icon: "🎓" },
   video_analisis: { label: "Video Análisis", icon: "📹" },
   graderias: { label: "Graderías", icon: "🏟️" },
+  alquiler_equipamiento: { label: "Alquiler de Equipamiento", icon: "🏸" },
+  parrilla: { label: "Zona de Parrilla", icon: "🔥" },
 } as const;
 
 export type AmenityKey = keyof typeof AMENITIES;

@@ -55,11 +55,7 @@
       "Cancha pública municipal",
       "Primera cancha de singles en Perú"
     ],
-    "facility_types": [
-      "outdoor",
-      "indoor",
-      "mixto"
-    ],
+    "facility_types": ["outdoor", "indoor", "mixto"],
     "booking_platforms": [
       "Matchpoint",
       "Playtomic",
@@ -105,6 +101,7 @@
       "id": "biz_001",
       "brand_id": "brand_onepadel",
       "brand_name": "One Padel",
+      "image_url": "https://onepadel-pe.matchpoint.com.es/Pages/images.ashx?id=52a704164143551e39465cf218eb1dbb",
       "venue_name": "One Padel - Manuel Olguín (Surco)",
       "research_context": "lead",
       "website": "https://onepadel.pe/",
@@ -184,9 +181,7 @@
           "Torneos",
           "Eventos corporativos"
         ],
-        "specializations": [
-          "Primer centro de pádel del Perú"
-        ],
+        "specializations": ["Primer centro de pádel del Perú"],
         "differentiators": [
           "Tienda especializada",
           "Cafetería y terraza social",
@@ -275,17 +270,9 @@
           "4 sedes estratégicas",
           "Infraestructura completa"
         ],
-        "weaknesses": [
-          "Quejas de servicio al cliente en tienda"
-        ],
-        "opportunities": [
-          "Expansión a provincias",
-          "Primera cancha singles"
-        ],
-        "threats": [
-          "Competencia creciente",
-          "Riesgo de cierres municipales"
-        ]
+        "weaknesses": ["Quejas de servicio al cliente en tienda"],
+        "opportunities": ["Expansión a provincias", "Primera cancha singles"],
+        "threats": ["Competencia creciente", "Riesgo de cierres municipales"]
       },
       "sources": [
         "Google Maps",
@@ -298,6 +285,7 @@
       "id": "biz_002",
       "brand_id": "brand_onepadel",
       "brand_name": "One Padel",
+      "image_url": "https://onepadel-pe.matchpoint.com.es/Pages/images.ashx?id=e8bd3c80a9a0641fd2b1c632064c0bf4",
       "venue_name": "One Padel - Domingo Orué (Surquillo)",
       "research_context": "lead",
       "website": "https://onepadel.pe/",
@@ -369,15 +357,10 @@
             "features": []
           }
         ],
-        "amenities": [
-          "estacionamiento"
-        ]
+        "amenities": ["estacionamiento"]
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas",
-          "Clases"
-        ],
+        "core_offerings": ["Alquiler de canchas", "Clases"],
         "specializations": [],
         "differentiators": [
           "Ubicación límite Miraflores/Surquillo",
@@ -471,6 +454,7 @@
       "id": "biz_003",
       "brand_id": "brand_onepadel",
       "brand_name": "One Padel",
+      "image_url": "https://onepadel-pe.matchpoint.com.es/Pages/images.ashx?id=5c4a2ff9f4369fa02d5f2bc441d230b6",
       "venue_name": "One Padel - Centro Naval / adidas X3 (San Borja)",
       "research_context": "lead",
       "website": "https://onepadel.pe/",
@@ -511,33 +495,24 @@
             "type": "indoor",
             "surface": "Adidas",
             "size": "estándar",
-            "features": [
-              "Cancha Adidas indoor"
-            ]
+            "features": ["Cancha Adidas indoor"]
           },
           {
             "name": "Cancha Adidas #2",
             "type": "indoor",
             "surface": "Adidas",
             "size": "estándar",
-            "features": [
-              "Cancha Adidas indoor"
-            ]
+            "features": ["Cancha Adidas indoor"]
           },
           {
             "name": "Cancha Adidas #3",
             "type": "indoor",
             "surface": "Adidas",
             "size": "estándar",
-            "features": [
-              "Cancha Adidas indoor"
-            ]
+            "features": ["Cancha Adidas indoor"]
           }
         ],
-        "amenities": [
-          "estacionamiento",
-          "camerinos"
-        ]
+        "amenities": ["estacionamiento", "camerinos"]
       },
       "services": {
         "core_offerings": [
@@ -546,14 +521,8 @@
           "Clases particulares",
           "Torneos y ligas"
         ],
-        "specializations": [
-          "Canchas Adidas indoor",
-          "Alto rendimiento"
-        ],
-        "differentiators": [
-          "3 canchas indoor Adidas",
-          "Dentro del Club Naval"
-        ]
+        "specializations": ["Canchas Adidas indoor", "Alto rendimiento"],
+        "differentiators": ["3 canchas indoor Adidas", "Dentro del Club Naval"]
       },
       "hours": {
         "human_readable": "N/D",
@@ -605,6 +574,7 @@
       "id": "biz_004",
       "brand_id": "brand_onepadel",
       "brand_name": "One Padel",
+      "image_url": "https://onepadel-pe.matchpoint.com.es/Pages/images.ashx?id=a0566d3404cadc78f2635596de2ef581",
       "venue_name": "One Padel - Trigal / Benavides (Surco)",
       "research_context": "lead",
       "website": "https://onepadel.pe/",
@@ -694,9 +664,7 @@
             "type": "outdoor",
             "surface": null,
             "size": "singles",
-            "features": [
-              "Primera cancha de singles en Perú"
-            ]
+            "features": ["Primera cancha de singles en Perú"]
           }
         ],
         "amenities": [
@@ -812,6 +780,7 @@
       "id": "biz_005",
       "brand_id": "brand_madpadel",
       "brand_name": "Mad Padel",
+      "image_url": "https://res.cloudinary.com/playtomic/image/upload/c_limit,w_1600/v1/pro/tenants/364263d1-1c56-4230-a29e-08db754c11d9/madpadelindoorsb_0001",
       "venue_name": "Mad Padel - Surco Indoor",
       "research_context": "lead",
       "website": null,
@@ -847,18 +816,10 @@
         "unit_label": "cancha",
         "total_units": null,
         "unit_details": [],
-        "amenities": [
-          "estacionamiento_privado",
-          "camerinos",
-          "zona_social"
-        ]
+        "amenities": ["estacionamiento_privado", "camerinos", "zona_social"]
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas",
-          "Clases",
-          "Torneos"
-        ],
+        "core_offerings": ["Alquiler de canchas", "Clases", "Torneos"],
         "specializations": [
           "Primer club indoor del país",
           "Pistas fabricadas en España",
@@ -920,6 +881,7 @@
       "id": "biz_006",
       "brand_id": "brand_madpadel",
       "brand_name": "Mad Padel",
+      "image_url": "https://res.cloudinary.com/playtomic/image/upload/c_limit,w_1600/v1/pro/tenants/696571d6-98d6-4d84-8e00-5a69b16edbb4/madpadellamolina_0003",
       "venue_name": "Mad Padel - La Molina",
       "research_context": "lead",
       "website": null,
@@ -1111,6 +1073,7 @@
       "id": "biz_007",
       "brand_id": "brand_igma",
       "brand_name": "IGMA Pádel Center",
+      "image_url": "https://igmapadel-pe.matchpoint.com.es/images.ashx?id=da6a70c7ad6968ed2815e16e6df7d061",
       "venue_name": "IGMA Pádel Center",
       "research_context": "lead",
       "website": "https://igmapadel-pe.matchpoint.com.es/",
@@ -1189,10 +1152,7 @@
             "features": []
           }
         ],
-        "amenities": [
-          "estacionamiento_amplio",
-          "alquiler_palas"
-        ]
+        "amenities": ["estacionamiento_amplio", "alquiler_palas"]
       },
       "services": {
         "core_offerings": [
@@ -1200,9 +1160,7 @@
           "Campeonatos",
           "Alquiler de palas"
         ],
-        "specializations": [
-          "Sistema Matchpoint"
-        ],
+        "specializations": ["Sistema Matchpoint"],
         "differentiators": [
           "Ubicación en Yoy Lima Box Park",
           "App propia (Google Play y App Store)",
@@ -1286,16 +1244,14 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps",
-        "https://igmapadel-pe.matchpoint.com.es/"
-      ],
+      "sources": ["Google Maps", "https://igmapadel-pe.matchpoint.com.es/"],
       "data_confidence": "high"
     },
     {
       "id": "biz_008",
       "brand_id": "brand_padelcenter",
       "brand_name": "Perú Padel Center",
+      "image_url": "https://perupadelcenter-pe.matchpoint.com.es/PeruPadelCenter/images.ashx?id=e613d1da3c2513cf8659346463edb00c",
       "venue_name": "Padel Center Miraflores (Mendiburu)",
       "research_context": "lead",
       "website": "https://perupadelcenter-pe.matchpoint.com.es/",
@@ -1358,9 +1314,7 @@
           "Academia para adultos y niños",
           "Tienda especializada"
         ],
-        "specializations": [
-          "Academia con instructores certificados"
-        ],
+        "specializations": ["Academia con instructores certificados"],
         "differentiators": [
           "Ubicación premium en Miraflores",
           "10K seguidores Instagram",
@@ -1455,6 +1409,7 @@
       "id": "biz_009",
       "brand_id": "brand_bohemia",
       "brand_name": "Bohemia Padel Club",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWKeGBgSYKjxUEPszMjqtWYe8QK0-uPZo26A&s",
       "venue_name": "Bohemia Padel Club",
       "research_context": "lead",
       "website": "https://bohemiapadel.com/",
@@ -1502,9 +1457,7 @@
           "Clases personalizadas",
           "Alquiler de palas y pelotas"
         ],
-        "specializations": [
-          "Comunidad WhatsApp para encontrar partners"
-        ],
+        "specializations": ["Comunidad WhatsApp para encontrar partners"],
         "differentiators": [
           "App propia (Play Store y App Store)",
           "Comunidad WhatsApp para emparejar jugadores",
@@ -1589,16 +1542,14 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps",
-        "https://bohemiapadel.com/"
-      ],
+      "sources": ["Google Maps", "https://bohemiapadel.com/"],
       "data_confidence": "high"
     },
     {
       "id": "biz_010",
       "brand_id": "brand_maspadel",
       "brand_name": "Más Padel Perú",
+      "image_url": "https://static.wixstatic.com/media/0393fe_c541031f1df445299efd380ecee89fe2f000.jpg/v1/fill/w_1035,h_690,al_c,q_85,usm_0.33_1.00_0.00,enc_avif,quality_auto/0393fe_c541031f1df445299efd380ecee89fe2f000.jpg",
       "venue_name": "Más Padel - San Miguel",
       "research_context": "lead",
       "website": "https://www.maspadelperu.com/",
@@ -1639,42 +1590,31 @@
             "type": "outdoor",
             "surface": "panorámica",
             "size": "estándar",
-            "features": [
-              "Cancha panorámica"
-            ]
+            "features": ["Cancha panorámica"]
           },
           {
             "name": "Cancha Panorámica #2",
             "type": "outdoor",
             "surface": "panorámica",
             "size": "estándar",
-            "features": [
-              "Cancha panorámica"
-            ]
+            "features": ["Cancha panorámica"]
           },
           {
             "name": "Cancha Panorámica #3",
             "type": "outdoor",
             "surface": "panorámica",
             "size": "estándar",
-            "features": [
-              "Cancha panorámica"
-            ]
+            "features": ["Cancha panorámica"]
           },
           {
             "name": "Cancha Panorámica #4",
             "type": "outdoor",
             "surface": "panorámica",
             "size": "estándar",
-            "features": [
-              "Cancha panorámica"
-            ]
+            "features": ["Cancha panorámica"]
           }
         ],
-        "amenities": [
-          "estacionamiento_25_espacios",
-          "complejo_1320m2"
-        ]
+        "amenities": ["estacionamiento_25_espacios", "complejo_1320m2"]
       },
       "services": {
         "core_offerings": [
@@ -1744,9 +1684,7 @@
       "pricing": {
         "model": "per_hour",
         "price_range": null,
-        "tiers": [
-          "Packs disponibles en web"
-        ],
+        "tiers": ["Packs disponibles en web"],
         "currency": "PEN",
         "source": "https://www.maspadelperu.com/pricing-plans/list",
         "is_estimated": false
@@ -1773,16 +1711,14 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps",
-        "https://www.maspadelperu.com/"
-      ],
+      "sources": ["Google Maps", "https://www.maspadelperu.com/"],
       "data_confidence": "high"
     },
     {
       "id": "biz_011",
       "brand_id": "brand_clubpadellima",
       "brand_name": "Club Padel Lima",
+      "image_url": "https://www.laonce.com.pe/wp-content/uploads/2015/03/PADEL.jpg",
       "venue_name": "Club Padel Lima (La Once)",
       "research_context": "lead",
       "website": "https://www.laonce.com.pe/padel/",
@@ -1823,40 +1759,28 @@
             "type": "outdoor",
             "surface": "Mondo",
             "size": "estándar",
-            "features": [
-              "Superficie Mondo profesional"
-            ]
+            "features": ["Superficie Mondo profesional"]
           },
           {
             "name": "Cancha #2",
             "type": "outdoor",
             "surface": "Mondo",
             "size": "estándar",
-            "features": [
-              "Superficie Mondo profesional"
-            ]
+            "features": ["Superficie Mondo profesional"]
           },
           {
             "name": "Cancha #3",
             "type": "outdoor",
             "surface": "Mondo",
             "size": "estándar",
-            "features": [
-              "Superficie Mondo profesional",
-              "Cámaras de grabación"
-            ]
+            "features": ["Superficie Mondo profesional", "Cámaras de grabación"]
           }
         ],
         "amenities": []
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas",
-          "Clases"
-        ],
-        "specializations": [
-          "Superficie Mondo (estándar WPT)"
-        ],
+        "core_offerings": ["Alquiler de canchas", "Clases"],
+        "specializations": ["Superficie Mondo (estándar WPT)"],
         "differentiators": [
           "Superficie Mondo profesional",
           "Cancha con cámara para grabar",
@@ -1957,6 +1881,7 @@
       "id": "biz_012",
       "brand_id": "brand_insidecourt",
       "brand_name": "Inside Court Padel",
+      "image_url": "https://padelmundial.com/wp-content/uploads/2024/11/inside-padel-court.jpeg",
       "venue_name": "Inside Court Padel",
       "research_context": "lead",
       "website": null,
@@ -1995,9 +1920,7 @@
         "amenities": []
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas"
-        ],
+        "core_offerings": ["Alquiler de canchas"],
         "specializations": [],
         "differentiators": []
       },
@@ -2078,15 +2001,14 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps"
-      ],
+      "sources": ["Google Maps"],
       "data_confidence": "low"
     },
     {
       "id": "biz_013",
       "brand_id": "brand_villapadel",
       "brand_name": "Club Pádel Tenis Villa",
+      "image_url": "https://alquilatucancha-public.s3.sa-east-1.amazonaws.com/production/public/clubs/bg/club-padel-tenis-villa-lima.jpeg?857317",
       "venue_name": "Club Pádel Tenis Villa",
       "research_context": "lead",
       "website": null,
@@ -2137,18 +2059,11 @@
             "features": []
           }
         ],
-        "amenities": [
-          "cafetería",
-          "terraza"
-        ]
+        "amenities": ["cafetería", "terraza"]
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas (pádel y tenis)"
-        ],
-        "specializations": [
-          "Pádel y tenis"
-        ],
+        "core_offerings": ["Alquiler de canchas (pádel y tenis)"],
+        "specializations": ["Pádel y tenis"],
         "differentiators": [
           "Instalaciones modernas",
           "Terraza con vista",
@@ -2242,6 +2157,7 @@
       "id": "biz_014",
       "brand_id": "brand_eureka",
       "brand_name": "Eureka Sports",
+      "image_url": "https://eurekasports.pe/wp-content/uploads/2024/07/pa2.png",
       "venue_name": "Eureka Sports - San Borja",
       "research_context": "lead",
       "website": "https://eurekasports.pe/",
@@ -2292,19 +2208,14 @@
             "features": []
           }
         ],
-        "amenities": [
-          "estacionamiento_vigilado",
-          "alquiler_palas"
-        ]
+        "amenities": ["estacionamiento_vigilado", "alquiler_palas"]
       },
       "services": {
         "core_offerings": [
           "Alquiler de canchas (pádel, fútbol, vóley)",
           "Academia de pádel"
         ],
-        "specializations": [
-          "Complejo multideportivo"
-        ],
+        "specializations": ["Complejo multideportivo"],
         "differentiators": [
           "2 cuadras de estación La Cultura",
           "Complejo multideportivo",
@@ -2403,6 +2314,7 @@
       "id": "biz_015",
       "brand_id": "brand_padelmalecón",
       "brand_name": "Pádel Malecón Villa",
+      "image_url": "https://padelmundial.com/wp-content/uploads/2024/08/Cancha-La-Villa-del-Padel-Club.png",
       "venue_name": "Pádel Malecón Villa",
       "research_context": "lead",
       "website": null,
@@ -2452,12 +2364,8 @@
         "amenities": []
       },
       "services": {
-        "core_offerings": [
-          "Cancha pública de pádel"
-        ],
-        "specializations": [
-          "Primera cancha pública del Perú"
-        ],
+        "core_offerings": ["Cancha pública de pádel"],
+        "specializations": ["Primera cancha pública del Perú"],
         "differentiators": [
           "Frente al mar",
           "Acceso público/gratuito",
@@ -2541,15 +2449,14 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps"
-      ],
+      "sources": ["Google Maps"],
       "data_confidence": "medium"
     },
     {
       "id": "biz_016",
       "brand_id": "brand_eleven",
       "brand_name": "Eleven Sports Complex",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ77dh0qVESNDfAGN0D1nPgk6iNaTkbSJC3GQ&s",
       "venue_name": "Eleven Sports Complex",
       "research_context": "lead",
       "website": null,
@@ -2600,19 +2507,11 @@
             "features": []
           }
         ],
-        "amenities": [
-          "canchas_futbol",
-          "piscina"
-        ]
+        "amenities": ["canchas_futbol", "piscina"]
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas (pádel, fútbol)",
-          "Piscina"
-        ],
-        "specializations": [
-          "Complejo multideportivo grande"
-        ],
+        "core_offerings": ["Alquiler de canchas (pádel, fútbol)", "Piscina"],
+        "specializations": ["Complejo multideportivo grande"],
         "differentiators": [
           "Pádel + piscina en mismo lugar",
           "Complejo deportivo grande y conocido"
@@ -2695,15 +2594,14 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps"
-      ],
+      "sources": ["Google Maps"],
       "data_confidence": "medium"
     },
     {
       "id": "biz_017",
       "brand_id": "brand_clubadidasx3",
       "brand_name": "Club adidas X3",
+      "image_url": "https://static.wixstatic.com/media/768dcf_a26368d652fe4855bc4e268f24ccae35~mv2.jpg/v1/fill/w_2070,h_1602,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/768dcf_a26368d652fe4855bc4e268f24ccae35~mv2.jpg",
       "venue_name": "Club adidas X3 - Padel (Miraflores)",
       "research_context": "lead",
       "website": null,
@@ -2739,17 +2637,11 @@
         "unit_label": "cancha",
         "total_units": null,
         "unit_details": [],
-        "amenities": [
-          "estacionamiento"
-        ]
+        "amenities": ["estacionamiento"]
       },
       "services": {
-        "core_offerings": [
-          "Alquiler de canchas"
-        ],
-        "specializations": [
-          "Canchas marca Adidas"
-        ],
+        "core_offerings": ["Alquiler de canchas"],
+        "specializations": ["Canchas marca Adidas"],
         "differentiators": [
           "Respaldo marca Adidas",
           "Av. Paseo de la República"
@@ -2832,9 +2724,7 @@
         "estimated_monthly_traffic": null
       },
       "swot": null,
-      "sources": [
-        "Google Maps"
-      ],
+      "sources": ["Google Maps"],
       "data_confidence": "low"
     }
   ],
@@ -2853,86 +2743,37 @@
         {
           "business_id": "biz_001",
           "name": "One Padel Surco",
-          "coverage": [
-            true,
-            true,
-            true,
-            true,
-            true,
-            true
-          ]
+          "coverage": [true, true, true, true, true, true]
         },
         {
           "business_id": "biz_005",
           "name": "Mad Padel Indoor",
-          "coverage": [
-            true,
-            true,
-            false,
-            false,
-            true,
-            true
-          ]
+          "coverage": [true, true, false, false, true, true]
         },
         {
           "business_id": "biz_007",
           "name": "IGMA Pádel",
-          "coverage": [
-            true,
-            false,
-            false,
-            false,
-            true,
-            true
-          ]
+          "coverage": [true, false, false, false, true, true]
         },
         {
           "business_id": "biz_008",
           "name": "Padel Center Miraflores",
-          "coverage": [
-            true,
-            true,
-            true,
-            true,
-            true,
-            false
-          ]
+          "coverage": [true, true, true, true, true, false]
         },
         {
           "business_id": "biz_009",
           "name": "Bohemia Padel",
-          "coverage": [
-            true,
-            true,
-            false,
-            false,
-            true,
-            false
-          ]
+          "coverage": [true, true, false, false, true, false]
         },
         {
           "business_id": "biz_010",
           "name": "Más Padel",
-          "coverage": [
-            true,
-            true,
-            true,
-            false,
-            true,
-            true
-          ]
+          "coverage": [true, true, true, false, true, true]
         },
         {
           "business_id": "biz_011",
           "name": "Club Padel Lima",
-          "coverage": [
-            true,
-            true,
-            false,
-            false,
-            true,
-            false
-          ]
+          "coverage": [true, true, false, false, true, false]
         }
       ]
     },

@@ -65,6 +65,8 @@ export function formatDistrictName(slug: string): string {
     "la-molina": "La Molina",
     barranco: "Barranco",
     "san-borja": "San Borja",
+    surquillo: "Surquillo",
+    "san-miguel": "San Miguel",
     "pueblo-libre": "Pueblo Libre",
     "jesus-maria": "Jesús María",
     magdalena: "Magdalena",

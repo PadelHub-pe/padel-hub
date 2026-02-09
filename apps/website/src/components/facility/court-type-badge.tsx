@@ -1,17 +1,15 @@
-import { Badge } from "@wifo/ui/badge";
-
 export function CourtTypeBadge({ type }: { type: string }) {
   if (type === "indoor") {
     return (
-      <Badge variant="secondary" className="text-xs">
+      <span className="rounded-md bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
         Indoor
-      </Badge>
+      </span>
     );
   }
 
   return (
-    <Badge variant="outline" className="text-xs">
+    <span className="rounded-md bg-white/70 px-2 py-0.5 text-xs font-medium text-gray-900 backdrop-blur-sm">
       Outdoor
-    </Badge>
+    </span>
   );
 }

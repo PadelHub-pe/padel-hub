@@ -13,6 +13,7 @@
     "auth:generate": "pnpm -F @wifo/auth generate",
     "db:push": "turbo -F @wifo/db push",
     "db:seed": "pnpm -F @wifo/db seed",
+    "db:seed-facilities": "pnpm -F @wifo/db seed:facilities",
     "db:studio": "turbo -F @wifo/db studio",
     "db:reset": "supabase db reset",
     "supabase:start": "supabase start",
