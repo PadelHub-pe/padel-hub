@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
+import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 
 import { NAV_LINKS } from "~/lib/constants";
@@ -11,6 +13,58 @@ import { MobileNav } from "./mobile-nav";
 
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+  const linkRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    width: number;
+  } | null>(null);
+  // Skip transition on first render so the bar appears instantly
+  const [animate, setAnimate] = useState(false);
+
+  const activeIndex = NAV_LINKS.findIndex((link) =>
+    pathname.startsWith(link.href),
+  );
+
+  const measureIndicator = useCallback(():
+    | { left: number; width: number }
+    | null => {
+    const activeLink = NAV_LINKS[activeIndex];
+    if (!activeLink || !navRef.current) return null;
+    const el = linkRefs.current.get(activeLink.href);
+    if (!el) return null;
+    const navRect = navRef.current.getBoundingClientRect();
+    const linkRect = el.getBoundingClientRect();
+    return {
+      left: linkRect.left - navRect.left,
+      width: linkRect.width,
+    };
+  }, [activeIndex]);
+
+  // Set position on mount (no transition), then enable transitions
+  useEffect(() => {
+    const pos = measureIndicator();
+    setIndicator(pos);
+    // Enable transitions after first paint
+    requestAnimationFrame(() => {
+      setAnimate(true);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Animate on route change (after mount)
+  useEffect(() => {
+    if (!animate) return;
+    const pos = measureIndicator();
+    setIndicator(pos);
+  }, [measureIndicator, animate]);
+
+  // Recalc on resize
+  useEffect(() => {
+    const onResize = () => setIndicator(measureIndicator());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [measureIndicator]);
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
@@ -23,16 +77,37 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
+        <nav
+          ref={navRef}
+          className="relative hidden items-center gap-8 md:flex"
+        >
+          {NAV_LINKS.map((link, i) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+              ref={(el) => {
+                if (el) linkRefs.current.set(link.href, el);
+              }}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                i === activeIndex
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-primary",
+              )}
             >
               {link.label}
             </Link>
           ))}
+          {/* Animated underbar */}
+          {indicator && (
+            <span
+              className={cn(
+                "bg-primary pointer-events-none absolute -bottom-[0.45rem] h-0.5 rounded-full",
+                animate && "transition-all duration-300 ease-in-out",
+              )}
+              style={{ left: indicator.left, width: indicator.width }}
+            />
+          )}
         </nav>
 
         {/* Desktop CTAs */}

@@ -58,9 +58,9 @@ export function mapCoreOfferings(rawOfferings: string[]): string[] {
   const result = new Set<string>();
 
   for (const raw of rawOfferings) {
-    const mapped = OFFERING_MAP[raw];
-    if (mapped) {
-      result.add(mapped);
+    const key = OFFERING_MAP[raw];
+    if (key) {
+      result.add(CORE_OFFERINGS[key]);
     }
   }
 

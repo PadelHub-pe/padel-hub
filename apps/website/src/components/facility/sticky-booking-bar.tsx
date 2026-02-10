@@ -2,18 +2,20 @@
 
 import { Button } from "@wifo/ui/button";
 
-import { APP_STORE_URL } from "~/lib/constants";
-
 interface StickyBookingBarProps {
   facilityName: string;
   priceLabel: string | null;
   phone: string | null;
+  whatsappPhone?: string | null;
+  bookingUrl?: string | null;
 }
 
 export function StickyBookingBar({
   facilityName,
   priceLabel,
   phone,
+  whatsappPhone,
+  bookingUrl,
 }: StickyBookingBarProps) {
   return (
     <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur md:hidden">
@@ -30,15 +32,27 @@ export function StickyBookingBar({
               <a href={`tel:${phone}`}>Llamar</a>
             </Button>
           )}
-          <Button variant="secondary" size="sm" asChild>
-            <a
-              href={APP_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Reservar
-            </a>
-          </Button>
+          {bookingUrl ? (
+            <Button variant="secondary" size="sm" asChild>
+              <a
+                href={bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Reservar
+              </a>
+            </Button>
+          ) : whatsappPhone ? (
+            <Button variant="secondary" size="sm" asChild>
+              <a
+                href={`https://wa.me/${whatsappPhone.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                WhatsApp
+              </a>
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+
 import { Card, CardContent } from "@wifo/ui/card";
 
 import { Container } from "~/components/layout/container";
-import { Breadcrumbs } from "~/components/seo/breadcrumbs";
 import { OwnerContactForm } from "~/components/lead-capture/owner-contact-form";
+import { Breadcrumbs } from "~/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Para Propietarios de Canchas | PadelHub",
@@ -45,7 +46,7 @@ const BENEFITS = [
   {
     title: "Sin costo inicial",
     description:
-      "Registra tu cancha gratis. Solo pagas una comision cuando recibes reservas.",
+      "Registra tu cancha gratis. Solo pagas una comision cuando recibes reservas o un monto fijo flexible.",
     icon: "💰",
   },
 ];
@@ -54,9 +55,7 @@ export default function ParaPropietariosPage() {
   return (
     <Container className="py-8">
       <Breadcrumbs
-        items={[
-          { name: "Para Propietarios", href: "/para-propietarios" },
-        ]}
+        items={[{ name: "Para Propietarios", href: "/para-propietarios" }]}
       />
 
       {/* Hero */}
@@ -82,9 +81,7 @@ export default function ParaPropietariosPage() {
                 <span className="mb-3 block text-3xl" role="img" aria-hidden>
                   {benefit.icon}
                 </span>
-                <h3 className="mb-2 text-lg font-semibold">
-                  {benefit.title}
-                </h3>
+                <h3 className="mb-2 text-lg font-semibold">{benefit.title}</h3>
                 <p className="text-muted-foreground text-sm">
                   {benefit.description}
                 </p>

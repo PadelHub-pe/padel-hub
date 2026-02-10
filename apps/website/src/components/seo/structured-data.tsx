@@ -1,3 +1,5 @@
+import { formatDistrictName } from "~/lib/format";
+
 /**
  * JSON-LD structured data component for SEO
  * Renders a <script type="application/ld+json"> tag in the page
@@ -111,6 +113,7 @@ export function FacilitySchema({
     courts: { name: string; type: string; priceInCents: number | null }[];
   };
 }) {
+  const districtDisplay = formatDistrictName(facility.district);
   const minPrice = facility.courts.reduce((min, c) => {
     if (c.priceInCents === null) return min;
     const price = c.priceInCents / 100;
@@ -124,16 +127,16 @@ export function FacilitySchema({
         "@type": "SportsActivityLocation",
         name: facility.name,
         description:
-          facility.description ?? `Cancha de padel en ${facility.district}, Lima`,
+          facility.description ?? `Cancha de padel en ${districtDisplay}, Lima`,
         address: {
           "@type": "PostalAddress",
           streetAddress: facility.address,
-          addressLocality: facility.district,
+          addressLocality: districtDisplay,
           addressRegion: "Lima",
           addressCountry: "PE",
         },
         telephone: facility.phone,
-        url: `https://padelhub.pe/canchas/${facility.district.toLowerCase().replace(/\s+/g, "-")}/${facility.slug}`,
+        url: `https://padelhub.pe/canchas/${facility.district}/${facility.slug}`,
         sport: "Padel",
         ...(minPrice !== Infinity && {
           priceRange: `Desde S/ ${minPrice}`,

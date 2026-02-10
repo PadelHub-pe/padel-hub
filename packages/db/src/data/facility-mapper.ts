@@ -5,7 +5,7 @@
  * typed objects ready for DB insertion.
  */
 
-import { normalizeDistrict } from "./districts";
+import { normalizeDistrictToSlug } from "./districts";
 import { mapAmenities } from "./amenities";
 import { mapCoreOfferings } from "./core-offerings";
 
@@ -349,7 +349,7 @@ export function mapResearchToFacilities(
       slug: slugify(biz.venue_name),
       description: buildDescription(biz),
       address: biz.location.address,
-      district: normalizeDistrict(biz.location.district),
+      district: normalizeDistrictToSlug(biz.location.district),
       city: biz.location.city || "Lima",
       phone,
       whatsappPhone,

@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
+import { Checkbox } from "@wifo/ui/checkbox";
 import { Input } from "@wifo/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@wifo/ui/popover";
 import {
   Select,
   SelectContent,
@@ -14,11 +20,22 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+
 import {
   DISTRICT_SLUGS,
   LIMA_DISTRICTS,
   SKILL_CATEGORIES,
 } from "~/lib/constants";
+import { formatDistrictName } from "~/lib/format";
+
+const TIMEZONE = "America/Lima";
+
+/** Today in YYYY-MM-DD for the HTML date input `min` attribute */
+function getTodayString(): string {
+  return format(toZonedTime(new Date(), TIMEZONE), "yyyy-MM-dd");
+}
 
 type Tab = "cancha" | "partido";
 
@@ -121,15 +138,20 @@ export function HeroSearchTabs({
 
 function SearchCourtForm() {
   const router = useRouter();
-  const [district, setDistrict] = useState("");
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
   const [courtType, setCourtType] = useState("");
   const [date, setDate] = useState("");
 
+  function toggleDistrict(slug: string) {
+    setSelectedDistricts((prev) =>
+      prev.includes(slug) ? prev.filter((d) => d !== slug) : [...prev, slug],
+    );
+  }
+
   function handleSearch() {
     const params = new URLSearchParams();
-    if (district) {
-      const slug = DISTRICT_SLUGS[district];
-      if (slug) params.set("distrito", slug);
+    if (selectedDistricts.length > 0) {
+      params.set("distrito", selectedDistricts.join(","));
     }
     if (courtType) params.set("tipo", courtType);
     if (date) params.set("fecha", date);
@@ -138,6 +160,13 @@ function SearchCourtForm() {
     router.push(`/canchas${query ? `?${query}` : ""}`);
   }
 
+  const districtLabel =
+    selectedDistricts.length === 0
+      ? "Todos los distritos"
+      : selectedDistricts.length === 1
+        ? formatDistrictName(selectedDistricts[0]!)
+        : `${selectedDistricts.length} distritos`;
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -145,18 +174,59 @@ function SearchCourtForm() {
           <label className="text-muted-foreground mb-1 block text-xs font-medium">
             Distrito
           </label>
-          <Select value={district} onValueChange={setDistrict}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Todos los distritos" />
-            </SelectTrigger>
-            <SelectContent>
-              {LIMA_DISTRICTS.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between font-normal"
+              >
+                <span className="truncate">{districtLabel}</span>
+                <svg
+                  className="ml-2 h-4 w-4 shrink-0 opacity-50"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                  />
+                </svg>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-56 p-2">
+              <div className="max-h-64 overflow-y-auto">
+                {LIMA_DISTRICTS.map((d) => {
+                  const slug = DISTRICT_SLUGS[d] ?? d.toLowerCase();
+                  const checked = selectedDistricts.includes(slug);
+                  return (
+                    <label
+                      key={slug}
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleDistrict(slug)}
+                      />
+                      {d}
+                    </label>
+                  );
+                })}
+              </div>
+              {selectedDistricts.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 w-full text-xs"
+                  onClick={() => setSelectedDistricts([])}
+                >
+                  Limpiar
+                </Button>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div>
@@ -166,6 +236,7 @@ function SearchCourtForm() {
           <Input
             type="date"
             value={date}
+            min={getTodayString()}
             onChange={(e) => setDate(e.target.value)}
             className="w-full"
           />
@@ -175,11 +246,15 @@ function SearchCourtForm() {
           <label className="text-muted-foreground mb-1 block text-xs font-medium">
             Tipo de cancha
           </label>
-          <Select value={courtType} onValueChange={setCourtType}>
+          <Select
+            value={courtType || "all"}
+            onValueChange={(v) => setCourtType(v === "all" ? "" : v)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="indoor">Indoor</SelectItem>
               <SelectItem value="outdoor">Outdoor</SelectItem>
             </SelectContent>
@@ -251,6 +326,7 @@ function SearchMatchForm() {
           <Input
             type="date"
             value={date}
+            min={getTodayString()}
             onChange={(e) => setDate(e.target.value)}
             className="w-full"
           />

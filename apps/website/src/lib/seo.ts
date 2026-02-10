@@ -1,21 +1,26 @@
 import type { Metadata } from "next";
 
+import { formatDistrictName } from "~/lib/format";
+
 const BASE_URL = "https://padelhub.pe";
 
 /**
  * Generate metadata for district pages
  */
 export function generateDistrictMetadata(
-  district: string,
+  districtName: string,
   facilityCount: number,
+  districtSlug?: string,
 ): Metadata {
+  const slug =
+    districtSlug ?? districtName.toLowerCase().replace(/\s+/g, "-");
   return {
-    title: `Canchas de Padel en ${district} | Precios y Horarios`,
-    description: `Encuentra las mejores canchas de padel en ${district}, Lima. ${facilityCount} canchas disponibles. Compara precios y horarios. Reserva al instante.`,
+    title: `Canchas de Padel en ${districtName} | Precios y Horarios`,
+    description: `Encuentra las mejores canchas de padel en ${districtName}, Lima. ${facilityCount} canchas disponibles. Compara precios y horarios. Reserva al instante.`,
     openGraph: {
-      title: `Canchas de Padel en ${district} | PadelHub`,
-      description: `Encuentra ${facilityCount} canchas de padel en ${district}, Lima. Compara precios y reserva.`,
-      url: `${BASE_URL}/canchas/${district.toLowerCase().replace(/\s+/g, "-")}`,
+      title: `Canchas de Padel en ${districtName} | PadelHub`,
+      description: `Encuentra ${facilityCount} canchas de padel en ${districtName}, Lima. Compara precios y reserva.`,
+      url: `${BASE_URL}/canchas/${slug}`,
     },
   };
 }
@@ -35,20 +40,20 @@ export function generateFacilityMetadata(facility: {
     .filter((p): p is number => p !== null);
   const minPrice = prices.length > 0 ? Math.min(...prices) / 100 : null;
 
-  const districtSlug = facility.district.toLowerCase().replace(/\s+/g, "-");
+  const districtDisplay = formatDistrictName(facility.district);
   const courtCount = facility.courts.length;
 
   const description =
     facility.description ??
-    `${facility.name} en ${facility.district}. ${courtCount} ${courtCount === 1 ? "cancha" : "canchas"}${minPrice ? `, desde S/ ${minPrice}` : ""}. Reserva ahora.`;
+    `${facility.name} en ${districtDisplay}. ${courtCount} ${courtCount === 1 ? "cancha" : "canchas"}${minPrice ? `, desde S/ ${minPrice}` : ""}. Reserva ahora.`;
 
   return {
-    title: `${facility.name} - Cancha de Padel en ${facility.district}`,
+    title: `${facility.name} - Cancha de Padel en ${districtDisplay}`,
     description,
     openGraph: {
       title: `${facility.name} | PadelHub`,
       description,
-      url: `${BASE_URL}/canchas/${districtSlug}/${facility.slug}`,
+      url: `${BASE_URL}/canchas/${facility.district}/${facility.slug}`,
     },
   };
 }

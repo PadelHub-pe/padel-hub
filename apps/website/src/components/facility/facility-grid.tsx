@@ -8,6 +8,9 @@ interface Facility {
   district: string;
   photos: string[] | null;
   amenities: string[] | null;
+  coreOfferings: string[] | null;
+  latitude: string | null;
+  longitude: string | null;
   courts: {
     id: string;
     name: string;

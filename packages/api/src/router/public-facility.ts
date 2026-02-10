@@ -1,4 +1,4 @@
-import { and, count, eq, ilike, or } from "drizzle-orm";
+import { and, count, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { courts, facilities } from "@wifo/db/schema";
@@ -13,9 +13,11 @@ export const publicFacilityRouter = createTRPCRouter({
   list: publicProcedure
     .input(
       z.object({
-        district: z.string().optional(),
+        districts: z.array(z.string()).optional(),
         courtType: z.enum(["indoor", "outdoor"]).optional(),
         search: z.string().optional(),
+        amenities: z.array(z.string()).optional(),
+        coreOfferings: z.array(z.string()).optional(),
         limit: z.number().min(1).max(50).default(20),
         offset: z.number().min(0).default(0),
       }),
@@ -23,8 +25,20 @@ export const publicFacilityRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const conditions = [eq(facilities.isActive, true)];
 
-      if (input.district) {
-        conditions.push(eq(facilities.district, input.district));
+      if (input.districts && input.districts.length > 0) {
+        conditions.push(inArray(facilities.district, input.districts));
+      }
+
+      if (input.amenities && input.amenities.length > 0) {
+        conditions.push(
+          sql`${facilities.amenities} @> ${JSON.stringify(input.amenities)}::jsonb`,
+        );
+      }
+
+      if (input.coreOfferings && input.coreOfferings.length > 0) {
+        conditions.push(
+          sql`${facilities.coreOfferings} @> ${JSON.stringify(input.coreOfferings)}::jsonb`,
+        );
       }
 
       if (input.search) {
@@ -61,7 +75,10 @@ export const publicFacilityRouter = createTRPCRouter({
           city: true,
           phone: true,
           amenities: true,
+          coreOfferings: true,
           photos: true,
+          latitude: true,
+          longitude: true,
         },
         limit: input.limit,
         offset: input.offset,
@@ -151,7 +168,10 @@ export const publicFacilityRouter = createTRPCRouter({
           city: true,
           phone: true,
           amenities: true,
+          coreOfferings: true,
           photos: true,
+          latitude: true,
+          longitude: true,
         },
         orderBy: (facilities, { asc }) => [asc(facilities.name)],
       });
@@ -205,7 +225,10 @@ export const publicFacilityRouter = createTRPCRouter({
           city: true,
           phone: true,
           amenities: true,
+          coreOfferings: true,
           photos: true,
+          latitude: true,
+          longitude: true,
         },
         limit: input.limit,
         orderBy: (facilities, { desc }) => [desc(facilities.createdAt)],

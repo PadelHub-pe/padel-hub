@@ -89,6 +89,36 @@ export const DISTRICT_SLUGS: Record<string, string> = {
 };
 
 /**
+ * District descriptions for SEO and district pages
+ */
+export const DISTRICT_DESCRIPTIONS: Record<string, string> = {
+  miraflores:
+    "Zona turistica y residencial con canchas modernas cerca al malecon. Ideal para jugar con vista al mar despues del trabajo.",
+  "san-isidro":
+    "El distrito financiero de Lima ofrece instalaciones premium y canchas bien mantenidas en zonas de facil acceso.",
+  surco:
+    "Amplia zona residencial con la mayor variedad de clubes y academias de padel en Lima.",
+  "la-molina":
+    "Distrito residencial con clubes espaciosos y amplias areas verdes para disfrutar del deporte al aire libre.",
+  barranco:
+    "Barrio bohemio con canchas que combinan ambiente relajado y buena competencia entre jugadores locales.",
+  "san-borja":
+    "Distrito deportivo por excelencia, con instalaciones modernas y buena conectividad desde toda Lima.",
+  surquillo:
+    "Ubicacion centrica con opciones accesibles y facil acceso desde Miraflores, San Isidro y Surco.",
+  "san-miguel":
+    "Canchas cerca a la Costa Verde con buenas opciones para jugadores de todos los niveles.",
+  "pueblo-libre":
+    "Distrito historico con canchas accesibles y ambiente familiar para disfrutar del padel.",
+  "jesus-maria":
+    "Ubicacion estrategica en Lima moderna con opciones para jugadores que buscan conveniencia.",
+  magdalena:
+    "Distrito costero con canchas cercanas a la Costa Verde y ambiente tranquilo para jugar.",
+  chorrillos:
+    "Canchas en zona costera con precios competitivos y vistas unicas al Pacifico.",
+};
+
+/**
  * Amenities with display labels and icons
  */
 export const AMENITIES = {
@@ -109,6 +139,22 @@ export const AMENITIES = {
 } as const;
 
 export type AmenityKey = keyof typeof AMENITIES;
+
+/**
+ * Core offerings with display labels and icons
+ * Based on packages/db/src/data/core-offerings.ts
+ */
+export const CORE_OFFERINGS = {
+  alquiler_canchas: { label: "Alquiler de Canchas", icon: "🎾" },
+  clases: { label: "Clases / Academia", icon: "🎓" },
+  torneos: { label: "Torneos y Ligas", icon: "🏆" },
+  alquiler_equipamiento: { label: "Alquiler de Equipamiento", icon: "🏸" },
+  eventos_corporativos: { label: "Eventos Corporativos", icon: "🏢" },
+  tienda: { label: "Tienda Especializada", icon: "🛒" },
+  cafeteria_bar: { label: "Cafetería / Bar", icon: "☕" },
+} as const;
+
+export type CoreOfferingKey = keyof typeof CORE_OFFERINGS;
 
 /**
  * Skill categories (6=beginner, 1=pro)

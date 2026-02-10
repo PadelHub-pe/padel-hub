@@ -3,8 +3,12 @@ import Link from "next/link";
 
 import { Card, CardContent } from "@wifo/ui/card";
 
-import { DISTRICT_SLUGS } from "~/lib/constants";
-import { countCourtsByType, formatPricePEN, getMinPrice } from "~/lib/format";
+import {
+  countCourtsByType,
+  formatDistrictName,
+  formatPricePEN,
+  getMinPrice,
+} from "~/lib/format";
 import { CourtTypeBadge } from "./court-type-badge";
 
 interface FacilityCardProps {
@@ -16,6 +20,9 @@ interface FacilityCardProps {
     district: string;
     photos: string[] | null;
     amenities: string[] | null;
+    coreOfferings: string[] | null;
+    latitude: string | null;
+    longitude: string | null;
     courts: {
       id: string;
       name: string;
@@ -27,10 +34,7 @@ interface FacilityCardProps {
 }
 
 export function FacilityCard({ facility, isNew }: FacilityCardProps) {
-  const districtSlug =
-    DISTRICT_SLUGS[facility.district] ??
-    facility.district.toLowerCase().replace(/\s+/g, "-");
-  const href = `/canchas/${districtSlug}/${facility.slug}`;
+  const href = `/canchas/${facility.district}/${facility.slug}`;
   const minPrice = getMinPrice(facility.courts);
   const { indoor, outdoor } = countCourtsByType(facility.courts);
 
@@ -112,7 +116,8 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
               />
             </svg>
             <span>
-              {facility.district} &middot; {facility.courts.length}{" "}
+              {formatDistrictName(facility.district)} &middot;{" "}
+              {facility.courts.length}{" "}
               {facility.courts.length === 1 ? "cancha" : "canchas"}
             </span>
           </div>

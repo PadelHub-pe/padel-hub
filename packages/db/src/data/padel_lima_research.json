@@ -467,8 +467,8 @@
         "city": "Lima",
         "state_province": "Lima",
         "country": "Perú",
-        "latitude": null,
-        "longitude": null,
+        "latitude": -12.0964674,
+        "longitude": -76.9952983,
         "service_area": "Lima Metropolitana"
       },
       "contact": {
@@ -2170,8 +2170,8 @@
         "city": "Lima",
         "state_province": "Lima",
         "country": "Perú",
-        "latitude": null,
-        "longitude": null,
+        "latitude": -12.0881777,
+        "longitude": -77.007399,
         "service_area": "San Borja"
       },
       "contact": {

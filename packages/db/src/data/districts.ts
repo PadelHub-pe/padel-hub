@@ -2,7 +2,7 @@
  * District name mapping system
  *
  * The research JSON uses official district names (e.g. "Santiago de Surco")
- * The DB and website use short display names (e.g. "Surco")
+ * The DB stores slugs (e.g. "surco") and display names are derived at render time
  *
  * This module provides the canonical mapping between the two.
  */
@@ -97,11 +97,22 @@ const slugIndex = new Map<string, DistrictEntry>(
 );
 
 /**
- * Convert an official district name (from research JSON) to the short display name stored in DB.
+ * Convert an official district name (from research JSON) to the short display name.
  * e.g. "Santiago de Surco" → "Surco"
  */
 export function normalizeDistrict(officialName: string): string {
   return officialNameIndex.get(officialName)?.short ?? officialName;
+}
+
+/**
+ * Convert an official district name to the slug stored in DB.
+ * e.g. "Santiago de Surco" → "surco"
+ */
+export function normalizeDistrictToSlug(officialName: string): string {
+  return (
+    officialNameIndex.get(officialName)?.slug ??
+    officialName.toLowerCase().replace(/\s+/g, "-")
+  );
 }
 
 /**

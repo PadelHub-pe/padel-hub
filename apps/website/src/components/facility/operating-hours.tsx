@@ -15,6 +15,13 @@ interface OperatingHour {
   isClosed: boolean;
 }
 
+/** Strip seconds from "HH:MM:SS" → "HH:MM". Already short strings pass through. */
+function formatTime(time: string): string {
+  const parts = time.split(":");
+  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+  return time;
+}
+
 export function OperatingHours({
   hours,
 }: {
@@ -39,7 +46,7 @@ export function OperatingHours({
             <span className="text-muted-foreground/60 text-xs">Cerrado</span>
           ) : (
             <span className="font-medium">
-              {hour.openTime} - {hour.closeTime}
+              {formatTime(hour.openTime)} - {formatTime(hour.closeTime)}
             </span>
           )}
         </div>
