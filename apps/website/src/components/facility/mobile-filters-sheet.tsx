@@ -222,6 +222,7 @@ export function MobileFiltersSheet({
                   viewBox="0 0 24 24"
                   strokeWidth="2"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -246,6 +247,7 @@ export function MobileFiltersSheet({
                   viewBox="0 0 24 24"
                   strokeWidth="2"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"

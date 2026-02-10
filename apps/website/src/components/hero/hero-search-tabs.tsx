@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import { Checkbox } from "@wifo/ui/checkbox";
 import { Input } from "@wifo/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@wifo/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@wifo/ui/popover";
 import {
   Select,
   SelectContent,
@@ -19,9 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wifo/ui/select";
-
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 
 import {
   DISTRICT_SLUGS,
@@ -171,12 +166,16 @@ function SearchCourtForm() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
-          <label className="text-muted-foreground mb-1 block text-xs font-medium">
+          <label
+            htmlFor="court-district-btn"
+            className="text-muted-foreground mb-1 block text-xs font-medium"
+          >
             Distrito
           </label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                id="court-district-btn"
                 variant="outline"
                 className="w-full justify-between font-normal"
               >
@@ -187,6 +186,7 @@ function SearchCourtForm() {
                   viewBox="0 0 24 24"
                   strokeWidth="2"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -204,7 +204,7 @@ function SearchCourtForm() {
                   return (
                     <label
                       key={slug}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                      className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm"
                     >
                       <Checkbox
                         checked={checked}
@@ -230,11 +230,16 @@ function SearchCourtForm() {
         </div>
 
         <div>
-          <label className="text-muted-foreground mb-1 block text-xs font-medium">
+          <label
+            htmlFor="court-date"
+            className="text-muted-foreground mb-1 block text-xs font-medium"
+          >
             Fecha
           </label>
           <Input
+            id="court-date"
             type="date"
+            name="bookingDate"
             value={date}
             min={getTodayString()}
             onChange={(e) => setDate(e.target.value)}
@@ -247,10 +252,11 @@ function SearchCourtForm() {
             Tipo de cancha
           </label>
           <Select
+            name="courtType"
             value={courtType || "all"}
             onValueChange={(v) => setCourtType(v === "all" ? "" : v)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label="Tipo de cancha">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -288,7 +294,7 @@ function SearchMatchForm() {
             Distrito
           </label>
           <Select value={district} onValueChange={setDistrict}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label="Distrito">
               <SelectValue placeholder="Todos los distritos" />
             </SelectTrigger>
             <SelectContent>
@@ -306,7 +312,7 @@ function SearchMatchForm() {
             Nivel
           </label>
           <Select value={skill} onValueChange={setSkill}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label="Nivel de juego">
               <SelectValue placeholder="Todas las categorias" />
             </SelectTrigger>
             <SelectContent>
@@ -320,10 +326,14 @@ function SearchMatchForm() {
         </div>
 
         <div>
-          <label className="text-muted-foreground mb-1 block text-xs font-medium">
+          <label
+            htmlFor="match-date"
+            className="text-muted-foreground mb-1 block text-xs font-medium"
+          >
             Fecha
           </label>
           <Input
+            id="match-date"
             type="date"
             value={date}
             min={getTodayString()}

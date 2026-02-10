@@ -303,6 +303,7 @@ export function FacilityFilters() {
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -315,9 +316,10 @@ export function FacilityFilters() {
         )}
 
         {/* View toggle */}
-        <div className="bg-muted inline-flex shrink-0 items-center rounded-lg p-1">
+        <div className="bg-muted inline-flex shrink-0 items-center rounded-lg p-1" role="group" aria-label="Vista">
           <button
             onClick={() => currentView !== "lista" && toggleView()}
+            aria-pressed={currentView !== "mapa"}
             className={cn(
               "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               currentView !== "mapa"
@@ -331,6 +333,7 @@ export function FacilityFilters() {
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -342,6 +345,7 @@ export function FacilityFilters() {
           </button>
           <button
             onClick={() => currentView !== "mapa" && toggleView()}
+            aria-pressed={currentView === "mapa"}
             className={cn(
               "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               currentView === "mapa"
@@ -355,6 +359,7 @@ export function FacilityFilters() {
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -420,6 +425,7 @@ export function FacilityFilters() {
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -437,9 +443,10 @@ export function FacilityFilters() {
         </div>
 
         {/* View toggle (compact on mobile) */}
-        <div className="bg-muted inline-flex shrink-0 items-center rounded-lg p-1">
+        <div className="bg-muted inline-flex shrink-0 items-center rounded-lg p-1" role="group" aria-label="Vista">
           <button
             onClick={() => currentView !== "lista" && toggleView()}
+            aria-pressed={currentView !== "mapa"}
             className={cn(
               "inline-flex items-center rounded-md p-1.5 transition-colors",
               currentView !== "mapa"
@@ -453,6 +460,7 @@ export function FacilityFilters() {
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -464,6 +472,7 @@ export function FacilityFilters() {
           </button>
           <button
             onClick={() => currentView !== "mapa" && toggleView()}
+            aria-pressed={currentView === "mapa"}
             className={cn(
               "inline-flex items-center rounded-md p-1.5 transition-colors",
               currentView === "mapa"
@@ -477,6 +486,7 @@ export function FacilityFilters() {
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -506,6 +516,7 @@ export function FacilityFilters() {
               <button
                 onClick={() => removeDistrict(slug)}
                 className="hover:bg-primary/20 inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors"
+                aria-label={`Quitar filtro ${formatDistrictName(slug)}`}
               >
                 <svg
                   className="h-3 w-3"
@@ -513,6 +524,7 @@ export function FacilityFilters() {
                   viewBox="0 0 24 24"
                   strokeWidth="2.5"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"

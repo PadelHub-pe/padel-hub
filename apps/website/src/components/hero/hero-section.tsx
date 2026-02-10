@@ -7,8 +7,14 @@ import { Container } from "~/components/layout/container";
 import { HeroSearchTabs } from "./hero-search-tabs";
 
 const HERO_IMAGES = {
-  cancha: "/images/canva-padel-2.jpg",
-  partido: "/images/canva-padel-1.jpg",
+  cancha: {
+    src: "/images/canva-padel-2.jpg",
+    alt: "Cancha de padel cubierta con iluminacion profesional en Lima",
+  },
+  partido: {
+    src: "/images/canva-padel-1.jpg",
+    alt: "Jugadores disputando un partido de padel en Lima, Peru",
+  },
 } as const;
 
 export function HeroSection() {
@@ -17,12 +23,13 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden py-20 sm:py-28 lg:py-32">
       {/* Background images — both rendered, crossfade via opacity */}
-      {Object.entries(HERO_IMAGES).map(([tab, src]) => (
+      {Object.entries(HERO_IMAGES).map(([tab, img]) => (
         <Image
           key={tab}
-          src={src}
-          alt="Cancha de padel en Lima"
+          src={img.src}
+          alt={img.alt}
           fill
+          sizes="100vw"
           className={`object-cover transition-opacity duration-700 ease-in-out ${
             activeTab === tab ? "opacity-100" : "opacity-0"
           }`}

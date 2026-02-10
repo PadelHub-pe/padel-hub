@@ -31,12 +31,31 @@ export async function generateMetadata(props: {
   const { district } = await props.params;
   const districtName = formatDistrictName(district);
 
-  const caller = await api();
-  const facilities = await caller.publicFacility.listByDistrict({
-    district,
-  });
+  try {
+    const caller = await api();
+    const facilities = await caller.publicFacility.listByDistrict({
+      district,
+    });
 
-  return generateDistrictMetadata(districtName, facilities.length, district);
+    // Compute price range for richer meta descriptions
+    const allPrices = facilities
+      .flatMap((f) => f.courts.map((c) => c.priceInCents))
+      .filter((p): p is number => p !== null);
+    const priceRange =
+      allPrices.length > 0
+        ? { min: Math.min(...allPrices), max: Math.max(...allPrices) }
+        : null;
+
+    return generateDistrictMetadata(
+      districtName,
+      facilities.length,
+      district,
+      priceRange,
+    );
+  } catch {
+    // Fallback metadata if API call fails
+    return generateDistrictMetadata(districtName, 0, district, null);
+  }
 }
 
 export default async function DistrictPage(props: {
@@ -97,6 +116,9 @@ export default async function DistrictPage(props: {
                 addressCountry: "PE",
               },
               url: `https://padelhub.pe/canchas/${district}/${facility.slug}`,
+              ...((facility.photos as string[] | null)?.[0] && {
+                image: (facility.photos as string[])[0],
+              }),
             },
           })),
         }}
@@ -115,12 +137,7 @@ export default async function DistrictPage(props: {
           <h1 className="mb-3 text-3xl font-bold sm:text-4xl">
             Canchas de Padel en {districtName}
           </h1>
-          {facilities.length === 0 ? (
-            <p className="text-muted-foreground text-lg">
-              Aun no tenemos canchas registradas en {districtName}. Vuelve
-              pronto.
-            </p>
-          ) : (
+          {facilities.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium">
                 <svg
@@ -129,6 +146,7 @@ export default async function DistrictPage(props: {
                   viewBox="0 0 24 24"
                   strokeWidth="2"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -151,6 +169,7 @@ export default async function DistrictPage(props: {
                   viewBox="0 0 24 24"
                   strokeWidth="2"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -169,6 +188,7 @@ export default async function DistrictPage(props: {
                     viewBox="0 0 24 24"
                     strokeWidth="2"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -199,6 +219,7 @@ export default async function DistrictPage(props: {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -226,6 +247,7 @@ export default async function DistrictPage(props: {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -253,6 +275,7 @@ export default async function DistrictPage(props: {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -284,6 +307,7 @@ export default async function DistrictPage(props: {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -358,16 +382,46 @@ export default async function DistrictPage(props: {
             )}
           </>
         ) : (
-          <div className="mt-8 text-center">
-            <p className="text-muted-foreground mb-4">
-              Conoces una cancha en {districtName}?
-            </p>
-            <a
-              href="/para-propietarios"
-              className="text-primary font-medium underline underline-offset-4"
+          <div className="py-16 text-center">
+            <svg
+              className="text-muted-foreground/40 mx-auto mb-4 h-16 w-16"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1"
+              stroke="currentColor"
+              aria-hidden="true"
             >
-              Registra tu cancha gratis
-            </a>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+              />
+            </svg>
+            <h3 className="mb-2 text-lg font-semibold">
+              Aun no tenemos canchas en {districtName}
+            </h3>
+            <p className="text-muted-foreground mb-4 text-sm">
+              Estamos trabajando para agregar mas clubes en esta zona.
+            </p>
+            <div className="flex flex-col items-center gap-2">
+              <Link
+                href="/canchas"
+                className="text-primary text-sm font-medium hover:underline"
+              >
+                Ver canchas en otros distritos
+              </Link>
+              <Link
+                href="/para-propietarios"
+                className="text-muted-foreground text-sm hover:underline"
+              >
+                ¿Conoces una cancha? Registrala gratis
+              </Link>
+            </div>
           </div>
         )}
       </Container>

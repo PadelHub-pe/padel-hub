@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { Separator } from "@wifo/ui/separator";
 
 import { HeroSection } from "~/components/hero/hero-section";
@@ -15,6 +17,30 @@ import {
   WebSiteSchema,
 } from "~/components/seo/structured-data";
 import { api } from "~/trpc/server";
+
+export const metadata: Metadata = {
+  title: "PadelHub - Reserva Canchas de Padel en Lima, Peru",
+  description:
+    "Descubre y reserva las mejores canchas de padel en Lima. Compara precios desde S/ 80, horarios y ubicaciones en Miraflores, San Isidro, Surco, La Molina y mas distritos. Gratis para jugadores.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "PadelHub - Reserva Canchas de Padel en Lima",
+    description:
+      "La plataforma #1 para encontrar y reservar canchas de padel en Lima. Compara precios, horarios y encuentra jugadores de tu nivel.",
+    url: "https://padelhub.pe",
+    type: "website",
+    locale: "es_PE",
+    siteName: "PadelHub",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PadelHub - Canchas de Padel en Lima",
+    description:
+      "Encuentra y reserva canchas de padel en Lima. Compara precios y horarios en Miraflores, Surco, San Isidro y mas.",
+  },
+};
 
 export default async function HomePage() {
   const caller = await api();

@@ -48,8 +48,9 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
               <Image
                 key={facility.photos[0]}
                 src={facility.photos[0] || ""}
-                alt="Cancha de padel en Lima"
+                alt={`${facility.name} - Cancha de padel en ${formatDistrictName(facility.district)}, Lima`}
                 fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className={`object-cover transition-opacity duration-700 ease-in-out`}
                 quality={85}
               />
@@ -62,6 +63,7 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
                 viewBox="0 0 24 24"
                 strokeWidth="1"
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -103,6 +105,7 @@ export function FacilityCard({ facility, isNew }: FacilityCardProps) {
               viewBox="0 0 24 24"
               strokeWidth="1.5"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

@@ -7,9 +7,18 @@ import { OwnerContactForm } from "~/components/lead-capture/owner-contact-form";
 import { Breadcrumbs } from "~/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Para Propietarios de Canchas | PadelHub",
+  title: "Para Propietarios de Canchas de Padel en Lima",
   description:
     "Registra tu cancha de padel en PadelHub y llega a miles de jugadores en Lima. Gestion de reservas, analiticas y mas. Gratis para empezar.",
+  alternates: {
+    canonical: "/para-propietarios",
+  },
+  openGraph: {
+    title: "Para Propietarios de Canchas | PadelHub",
+    description:
+      "Registra tu cancha de padel en PadelHub y llega a miles de jugadores en Lima. Gratis para empezar.",
+    url: "https://padelhub.pe/para-propietarios",
+  },
 };
 
 const BENEFITS = [
@@ -78,7 +87,7 @@ export default function ParaPropietariosPage() {
           {BENEFITS.map((benefit) => (
             <Card key={benefit.title}>
               <CardContent className="p-6">
-                <span className="mb-3 block text-3xl" role="img" aria-hidden>
+                <span className="mb-3 block text-3xl" role="img" aria-hidden="true">
                   {benefit.icon}
                 </span>
                 <h3 className="mb-2 text-lg font-semibold">{benefit.title}</h3>

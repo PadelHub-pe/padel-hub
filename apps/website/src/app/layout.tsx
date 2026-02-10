@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
       ? "https://padelhub.pe"
-      : "http://localhost:3003",
+      : "http://localhost:3001",
   ),
   title: {
     default: "PadelHub - Reserva Canchas de Padel en Lima",
@@ -28,9 +28,25 @@ export const metadata: Metadata = {
     "padel Peru",
     "jugadores padel Lima",
     "alquilar cancha padel",
+    "pistas de padel Lima",
+    "donde jugar padel en Lima",
+    "padel cerca de mi",
+    "club de padel Lima",
+    "reservas padel online",
+    "padel indoor Lima",
+    "padel outdoor Lima",
+    "horarios padel Lima",
+    "precios padel Lima",
+    "academias de padel Lima",
+    "torneos de padel Peru",
+    "alquiler canchas padel Lima",
   ],
   authors: [{ name: "PadelHub" }],
   creator: "PadelHub",
+  category: "sports",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "es_PE",
@@ -57,6 +73,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  other: {
+    "geo.region": "PE-LIM",
+    "geo.placename": "Lima",
+    "geo.position": "-12.0464;-77.0428",
+    ICBM: "-12.0464, -77.0428",
+  },
 };
 
 export const viewport: Viewport = {
@@ -68,6 +90,7 @@ export const viewport: Viewport = {
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
 });
 
 export default function RootLayout(props: { children: React.ReactNode }) {

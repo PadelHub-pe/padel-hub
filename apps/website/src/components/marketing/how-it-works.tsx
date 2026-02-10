@@ -13,6 +13,7 @@ const STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -34,6 +35,7 @@ const STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -55,6 +57,7 @@ const STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"

@@ -71,10 +71,11 @@ export function OwnerContactForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-muted-foreground mb-1 block text-sm font-medium">
+          <label htmlFor="owner-business-name" className="text-muted-foreground mb-1 block text-sm font-medium">
             Nombre del negocio *
           </label>
           <Input
+            id="owner-business-name"
             value={formData.businessName}
             onChange={(e) => updateField("businessName", e.target.value)}
             placeholder="Mi Club de Padel"
@@ -82,10 +83,11 @@ export function OwnerContactForm() {
           />
         </div>
         <div>
-          <label className="text-muted-foreground mb-1 block text-sm font-medium">
+          <label htmlFor="owner-contact-name" className="text-muted-foreground mb-1 block text-sm font-medium">
             Nombre de contacto *
           </label>
           <Input
+            id="owner-contact-name"
             value={formData.contactName}
             onChange={(e) => updateField("contactName", e.target.value)}
             placeholder="Juan Perez"
@@ -96,10 +98,11 @@ export function OwnerContactForm() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-muted-foreground mb-1 block text-sm font-medium">
+          <label htmlFor="owner-email" className="text-muted-foreground mb-1 block text-sm font-medium">
             Email *
           </label>
           <Input
+            id="owner-email"
             type="email"
             value={formData.email}
             onChange={(e) => updateField("email", e.target.value)}
@@ -108,10 +111,11 @@ export function OwnerContactForm() {
           />
         </div>
         <div>
-          <label className="text-muted-foreground mb-1 block text-sm font-medium">
+          <label htmlFor="owner-phone" className="text-muted-foreground mb-1 block text-sm font-medium">
             Telefono *
           </label>
           <Input
+            id="owner-phone"
             type="tel"
             value={formData.phone}
             onChange={(e) => updateField("phone", e.target.value)}
@@ -123,10 +127,11 @@ export function OwnerContactForm() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-muted-foreground mb-1 block text-sm font-medium">
+          <label htmlFor="owner-court-count" className="text-muted-foreground mb-1 block text-sm font-medium">
             Numero de canchas
           </label>
           <Input
+            id="owner-court-count"
             type="number"
             min="1"
             value={formData.courtCount}
@@ -142,7 +147,7 @@ export function OwnerContactForm() {
             value={formData.district}
             onValueChange={(value) => updateField("district", value)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label="Distrito">
               <SelectValue placeholder="Seleccionar distrito" />
             </SelectTrigger>
             <SelectContent>
@@ -157,10 +162,11 @@ export function OwnerContactForm() {
       </div>
 
       <div>
-        <label className="text-muted-foreground mb-1 block text-sm font-medium">
+        <label htmlFor="owner-message" className="text-muted-foreground mb-1 block text-sm font-medium">
           Mensaje (opcional)
         </label>
         <Textarea
+          id="owner-message"
           value={formData.message}
           onChange={(e) => updateField("message", e.target.value)}
           placeholder="Cuentanos sobre tu negocio..."

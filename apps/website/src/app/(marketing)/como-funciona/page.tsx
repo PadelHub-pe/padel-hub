@@ -5,9 +5,18 @@ import { Breadcrumbs } from "~/components/seo/breadcrumbs";
 import { HowItWorksTabs } from "./how-it-works-tabs";
 
 export const metadata: Metadata = {
-  title: "Como Funciona PadelHub | Reserva Canchas de Padel",
+  title: "Como Funciona | Reserva Canchas de Padel en Lima",
   description:
     "Descubre como PadelHub te ayuda a encontrar y reservar canchas de padel en Lima. Para jugadores y propietarios de canchas.",
+  alternates: {
+    canonical: "/como-funciona",
+  },
+  openGraph: {
+    title: "Como Funciona PadelHub",
+    description:
+      "Descubre como PadelHub te ayuda a encontrar y reservar canchas de padel en Lima.",
+    url: "https://padelhub.pe/como-funciona",
+  },
 };
 
 export default function ComoFuncionaPage() {

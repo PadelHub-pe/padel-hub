@@ -20,6 +20,7 @@ const PLAYER_STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -41,6 +42,7 @@ const PLAYER_STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -62,6 +64,7 @@ const PLAYER_STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -86,6 +89,7 @@ const OWNER_STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -107,6 +111,7 @@ const OWNER_STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -128,6 +133,7 @@ const OWNER_STEPS = [
         viewBox="0 0 24 24"
         strokeWidth="1.5"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -149,8 +155,10 @@ export function HowItWorksTabs() {
     <div>
       {/* Tab switcher */}
       <div className="mb-10 flex justify-center">
-        <div className="bg-muted inline-flex rounded-xl p-1">
+        <div className="bg-muted inline-flex rounded-xl p-1" role="tablist" aria-label="Tipo de usuario">
           <button
+            role="tab"
+            aria-selected={isPlayers}
             onClick={() => setActiveTab("jugadores")}
             className={cn(
               "cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors",
@@ -162,6 +170,8 @@ export function HowItWorksTabs() {
             Soy Jugador
           </button>
           <button
+            role="tab"
+            aria-selected={!isPlayers}
             onClick={() => setActiveTab("propietarios")}
             className={cn(
               "cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors",
@@ -176,7 +186,7 @@ export function HowItWorksTabs() {
       </div>
 
       {/* Steps grid */}
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div role="tabpanel" className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {steps.map((step) => (
           <div key={step.number} className="text-center">
             <div

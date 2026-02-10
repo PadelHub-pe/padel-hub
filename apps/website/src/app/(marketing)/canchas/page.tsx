@@ -11,9 +11,18 @@ import { formatDistrictName } from "~/lib/format";
 import { api } from "~/trpc/server";
 
 export const metadata: Metadata = {
-  title: "Canchas de Padel en Lima | Directorio Completo",
+  title: "Canchas de Padel en Lima | Directorio Completo de Precios y Horarios",
   description:
-    "Encuentra y compara canchas de padel en Lima. Filtra por distrito, tipo de cancha y precio. Miraflores, San Isidro, Surco y mas.",
+    "Encuentra y compara canchas de padel en Lima. Filtra por distrito, tipo de cancha, precio y amenidades. Miraflores, San Isidro, Surco, La Molina y mas distritos.",
+  alternates: {
+    canonical: "/canchas",
+  },
+  openGraph: {
+    title: "Canchas de Padel en Lima | PadelHub",
+    description:
+      "Directorio completo de canchas de padel en Lima. Compara precios, horarios y amenidades. Reserva al instante.",
+    url: "https://padelhub.pe/canchas",
+  },
 };
 
 export default async function CanchasPage(props: {
@@ -75,6 +84,7 @@ export default async function CanchasPage(props: {
             item: {
               "@type": "SportsActivityLocation",
               name: facility.name,
+              url: `https://padelhub.pe/canchas/${facility.district}/${facility.slug}`,
               address: {
                 "@type": "PostalAddress",
                 streetAddress: facility.address,
@@ -100,6 +110,11 @@ export default async function CanchasPage(props: {
               ? "cancha encontrada"
               : "canchas encontradas"}
           </p>
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
+            Compara precios, horarios, amenidades y tipos de cancha (indoor y
+            outdoor) en los principales distritos de Lima. Filtra por ubicacion
+            para encontrar la cancha de padel mas cercana a ti.
+          </p>
         </div>
 
         <FacilityFilters />
@@ -112,6 +127,7 @@ export default async function CanchasPage(props: {
               viewBox="0 0 24 24"
               strokeWidth="1"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -147,23 +163,23 @@ export default async function CanchasPage(props: {
         {!isMapView && result.total > limit && (
           <div className="mt-8 flex items-center justify-center gap-2">
             {page > 1 && (
-              <a
+              <Link
                 href={`/canchas?${buildPageParams(searchParams, page - 1)}`}
                 className="bg-muted hover:bg-muted/80 rounded-md px-4 py-2 text-sm transition-colors"
               >
                 Anterior
-              </a>
+              </Link>
             )}
             <span className="text-muted-foreground px-4 text-sm">
               Pagina {page} de {Math.ceil(result.total / limit)}
             </span>
             {result.hasMore && (
-              <a
+              <Link
                 href={`/canchas?${buildPageParams(searchParams, page + 1)}`}
                 className="bg-muted hover:bg-muted/80 rounded-md px-4 py-2 text-sm transition-colors"
               >
                 Siguiente
-              </a>
+              </Link>
             )}
           </div>
         )}

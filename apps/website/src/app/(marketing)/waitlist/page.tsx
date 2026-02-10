@@ -6,9 +6,12 @@ import { Breadcrumbs } from "~/components/seo/breadcrumbs";
 import { WaitlistForm } from "~/components/lead-capture/waitlist-form";
 
 export const metadata: Metadata = {
-  title: "Lista de Espera | PadelHub",
+  title: "Lista de Espera",
   description:
     "Unete a la lista de espera de PadelHub y se el primero en probar nuevas funcionalidades como partidos abiertos y reservas online.",
+  alternates: {
+    canonical: "/waitlist",
+  },
 };
 
 export default function WaitlistPage() {
@@ -26,6 +29,7 @@ export default function WaitlistPage() {
             viewBox="0 0 24 24"
             strokeWidth="1.5"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

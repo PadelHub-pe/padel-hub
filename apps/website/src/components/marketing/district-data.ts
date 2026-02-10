@@ -18,21 +18,21 @@ export interface District {
 export const DISTRICTS: District[] = [
   {
     name: "San Isidro",
-    courtCount: 3,
+    courtCount: 1,
     tagline: "Zona financiera",
     lat: -12.0977,
     lng: -77.0365,
   },
   {
     name: "San Borja",
-    courtCount: 2,
+    courtCount: 3,
     tagline: "Bien conectado",
     lat: -12.1066,
     lng: -76.9986,
   },
   {
     name: "Miraflores",
-    courtCount: 4,
+    courtCount: 2,
     tagline: "Mas popular",
     lat: -12.1219,
     lng: -77.0299,
@@ -46,20 +46,19 @@ export const DISTRICTS: District[] = [
   },
   {
     name: "Surco",
-    courtCount: 5,
+    courtCount: 4,
     tagline: "Mayor variedad",
     lat: -12.1367,
-    lng: -76.9780,
+    lng: -76.978,
   },
   {
     name: "La Molina",
     courtCount: 2,
     tagline: "Canchas amplias",
     lat: -12.0868,
-    lng: -76.9350,
+    lng: -76.935,
   },
 ].map((d) => ({
   ...d,
-  slug:
-    DISTRICT_SLUGS[d.name] ?? d.name.toLowerCase().replace(/\s+/g, "-"),
+  slug: DISTRICT_SLUGS[d.name] ?? d.name.toLowerCase().replace(/\s+/g, "-"),
 }));

@@ -6,9 +6,12 @@ import { Breadcrumbs } from "~/components/seo/breadcrumbs";
 import { CONTACT, SOCIAL_LINKS } from "~/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Contacto | PadelHub",
+  title: "Contacto",
   description:
     "Contactanos para consultas, sugerencias o soporte. Estamos aqui para ayudarte.",
+  alternates: {
+    canonical: "/contacto",
+  },
 };
 
 export default function ContactoPage() {

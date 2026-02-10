@@ -1,10 +1,15 @@
 import type { MetadataRoute } from "next";
 
 import { DISTRICT_SLUGS } from "~/lib/constants";
+import { api } from "~/trpc/server";
 
 const BASE_URL = "https://padelhub.pe";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Fetch all active facilities for individual detail pages
+  const caller = await api();
+  const result = await caller.publicFacility.list({ limit: 50, offset: 0 });
+
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
@@ -66,5 +71,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...districtPages];
+  // Individual facility detail pages
+  const facilityPages: MetadataRoute.Sitemap = result.facilities.map(
+    (facility) => ({
+      url: `${BASE_URL}/canchas/${facility.district}/${facility.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }),
+  );
+
+  return [...staticPages, ...districtPages, ...facilityPages];
 }

@@ -79,7 +79,11 @@ export function WaitlistForm({
   if (compact) {
     return (
       <form onSubmit={handleSubmit} className="flex gap-2">
+        <label htmlFor={`waitlist-email-${source}`} className="sr-only">
+          Email
+        </label>
         <Input
+          id={`waitlist-email-${source}`}
           type="email"
           placeholder="tu@email.com"
           value={email}
@@ -100,28 +104,46 @@ export function WaitlistForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Input
-        type="text"
-        placeholder="Tu nombre"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        autoComplete="given-name"
-      />
-      <Input
-        type="email"
-        placeholder="tu@email.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <Input
-        type="tel"
-        placeholder="Teléfono (opcional)"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-      />
+      <div>
+        <label htmlFor={`waitlist-name-${source}`} className="sr-only">
+          Nombre
+        </label>
+        <Input
+          id={`waitlist-name-${source}`}
+          type="text"
+          placeholder="Tu nombre"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoComplete="given-name"
+        />
+      </div>
+      <div>
+        <label htmlFor={`waitlist-email-full-${source}`} className="sr-only">
+          Email
+        </label>
+        <Input
+          id={`waitlist-email-full-${source}`}
+          type="email"
+          placeholder="tu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor={`waitlist-phone-${source}`} className="sr-only">
+          Teléfono
+        </label>
+        <Input
+          id={`waitlist-phone-${source}`}
+          type="tel"
+          placeholder="Teléfono (opcional)"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+      </div>
       <Select value={district} onValueChange={setDistrict}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" aria-label="Distrito">
           <SelectValue placeholder="Distrito (opcional)" />
         </SelectTrigger>
         <SelectContent>
