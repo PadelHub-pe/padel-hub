@@ -26,6 +26,15 @@ const updateFacilityStatusSchema = z.object({
   isActive: z.boolean(),
 });
 
+const createFacilitySchema = z.object({
+  organizationId: z.string().uuid(),
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres").max(200),
+  address: z.string().min(5, "La dirección debe tener al menos 5 caracteres").max(500),
+  district: z.string().min(2, "El distrito es requerido").max(100),
+  phone: z.string().min(6, "El teléfono debe tener al menos 6 caracteres").max(20),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+});
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -197,6 +206,7 @@ export const orgRouter = {
             district: facility.district,
             phone: facility.phone,
             isActive: facility.isActive,
+            isSetupComplete: facility.onboardingCompletedAt !== null,
             photos: facility.photos ?? [],
             courtCount: facility.courts.length,
             indoorCount,
@@ -408,5 +418,52 @@ export const orgRouter = {
         .orderBy(facilities.district);
 
       return result.map((r) => r.district);
+    }),
+
+  /**
+   * Create a new facility with minimal fields (Quick Create)
+   * Only org_admin can create facilities
+   */
+  createFacility: protectedProcedure
+    .input(createFacilitySchema)
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, name, address, district, phone, email } = input;
+
+      // Verify user is org_admin
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden crear locales",
+        });
+      }
+
+      // Create facility with minimal fields
+      const [facility] = await ctx.db
+        .insert(facilities)
+        .values({
+          organizationId,
+          name,
+          address,
+          district,
+          city: "Lima", // Default city for MVP
+          phone,
+          email: email ?? null,
+          isActive: false, // Inactive until setup is complete
+        })
+        .returning();
+
+      if (!facility) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error al crear el local",
+        });
+      }
+
+      return {
+        id: facility.id,
+        name: facility.name,
+      };
     }),
 } satisfies TRPCRouterRecord;

@@ -53,6 +53,7 @@ type QuickBookingFormValues = z.infer<typeof quickBookingSchema>;
 interface QuickBookingFormProps {
   open: boolean;
   onClose: () => void;
+  facilityId: string;
   courtId: string;
   courtName: string;
   date: Date;
@@ -65,6 +66,7 @@ interface QuickBookingFormProps {
 export function QuickBookingForm({
   open,
   onClose,
+  facilityId,
   courtId,
   courtName,
   date,
@@ -107,6 +109,7 @@ export function QuickBookingForm({
 
   const onSubmit = (values: QuickBookingFormValues) => {
     createMutation.mutate({
+      facilityId,
       courtId,
       date,
       startTime,

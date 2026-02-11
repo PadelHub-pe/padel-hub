@@ -3,11 +3,16 @@ import { Suspense } from "react";
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { BookingsView } from "./_components/bookings-view";
 
-export default function FacilityBookingsPage() {
+interface FacilityBookingsPageProps {
+  params: Promise<{ orgSlug: string; facilityId: string }>;
+}
+
+export default async function FacilityBookingsPage({ params }: FacilityBookingsPageProps) {
+  const { facilityId } = await params;
+
   // Prefetch data for client components
-  // TODO: Update to accept facilityId for facility-scoped data
-  prefetch(trpc.booking.list.queryOptions({ page: 1, limit: 10 }));
-  prefetch(trpc.court.list.queryOptions());
+  prefetch(trpc.booking.list.queryOptions({ facilityId, page: 1, limit: 10 }));
+  prefetch(trpc.court.list.queryOptions({ facilityId }));
 
   return (
     <HydrateClient>

@@ -7,6 +7,7 @@ interface Facility {
   district: string;
   phone: string;
   isActive: boolean;
+  isSetupComplete: boolean;
   photos: string[];
   courtCount: number;
   indoorCount: number;

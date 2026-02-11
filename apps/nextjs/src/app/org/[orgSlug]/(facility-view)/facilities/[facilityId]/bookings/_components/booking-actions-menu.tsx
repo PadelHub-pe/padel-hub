@@ -11,6 +11,7 @@ import {
 } from "@wifo/ui/dropdown-menu";
 import { toast } from "@wifo/ui/toast";
 
+import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { CancelBookingDialog } from "./cancel-booking-dialog";
 
@@ -35,6 +36,7 @@ export function BookingActionsMenu({
   onBookingUpdated,
 }: BookingActionsMenuProps) {
   const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const confirmMutation = useMutation(
@@ -50,7 +52,7 @@ export function BookingActionsMenu({
   );
 
   const handleConfirm = () => {
-    confirmMutation.mutate({ id: bookingId });
+    confirmMutation.mutate({ facilityId, id: bookingId });
   };
 
   const canConfirm = status === "pending";

@@ -46,7 +46,7 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
   const basePath = `/org/${orgSlug}/facilities/${facilityId}`;
 
   const { data: court } = useSuspenseQuery(
-    trpc.court.getById.queryOptions({ id }),
+    trpc.court.getById.queryOptions({ facilityId, id }),
   );
 
   const form = useForm<CourtEditFormValues>({
@@ -99,6 +99,7 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
         : undefined;
 
     updateMutation.mutate({
+      facilityId,
       id,
       data: {
         name: values.name,
@@ -113,7 +114,7 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
   }
 
   function handleDelete() {
-    deleteMutation.mutate({ id });
+    deleteMutation.mutate({ facilityId, id });
   }
 
   return (

@@ -7,6 +7,7 @@ import { es } from "date-fns/locale";
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
+import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "./booking-status-badge";
 import { CancelBookingDialog } from "./cancel-booking-dialog";
@@ -26,10 +27,11 @@ export function BookingDetailDrawer({
   onBookingUpdated,
 }: BookingDetailDrawerProps) {
   const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: booking, isLoading } = useQuery({
-    ...trpc.booking.getById.queryOptions({ id: bookingId ?? "" }),
+    ...trpc.booking.getById.queryOptions({ facilityId, id: bookingId ?? "" }),
     enabled: !!bookingId && open,
   });
 
@@ -49,7 +51,7 @@ export function BookingDetailDrawer({
 
   const handleConfirm = () => {
     if (bookingId) {
-      confirmMutation.mutate({ id: bookingId });
+      confirmMutation.mutate({ facilityId, id: bookingId });
     }
   };
 

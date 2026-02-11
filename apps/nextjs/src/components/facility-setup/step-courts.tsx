@@ -9,12 +9,14 @@ import { Label } from "@wifo/ui/label";
 import { RadioGroup, RadioGroupItem } from "@wifo/ui/radio-group";
 import { useWatch } from "react-hook-form";
 
-import type { CourtsFormValues } from "./onboarding-wizard";
-
 export interface Court {
   id: string;
   name: string;
   type: "indoor" | "outdoor";
+}
+
+export interface CourtsFormValues {
+  courts: Court[];
 }
 
 interface StepCourtsProps {

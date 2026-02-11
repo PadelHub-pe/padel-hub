@@ -112,48 +112,18 @@ export const CreatePostSchema = createInsertSchema(Post, {
 });
 
 // =============================================================================
-// Owner & Facility Schema
+// Facility Schema
 // =============================================================================
-
-/**
- * Owner Accounts - linked to Better Auth user
- * Represents a court owner who manages one or more facilities
- */
-export const ownerAccounts = pgTable("owner_accounts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  contactName: varchar("contact_name", { length: 100 }).notNull(),
-  phone: varchar("phone", { length: 20 }).notNull(),
-  onboardingCompletedAt: timestamp("onboarding_completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
-
-export const ownerAccountsRelations = relations(ownerAccounts, ({ one, many }) => ({
-  user: one(user, {
-    fields: [ownerAccounts.userId],
-    references: [user.id],
-  }),
-  facilities: many(facilities),
-}));
 
 /**
  * Facilities table - represents a padel venue/club
  */
 export const facilities = pgTable("facilities", {
   id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: uuid("owner_id")
+  // Organization reference - all facilities must belong to an organization
+  organizationId: uuid("organization_id")
     .notNull()
-    .references(() => ownerAccounts.id, { onDelete: "cascade" }),
-  // Organization reference (nullable for backward compatibility during migration)
-  organizationId: uuid("organization_id").references(() => organizations.id, {
-    onDelete: "set null",
-  }),
+    .references(() => organizations.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 200 }).notNull(),
   description: text("description"),
   address: varchar("address", { length: 500 }).notNull(),
@@ -165,6 +135,8 @@ export const facilities = pgTable("facilities", {
   amenities: jsonb("amenities").$type<string[]>().default([]),
   photos: jsonb("photos").$type<string[]>().default([]),
   isActive: boolean("is_active").default(false).notNull(),
+  // Onboarding tracking (migrated from ownerAccounts)
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -173,10 +145,6 @@ export const facilities = pgTable("facilities", {
 });
 
 export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
-  owner: one(ownerAccounts, {
-    fields: [facilities.ownerId],
-    references: [ownerAccounts.id],
-  }),
   organization: one(organizations, {
     fields: [facilities.organizationId],
     references: [organizations.id],
@@ -449,16 +417,6 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
 // =============================================================================
 // Insert Schemas for Validation
 // =============================================================================
-
-export const CreateOwnerAccountSchema = createInsertSchema(ownerAccounts, {
-  contactName: z.string().min(2).max(100),
-  phone: z.string().min(6).max(20),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  onboardingCompletedAt: true,
-});
 
 export const CreateFacilitySchema = createInsertSchema(facilities, {
   name: z.string().min(3).max(200),

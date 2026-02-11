@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@wifo/ui/popover";
 
+import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "../../_components/booking-status-badge";
 import { formatTime, getStatusColors } from "./calendar-utils";
@@ -28,9 +29,10 @@ export function BookingTooltip({
   children,
 }: BookingTooltipProps) {
   const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
 
   const { data: booking, isLoading } = useQuery({
-    ...trpc.booking.getById.queryOptions({ id: bookingId }),
+    ...trpc.booking.getById.queryOptions({ facilityId, id: bookingId }),
     enabled: open,
   });
 

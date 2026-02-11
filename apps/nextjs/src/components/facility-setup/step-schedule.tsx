@@ -22,8 +22,6 @@ import {
 } from "@wifo/ui/select";
 import { useWatch } from "react-hook-form";
 
-import type { ScheduleFormValues } from "./onboarding-wizard";
-
 const DAYS_OF_WEEK = [
   { value: 1, label: "Lunes" },
   { value: 2, label: "Martes" },
@@ -62,6 +60,12 @@ export interface OperatingHour {
   isClosed: boolean;
 }
 
+export interface ScheduleFormValues {
+  operatingHours: OperatingHour[];
+  defaultDurationMinutes: "60" | "90" | "120";
+  defaultPriceInSoles: string;
+}
+
 interface StepScheduleProps {
   control: Control<ScheduleFormValues>;
 }
@@ -72,12 +76,9 @@ export function StepSchedule({ control }: StepScheduleProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">
-          Horarios y Precios
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900">Horarios y Precios</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Configura los horarios de operación y precio por defecto de tus
-          canchas.
+          Configura los horarios de operación y precio por defecto de tus canchas.
         </p>
       </div>
 
@@ -90,9 +91,7 @@ export function StepSchedule({ control }: StepScheduleProps) {
             <FormLabel>Horarios de operación</FormLabel>
             <div className="mt-2 space-y-2">
               {DAYS_OF_WEEK.map((day) => {
-                const hourIndex = operatingHours.findIndex(
-                  (h) => h.dayOfWeek === day.value,
-                );
+                const hourIndex = operatingHours.findIndex((h) => h.dayOfWeek === day.value);
                 const hour = operatingHours[hourIndex];
                 if (!hour) return null;
 
@@ -112,9 +111,7 @@ export function StepSchedule({ control }: StepScheduleProps) {
                     className="flex flex-col gap-3 rounded-lg border bg-white p-3 sm:flex-row sm:items-center"
                   >
                     {/* Day name */}
-                    <div className="w-24 font-medium text-gray-700">
-                      {day.label}
-                    </div>
+                    <div className="w-24 font-medium text-gray-700">{day.label}</div>
 
                     {/* Closed checkbox */}
                     <div className="flex items-center gap-2">
@@ -138,9 +135,7 @@ export function StepSchedule({ control }: StepScheduleProps) {
                       <div className="flex flex-1 items-center gap-2">
                         <Select
                           value={hour.openTime}
-                          onValueChange={(value) =>
-                            handleHourChange("openTime", value)
-                          }
+                          onValueChange={(value) => handleHourChange("openTime", value)}
                         >
                           <SelectTrigger className="w-full sm:w-28">
                             <SelectValue />
@@ -156,9 +151,7 @@ export function StepSchedule({ control }: StepScheduleProps) {
                         <span className="text-gray-500">a</span>
                         <Select
                           value={hour.closeTime}
-                          onValueChange={(value) =>
-                            handleHourChange("closeTime", value)
-                          }
+                          onValueChange={(value) => handleHourChange("closeTime", value)}
                         >
                           <SelectTrigger className="w-full sm:w-28">
                             <SelectValue />
@@ -246,12 +239,24 @@ export function StepSchedule({ control }: StepScheduleProps) {
             </div>
             <FormMessage />
             <FormDescription>
-              Podrás configurar precios por horario más tarde desde tu panel de
-              control.
+              Podrás configurar precios por horario más tarde desde tu panel de control.
             </FormDescription>
           </FormItem>
         )}
       />
     </div>
   );
+}
+
+// Helper to create default operating hours
+export function createDefaultOperatingHours(): OperatingHour[] {
+  return [
+    { dayOfWeek: 0, openTime: "09:00", closeTime: "21:00", isClosed: false },
+    { dayOfWeek: 1, openTime: "07:00", closeTime: "22:00", isClosed: false },
+    { dayOfWeek: 2, openTime: "07:00", closeTime: "22:00", isClosed: false },
+    { dayOfWeek: 3, openTime: "07:00", closeTime: "22:00", isClosed: false },
+    { dayOfWeek: 4, openTime: "07:00", closeTime: "22:00", isClosed: false },
+    { dayOfWeek: 5, openTime: "07:00", closeTime: "22:00", isClosed: false },
+    { dayOfWeek: 6, openTime: "08:00", closeTime: "22:00", isClosed: false },
+  ];
 }

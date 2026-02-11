@@ -7,7 +7,6 @@ import postgres from "postgres";
 import {
   user,
   account,
-  ownerAccounts,
   facilities,
   courts,
   bookings,
@@ -31,7 +30,6 @@ async function seed() {
   const testPassword = "password123";
   const userId = randomUUID();
   const accountId = randomUUID();
-  const ownerAccountId = randomUUID();
 
   // Secondary user (facility manager)
   const managerEmail = "manager@padelhub.pe";
@@ -69,37 +67,26 @@ async function seed() {
         // Delete organization memberships
         await db.delete(organizationMembers).where(eq(organizationMembers.userId, existingUserRecord.id));
 
-        // Find and delete owner account data
-        const existingOwner = await db
-          .select()
-          .from(ownerAccounts)
-          .where(eq(ownerAccounts.userId, existingUserRecord.id))
-          .limit(1);
-
-        const existingOwnerRecord = existingOwner[0];
-        if (existingOwnerRecord) {
-          const existingFacilities = await db
-            .select()
-            .from(facilities)
-            .where(eq(facilities.ownerId, existingOwnerRecord.id));
-
-          for (const facility of existingFacilities) {
-            await db.delete(bookings).where(eq(bookings.facilityId, facility.id));
-            await db.delete(courts).where(eq(courts.facilityId, facility.id));
-            await db.delete(facilities).where(eq(facilities.id, facility.id));
-          }
-
-          await db.delete(ownerAccounts).where(eq(ownerAccounts.id, existingOwnerRecord.id));
-        }
-
         await db.delete(account).where(eq(account.userId, existingUserRecord.id));
         await db.delete(user).where(eq(user.id, existingUserRecord.id));
       }
     }
 
-    // Delete test organization
+    // Delete test organization (cascade will delete facilities, courts, bookings)
     const existingOrg = await db.select().from(organizations).where(eq(organizations.slug, orgSlug)).limit(1);
     if (existingOrg[0]) {
+      // Delete facilities (cascade will delete courts and bookings)
+      const existingFacilities = await db
+        .select()
+        .from(facilities)
+        .where(eq(facilities.organizationId, existingOrg[0].id));
+
+      for (const facility of existingFacilities) {
+        await db.delete(bookings).where(eq(bookings.facilityId, facility.id));
+        await db.delete(courts).where(eq(courts.facilityId, facility.id));
+        await db.delete(facilities).where(eq(facilities.id, facility.id));
+      }
+
       await db.delete(organizationMembers).where(eq(organizationMembers.organizationId, existingOrg[0].id));
       await db.delete(organizations).where(eq(organizations.id, existingOrg[0].id));
     }
@@ -169,20 +156,6 @@ async function seed() {
     console.log(`   Name: Luis Vargas\n`);
 
     // ==========================================================================
-    // CREATE OWNER ACCOUNT
-    // ==========================================================================
-
-    await db.insert(ownerAccounts).values({
-      id: ownerAccountId,
-      userId: userId,
-      contactName: "Carlos Mendoza",
-      phone: "+51999888777",
-      onboardingCompletedAt: new Date(),
-    });
-
-    console.log("✅ Created owner account\n");
-
-    // ==========================================================================
     // CREATE ORGANIZATION
     // ==========================================================================
 
@@ -237,10 +210,9 @@ async function seed() {
     // CREATE FACILITIES
     // ==========================================================================
 
-    // Facility 1: Main club in San Isidro (active)
+    // Facility 1: Main club in San Isidro (active, setup complete)
     await db.insert(facilities).values({
       id: facility1Id,
-      ownerId: ownerAccountId,
       organizationId: orgId,
       name: "Padel Club San Isidro",
       description: "Nuestro club principal con canchas de primer nivel en el corazón de San Isidro",
@@ -255,12 +227,12 @@ async function seed() {
         "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=400&fit=crop",
       ],
       isActive: true,
+      onboardingCompletedAt: new Date(),
     });
 
-    // Facility 2: Miraflores location (active)
+    // Facility 2: Miraflores location (active, setup complete)
     await db.insert(facilities).values({
       id: facility2Id,
-      ownerId: ownerAccountId,
       organizationId: orgId,
       name: "Padel Club Miraflores",
       description: "Club moderno cerca al malecón con vista al mar",
@@ -274,12 +246,12 @@ async function seed() {
         "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&h=400&fit=crop",
       ],
       isActive: true,
+      onboardingCompletedAt: new Date(),
     });
 
-    // Facility 3: La Molina location (inactive - under construction)
+    // Facility 3: La Molina location (inactive - setup not complete)
     await db.insert(facilities).values({
       id: facility3Id,
-      ownerId: ownerAccountId,
       organizationId: orgId,
       name: "Padel Club La Molina",
       description: "Próximamente - Nuestro nuevo club en La Molina",
@@ -291,6 +263,7 @@ async function seed() {
       amenities: ["estacionamiento", "vestuarios"],
       photos: [],
       isActive: false,
+      // onboardingCompletedAt: null - setup not complete
     });
 
     console.log("✅ Created 3 facilities:");
@@ -599,7 +572,7 @@ async function seed() {
     ];
 
     // Insert all bookings
-    type BookingData = {
+    interface BookingData {
       code: string;
       courtId: string;
       facilityId: string;
@@ -616,7 +589,7 @@ async function seed() {
       paymentMethod?: "cash" | "card" | "app";
       cancelledBy?: "user" | "owner" | "system";
       cancellationReason?: string;
-    };
+    }
 
     const allBookings: BookingData[] = [
       ...facility1Bookings.map((b) => ({ ...b, facilityId: facility1Id })),

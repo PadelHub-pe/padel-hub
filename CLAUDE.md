@@ -126,8 +126,17 @@ apps/nextjs/src/app/
 
 **URL examples:**
 - `/org/padel-group-lima/facilities` - List all facilities
+- `/org/padel-group-lima/facilities/new` - Quick create facility form
 - `/org/padel-group-lima/facilities/abc123` - Facility dashboard
+- `/org/padel-group-lima/facilities/abc123/setup` - Setup wizard (courts + schedule)
 - `/org/padel-group-lima/facilities/abc123/courts` - Courts management
+
+**Facility Onboarding Flow:**
+1. Quick Create (`/facilities/new`) - Creates inactive facility with minimal fields
+2. Setup Wizard (`/facilities/[id]/setup`) - Configure courts and schedule
+3. Complete Setup - Activates facility (sets `onboardingCompletedAt`, `isActive=true`)
+
+Incomplete facilities show "Pendiente" badge on cards and setup banner on dashboard.
 
 ### Package Dependencies Flow
 ```
@@ -270,6 +279,30 @@ apps/nextjs/src/app/
   - Use `form.setError("root", ...)` for server/API errors
   - Use `form.formState.isSubmitting` for loading states
   - Error messages should be in Spanish
+
+### Facility Setup Components
+Reusable setup wizard components in `apps/nextjs/src/components/facility-setup/`:
+- `StepIndicator` - Progress indicator with configurable step labels
+- `StepCourts` - Court creation form (add/remove courts with name + type)
+- `StepSchedule` - Operating hours per day + default pricing
+
+```typescript
+import { StepIndicator, StepCourts, StepSchedule } from "~/components/facility-setup";
+
+// StepIndicator props
+<StepIndicator
+  currentStep={1}
+  steps={[{ label: "Courts" }, { label: "Schedule" }]}
+/>
+
+// StepCourts with controlled state
+const [courts, setCourts] = useState([{ name: "", type: "indoor" }]);
+<StepCourts courts={courts} onChange={setCourts} />
+
+// StepSchedule with controlled state
+const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
+<StepSchedule schedule={schedule} onChange={setSchedule} />
+```
 
 ### tRPC Procedures
 - Use `publicProcedure` for unauthenticated endpoints

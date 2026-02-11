@@ -4,14 +4,9 @@ import { addDays, startOfDay } from "date-fns";
 import { and, count, desc, eq, gte, ilike, lt, or } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import type { db as DbType } from "@wifo/db/client";
-import {
-  bookings,
-  courts,
-  CreateManualBookingSchema,
-  ownerAccounts,
-} from "@wifo/db/schema";
+import { bookings, courts, CreateManualBookingSchema } from "@wifo/db/schema";
 
+import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -19,6 +14,7 @@ import { protectedProcedure } from "../trpc";
 // =============================================================================
 
 const listBookingsSchema = z.object({
+  facilityId: z.string().uuid(),
   search: z.string().optional(),
   courtId: z.string().uuid().optional(),
   status: z
@@ -29,42 +25,39 @@ const listBookingsSchema = z.object({
   limit: z.number().int().min(1).max(100).default(10),
 });
 
+const getByIdSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+});
+
+const confirmSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+});
+
 const cancelBookingSchema = z.object({
+  facilityId: z.string().uuid(),
   id: z.string().uuid(),
   reason: z.string().max(500).optional(),
+});
+
+const updateStatusSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+  status: z.enum(["pending", "confirmed", "in_progress", "completed", "cancelled"]),
+});
+
+const createManualSchema = CreateManualBookingSchema.extend({
+  facilityId: z.string().uuid(),
+});
+
+const getStatsSchema = z.object({
+  facilityId: z.string().uuid(),
 });
 
 // =============================================================================
 // Helpers
 // =============================================================================
-
-async function getOwnerFacility(ctx: {
-  db: typeof DbType;
-  session: { user: { id: string } };
-}) {
-  const userId = ctx.session.user.id;
-
-  const ownerAccount = await ctx.db.query.ownerAccounts.findFirst({
-    where: eq(ownerAccounts.userId, userId),
-    with: {
-      facilities: {
-        limit: 1,
-      },
-    },
-  });
-
-  if (!ownerAccount?.facilities[0]) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "No se encontró el local",
-    });
-  }
-
-  return {
-    ownerId: ownerAccount.id,
-    facilityId: ownerAccount.facilities[0].id,
-  };
-}
 
 /**
  * Generate a unique booking code in format PH-YYYY-XXXX
@@ -81,12 +74,14 @@ function generateBookingCode(): string {
 
 export const bookingRouter = {
   /**
-   * List all bookings for the owner's facility with pagination and filters
+   * List all bookings for a facility with pagination and filters
    */
   list: protectedProcedure.input(listBookingsSchema).query(async ({ ctx, input }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
-    const { search, courtId, status, date, page, limit } = input;
+    const { facilityId, search, courtId, status, date, page, limit } = input;
     const offset = (page - 1) * limit;
+
+    // Verify access with booking:read permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
     // Build where conditions
     const conditions = [eq(bookings.facilityId, facilityId)];
@@ -100,7 +95,6 @@ export const bookingRouter = {
     }
 
     if (date) {
-      // Filter by date (same day) using date-fns
       const dayStart = startOfDay(date);
       const dayEnd = startOfDay(addDays(date, 1));
       conditions.push(gte(bookings.date, dayStart));
@@ -152,75 +146,80 @@ export const bookingRouter = {
   /**
    * Get a single booking by ID
    */
-  getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  getById: protectedProcedure.input(getByIdSchema).query(async ({ ctx, input }) => {
+    const { facilityId, id } = input;
 
-      const booking = await ctx.db.query.bookings.findFirst({
-        where: and(eq(bookings.id, input.id), eq(bookings.facilityId, facilityId)),
-        with: {
-          court: true,
-          user: true,
-        },
+    // Verify access with booking:read permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+
+    const booking = await ctx.db.query.bookings.findFirst({
+      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
+      with: {
+        court: true,
+        user: true,
+      },
+    });
+
+    if (!booking) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Reserva no encontrada",
       });
+    }
 
-      if (!booking) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Reserva no encontrada",
-        });
-      }
-
-      return booking;
-    }),
+    return booking;
+  }),
 
   /**
    * Confirm a pending booking
    */
-  confirm: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  confirm: protectedProcedure.input(confirmSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, id } = input;
 
-      const booking = await ctx.db.query.bookings.findFirst({
-        where: and(eq(bookings.id, input.id), eq(bookings.facilityId, facilityId)),
+    // Verify access with booking:manage permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+
+    const booking = await ctx.db.query.bookings.findFirst({
+      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
+    });
+
+    if (!booking) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Reserva no encontrada",
       });
+    }
 
-      if (!booking) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Reserva no encontrada",
-        });
-      }
+    if (booking.status !== "pending") {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Solo se pueden confirmar reservas pendientes",
+      });
+    }
 
-      if (booking.status !== "pending") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Solo se pueden confirmar reservas pendientes",
-        });
-      }
+    const [updatedBooking] = await ctx.db
+      .update(bookings)
+      .set({
+        status: "confirmed",
+        confirmedAt: new Date(),
+      })
+      .where(eq(bookings.id, id))
+      .returning();
 
-      const [updatedBooking] = await ctx.db
-        .update(bookings)
-        .set({
-          status: "confirmed",
-          confirmedAt: new Date(),
-        })
-        .where(eq(bookings.id, input.id))
-        .returning();
-
-      return updatedBooking;
-    }),
+    return updatedBooking;
+  }),
 
   /**
    * Cancel a booking
    */
   cancel: protectedProcedure.input(cancelBookingSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
+    const { facilityId, id, reason } = input;
+
+    // Verify access with booking:manage permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
 
     const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, input.id), eq(bookings.facilityId, facilityId)),
+      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
     });
 
     if (!booking) {
@@ -249,10 +248,10 @@ export const bookingRouter = {
       .set({
         status: "cancelled",
         cancelledBy: "owner",
-        cancellationReason: input.reason ?? null,
+        cancellationReason: reason ?? null,
         cancelledAt: new Date(),
       })
-      .where(eq(bookings.id, input.id))
+      .where(eq(bookings.id, id))
       .returning();
 
     return updatedBooking;
@@ -261,115 +260,113 @@ export const bookingRouter = {
   /**
    * Update booking status
    */
-  updateStatus: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        status: z.enum(["pending", "confirmed", "in_progress", "completed", "cancelled"]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  updateStatus: protectedProcedure.input(updateStatusSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, id, status } = input;
 
-      const booking = await ctx.db.query.bookings.findFirst({
-        where: and(eq(bookings.id, input.id), eq(bookings.facilityId, facilityId)),
+    // Verify access with booking:manage permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+
+    const booking = await ctx.db.query.bookings.findFirst({
+      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
+    });
+
+    if (!booking) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Reserva no encontrada",
       });
+    }
 
-      if (!booking) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Reserva no encontrada",
-        });
-      }
+    const updateData: Record<string, unknown> = { status };
 
-      const updateData: Record<string, unknown> = { status: input.status };
+    if (status === "confirmed" && !booking.confirmedAt) {
+      updateData.confirmedAt = new Date();
+    }
 
-      if (input.status === "confirmed" && !booking.confirmedAt) {
-        updateData.confirmedAt = new Date();
-      }
+    if (status === "cancelled") {
+      updateData.cancelledBy = "owner";
+      updateData.cancelledAt = new Date();
+    }
 
-      if (input.status === "cancelled") {
-        updateData.cancelledBy = "owner";
-        updateData.cancelledAt = new Date();
-      }
+    const [updatedBooking] = await ctx.db
+      .update(bookings)
+      .set(updateData)
+      .where(eq(bookings.id, id))
+      .returning();
 
-      const [updatedBooking] = await ctx.db
-        .update(bookings)
-        .set(updateData)
-        .where(eq(bookings.id, input.id))
-        .returning();
-
-      return updatedBooking;
-    }),
+    return updatedBooking;
+  }),
 
   /**
    * Create a manual booking (walk-in)
    */
-  createManual: protectedProcedure
-    .input(CreateManualBookingSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  createManual: protectedProcedure.input(createManualSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId } = input;
 
-      // Verify court belongs to facility
-      const court = await ctx.db.query.courts.findFirst({
-        where: and(eq(courts.id, input.courtId), eq(courts.facilityId, facilityId)),
+    // Verify access with booking:write permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:write");
+
+    // Verify court belongs to facility
+    const court = await ctx.db.query.courts.findFirst({
+      where: and(eq(courts.id, input.courtId), eq(courts.facilityId, facilityId)),
+    });
+
+    if (!court) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Cancha no encontrada",
       });
+    }
 
-      if (!court) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Cancha no encontrada",
-        });
-      }
+    // Generate unique booking code
+    let code = generateBookingCode();
+    let attempts = 0;
+    while (attempts < 10) {
+      const existing = await ctx.db.query.bookings.findFirst({
+        where: eq(bookings.code, code),
+      });
+      if (!existing) break;
+      code = generateBookingCode();
+      attempts++;
+    }
 
-      // Generate unique booking code
-      let code = generateBookingCode();
-      let attempts = 0;
-      while (attempts < 10) {
-        const existing = await ctx.db.query.bookings.findFirst({
-          where: eq(bookings.code, code),
-        });
-        if (!existing) break;
-        code = generateBookingCode();
-        attempts++;
-      }
+    const [booking] = await ctx.db
+      .insert(bookings)
+      .values({
+        code,
+        courtId: input.courtId,
+        facilityId,
+        date: input.date,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        priceInCents: input.priceInCents,
+        isPeakRate: input.isPeakRate,
+        paymentMethod: input.paymentMethod ?? null,
+        customerName: input.customerName,
+        customerPhone: input.customerPhone ?? null,
+        customerEmail: input.customerEmail ?? null,
+        notes: input.notes ?? null,
+        isManualBooking: true,
+        status: "confirmed",
+        confirmedAt: new Date(),
+      })
+      .returning();
 
-      const [booking] = await ctx.db
-        .insert(bookings)
-        .values({
-          code,
-          courtId: input.courtId,
-          facilityId,
-          date: input.date,
-          startTime: input.startTime,
-          endTime: input.endTime,
-          priceInCents: input.priceInCents,
-          isPeakRate: input.isPeakRate,
-          paymentMethod: input.paymentMethod ?? null,
-          customerName: input.customerName,
-          customerPhone: input.customerPhone ?? null,
-          customerEmail: input.customerEmail ?? null,
-          notes: input.notes ?? null,
-          isManualBooking: true,
-          status: "confirmed",
-          confirmedAt: new Date(),
-        })
-        .returning();
-
-      return booking;
-    }),
+    return booking;
+  }),
 
   /**
    * Get booking stats for dashboard
    */
-  getStats: protectedProcedure.query(async ({ ctx }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
+  getStats: protectedProcedure.input(getStatsSchema).query(async ({ ctx, input }) => {
+    const { facilityId } = input;
+
+    // Verify access with booking:read permission
+    await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
     // Get today's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = startOfDay(new Date());
+    const tomorrow = addDays(today, 1);
 
     // Today's bookings count
     const [todayResult] = await ctx.db

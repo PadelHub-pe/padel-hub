@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
+import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingDetailDrawer } from "./booking-detail-drawer";
 import { BookingsFilters } from "./bookings-filters";
@@ -12,6 +13,7 @@ import { BookingsTable } from "./bookings-table";
 
 export function BookingsView() {
   const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -24,9 +26,10 @@ export function BookingsView() {
   // Selected booking for detail drawer
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
-  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions());
+  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions({ facilityId }));
   const { data: bookingsData, refetch, isFetching } = useQuery({
     ...trpc.booking.list.queryOptions({
+      facilityId,
       search: search || undefined,
       courtId,
       status: status as

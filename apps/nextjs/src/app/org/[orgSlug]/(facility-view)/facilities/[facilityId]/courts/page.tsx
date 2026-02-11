@@ -3,11 +3,16 @@ import { Suspense } from "react";
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { CourtsView } from "./_components/courts-view";
 
-export default function FacilityCourtsPage() {
+interface FacilityCourtsPageProps {
+  params: Promise<{ orgSlug: string; facilityId: string }>;
+}
+
+export default async function FacilityCourtsPage({ params }: FacilityCourtsPageProps) {
+  const { facilityId } = await params;
+
   // Prefetch data for client components
-  // TODO: Update to accept facilityId for facility-scoped data
-  prefetch(trpc.court.list.queryOptions());
-  prefetch(trpc.court.getStats.queryOptions());
+  prefetch(trpc.court.list.queryOptions({ facilityId }));
+  prefetch(trpc.court.getStats.queryOptions({ facilityId }));
 
   return (
     <HydrateClient>

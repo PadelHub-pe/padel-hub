@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { useMutation } from "@tanstack/react-query";
 import { signUp } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
 import {
@@ -25,12 +24,9 @@ import { Input } from "@wifo/ui/input";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { useTRPC } from "~/trpc/react";
-
 const registerSchema = z
   .object({
-    contactName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-    phone: z.string().min(6, "El teléfono debe tener al menos 6 caracteres"),
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
     email: z.string().email("Ingresa un email válido"),
     password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
     confirmPassword: z.string(),
@@ -44,37 +40,24 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const trpc = useTRPC();
 
   const form = useForm<RegisterFormValues>({
     resolver: standardSchemaResolver(registerSchema),
     defaultValues: {
-      contactName: "",
-      phone: "",
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  const registerOwner = useMutation(
-    trpc.owner.register.mutationOptions({
-      onSuccess: () => {
-        router.push("/onboarding");
-      },
-      onError: (err) => {
-        form.setError("root", { message: err.message });
-      },
-    }),
-  );
-
   async function onSubmit(values: RegisterFormValues) {
     try {
-      // Step 1: Create Better Auth account
+      // Create Better Auth account
       const result = await signUp.email({
         email: values.email,
         password: values.password,
-        name: values.contactName,
+        name: values.name,
       });
 
       if (result.error) {
@@ -84,11 +67,8 @@ export default function RegisterPage() {
         return;
       }
 
-      // Step 2: Create owner account in our database
-      registerOwner.mutate({
-        contactName: values.contactName,
-        phone: values.phone,
-      });
+      // Redirect to org page - user will either see their orgs or a "no organizations" message
+      router.push("/org");
     } catch {
       form.setError("root", {
         message: "Ocurrió un error inesperado. Intenta nuevamente.",
@@ -96,7 +76,7 @@ export default function RegisterPage() {
     }
   }
 
-  const isLoading = form.formState.isSubmitting || registerOwner.isPending;
+  const isLoading = form.formState.isSubmitting;
 
   return (
     <div className="flex min-h-screen">
@@ -113,7 +93,7 @@ export default function RegisterPage() {
 
           {/* Headline */}
           <h1 className="mb-4 text-4xl font-bold leading-tight">
-            Registra tu Local de Padel
+            Gestiona tu Centro de Padel
           </h1>
 
           {/* Tagline */}
@@ -146,16 +126,16 @@ export default function RegisterPage() {
           <CardHeader className="text-center lg:text-left">
             <CardTitle className="text-2xl">Crea tu cuenta</CardTitle>
             <CardDescription>
-              Registra tus datos para comenzar a configurar tu centro de padel
+              Regístrate para comenzar a gestionar tu centro de padel
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {/* Contact Name */}
+                {/* Name */}
                 <FormField
                   control={form.control}
-                  name="contactName"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tu nombre completo</FormLabel>
@@ -163,25 +143,6 @@ export default function RegisterPage() {
                         <Input
                           type="text"
                           placeholder="Juan Pérez"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Phone */}
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tu teléfono</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="tel"
-                          placeholder="+51 999 999 999"
                           {...field}
                         />
                       </FormControl>

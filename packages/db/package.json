@@ -25,6 +25,7 @@
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "push": "pnpm with-env drizzle-kit push",
     "seed": "pnpm with-env tsx src/seed.ts",
+    "migrate:owner-accounts": "pnpm with-env tsx src/migrate-owner-accounts.ts",
     "studio": "pnpm with-env drizzle-kit studio",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --"

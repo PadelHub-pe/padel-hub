@@ -4,17 +4,15 @@ import { addDays, startOfDay } from "date-fns";
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import type { db as DbType } from "@wifo/db/client";
 import {
   blockedSlots,
   bookings,
   courts,
-  facilities,
   operatingHours,
-  organizationMembers,
   peakPeriods,
 } from "@wifo/db/schema";
 
+import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -47,6 +45,7 @@ const createPeakPeriodSchema = z.object({
 });
 
 const deletePeakPeriodSchema = z.object({
+  facilityId: z.string().uuid(),
   id: z.string().uuid(),
 });
 
@@ -85,48 +84,6 @@ const getDayOverviewSchema = z.object({
 // =============================================================================
 
 /**
- * Verify user has access to the facility via organization membership
- */
-async function verifyFacilityAccess(
-  ctx: { db: typeof DbType; session: { user: { id: string } } },
-  facilityId: string,
-) {
-  const facility = await ctx.db.query.facilities.findFirst({
-    where: eq(facilities.id, facilityId),
-  });
-
-  if (!facility) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Local no encontrado",
-    });
-  }
-
-  if (!facility.organizationId) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Este local no pertenece a ninguna organización",
-    });
-  }
-
-  const membership = await ctx.db.query.organizationMembers.findFirst({
-    where: and(
-      eq(organizationMembers.organizationId, facility.organizationId),
-      eq(organizationMembers.userId, ctx.session.user.id),
-    ),
-  });
-
-  if (!membership) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "No tienes acceso a este local",
-    });
-  }
-
-  return { facility, membership };
-}
-
-/**
  * Get default operating hours for days not yet configured
  */
 function getDefaultOperatingHours(dayOfWeek: number) {
@@ -151,7 +108,7 @@ export const scheduleRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId } = input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
       const hours = await ctx.db.query.operatingHours.findMany({
         where: eq(operatingHours.facilityId, facilityId),
@@ -183,7 +140,7 @@ export const scheduleRouter = {
     .mutation(async ({ ctx, input }) => {
       const { facilityId, hours } = input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:write");
 
       // Delete existing hours and insert new ones
       await ctx.db
@@ -211,7 +168,7 @@ export const scheduleRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId } = input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
       const periods = await ctx.db.query.peakPeriods.findMany({
         where: and(
@@ -246,7 +203,7 @@ export const scheduleRouter = {
         markupPercent,
       } = input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:write");
 
       const [created] = await ctx.db
         .insert(peakPeriods)
@@ -269,11 +226,13 @@ export const scheduleRouter = {
   deletePeakPeriod: protectedProcedure
     .input(deletePeakPeriodSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id } = input;
+      const { facilityId, id } = input;
 
-      // Get the peak period to verify access
+      await verifyFacilityAccess(ctx, facilityId, "schedule:write");
+
+      // Get the peak period to verify it exists and belongs to this facility
       const period = await ctx.db.query.peakPeriods.findFirst({
-        where: eq(peakPeriods.id, id),
+        where: and(eq(peakPeriods.id, id), eq(peakPeriods.facilityId, facilityId)),
       });
 
       if (!period) {
@@ -282,8 +241,6 @@ export const scheduleRouter = {
           message: "Periodo pico no encontrado",
         });
       }
-
-      await verifyFacilityAccess(ctx, period.facilityId);
 
       await ctx.db.delete(peakPeriods).where(eq(peakPeriods.id, id));
 
@@ -298,7 +255,7 @@ export const scheduleRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId, date } = input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
       const dayStart = startOfDay(date);
       const dayEnd = addDays(dayStart, 1);
@@ -338,7 +295,7 @@ export const scheduleRouter = {
       const { facilityId, courtId, date, startTime, endTime, reason, notes } =
         input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:write");
 
       // If courtId is provided, verify it belongs to the facility
       if (courtId) {
@@ -391,7 +348,7 @@ export const scheduleRouter = {
         });
       }
 
-      await verifyFacilityAccess(ctx, slot.facilityId);
+      await verifyFacilityAccess(ctx, slot.facilityId, "schedule:write");
 
       await ctx.db.delete(blockedSlots).where(eq(blockedSlots.id, id));
 
@@ -406,7 +363,7 @@ export const scheduleRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId, date } = input;
 
-      await verifyFacilityAccess(ctx, facilityId);
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
       const dayStart = startOfDay(date);
       const dayEnd = addDays(dayStart, 1);

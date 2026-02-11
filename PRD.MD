@@ -1,8 +1,8 @@
 # PadelHub MVP — “Book & Play”
 
-**Version:** 2.0
+**Version:** 2.1
 
-**Last Updated:** January 29, 2026
+**Last Updated:** February 5, 2026
 
 **Author:** Luis
 
@@ -485,31 +485,38 @@ A centralized platform creates network effects: more courts attract more players
     ▼
 [Register Account]
     • Email, password
-    • Business details
     │
     ▼
-[Onboarding Wizard]
-    │
-    ├──► Step 1: Facility Info
-    │    • Name, description
-    │    • Address (map)
-    │
-    ├──► Step 2: Photos
-    │    • Upload facility images
-    │
-    ├──► Step 3: Add Courts
-    │    • Court names
-    │    • Indoor/outdoor
-    │
-    ├──► Step 4: Set Schedule
-    │    • Operating hours
-    │    • Slot durations
-    │    • Prices
+[Organization Dashboard]
+    • View/manage facilities
     │
     ▼
-[Dashboard Ready]
-    • Preview public listing
-    • Go live
+[Quick Create Facility]
+    • Name, address, district
+    • Phone, email (optional)
+    │
+    ▼
+[Success Dialog]
+    • "Configure now?" or "Skip for later"
+    │
+    ├──► [Configure Now] ──► [Setup Wizard]
+    │                            │
+    │                            ├──► Step 1: Add Courts
+    │                            │    • Court names
+    │                            │    • Indoor/outdoor
+    │                            │
+    │                            ├──► Step 2: Set Schedule
+    │                            │    • Operating hours per day
+    │                            │    • Default pricing
+    │                            │
+    │                            ▼
+    │                       [Complete Setup]
+    │                            • Facility activated
+    │                            • Redirect to dashboard
+    │
+    └──► [Skip] ──► [Facilities List]
+                    • Facility shows "Pending" badge
+                    • Can complete setup later
 ```
 
 ### 7.5 Court Owner: Manage Reservations
@@ -547,8 +554,8 @@ A centralized platform creates network effects: more courts attract more players
 
 ```
 ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│    User     │       │   Facility  │       │    Court    │
-│  (Player)   │       │   (Venue)   │       │  (Physical) │
+│    User     │       │Organization │       │    Court    │
+│  (Player)   │       │             │       │  (Physical) │
 └──────┬──────┘       └──────┬──────┘       └──────┬──────┘
        │                     │                     │
        │                     │ 1:N                 │
@@ -556,8 +563,8 @@ A centralized platform creates network effects: more courts attract more players
        │              │             │              │
        │              ▼             │              │
        │        ┌─────────┐        │              │
-       │        │  Owner  │        │              │
-       │        │ Account │        │              │
+       │        │Facility │        │              │
+       │        │ (Venue) │        │              │
        │        └─────────┘        │              │
        │                           │              │
        │ 1:N                       │ 1:N          │ 1:N
@@ -572,6 +579,10 @@ A centralized platform creates network effects: more courts attract more players
 │ Open Match  │◄──────│  Join       │
 │             │  1:N  │  Request    │
 └─────────────┘       └─────────────┘
+
+Organization ─┬─► OrganizationMember (role: org_admin | facility_manager | staff)
+              │
+              └─► Facility ─► Court
 ```
 
 ### 8.2 Drizzle Schema
@@ -617,21 +628,22 @@ export const users = pgTable("users", {
 // packages/db/src/schema/facilities.ts
 export const facilities = pgTable("facilities", {
   id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: uuid("owner_id")
+  organizationId: uuid("organization_id")
     .notNull()
-    .references(() => ownerAccounts.id),
+    .references(() => organizations.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 200 }).notNull(),
   description: text("description"),
   address: varchar("address", { length: 500 }).notNull(),
   district: varchar("district", { length: 100 }).notNull(),
-  latitude: decimal("latitude", { precision: 10, scale: 8 }).notNull(),
-  longitude: decimal("longitude", { precision: 11, scale: 8 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
   phone: varchar("phone", { length: 20 }).notNull(),
   email: varchar("email", { length: 255 }),
   amenities: jsonb("amenities").$type<string[]>(),
   photos: jsonb("photos").$type<string[]>(),
-  operatingHours: jsonb("operating_hours").$type<OperatingHours>(),
-  isActive: boolean("is_active").default(true).notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -747,13 +759,34 @@ export const joinRequests = pgTable("join_requests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// packages/db/src/schema/owner-accounts.ts
-export const ownerAccounts = pgTable("owner_accounts", {
+// packages/db/src/schema/organizations.ts
+export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  businessName: varchar("business_name", { length: 200 }).notNull(),
-  contactName: varchar("contact_name", { length: 100 }).notNull(),
-  phone: varchar("phone", { length: 20 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  contactEmail: varchar("contact_email", { length: 255 }).notNull(),
+  logoUrl: varchar("logo_url", { length: 500 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const organizationMemberRoleEnum = pgEnum("organization_member_role", [
+  "org_admin",
+  "facility_manager",
+  "staff",
+]);
+
+export const organizationMembers = pgTable("organization_members", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  role: organizationMemberRoleEnum("role").notNull(),
+  facilityIds: jsonb("facility_ids").$type<string[]>(), // For facility_manager role
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 ```
@@ -1448,6 +1481,7 @@ pnpm lint
 | ------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------ |
 | 1.0     | 2026-01-29 | Luis   | Initial PRD                                                                                            |
 | 2.0     | 2026-01-29 | Luis   | Updated to T3 Turbo stack (tRPC, Drizzle, Better-Auth); Corrected skill categories (6=beginner, 1=pro) |
+| 2.1     | 2026-02-05 | Claude | Replaced ownerAccounts with multi-org model; Updated facility onboarding to Quick Create + Setup Wizard |
 
 ---
 

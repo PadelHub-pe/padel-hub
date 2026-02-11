@@ -50,7 +50,7 @@ export function PeakPeriodsSection({
   );
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate({ id });
+    deleteMutation.mutate({ facilityId, id });
   };
 
   return (

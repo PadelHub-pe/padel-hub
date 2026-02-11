@@ -33,7 +33,7 @@ export function CourtView({ id }: CourtViewProps) {
   const trpc = useTRPC();
 
   const { data: court } = useSuspenseQuery(
-    trpc.court.getById.queryOptions({ id }),
+    trpc.court.getById.queryOptions({ facilityId, id }),
   );
 
   const status = statusConfig[court.status];

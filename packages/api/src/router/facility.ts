@@ -3,11 +3,26 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { facilities, ownerAccounts } from "@wifo/db/schema";
+import {
+  courts,
+  facilities,
+  operatingHours,
+  timeSlotTemplates,
+} from "@wifo/db/schema";
 
+import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
 
+// =============================================================================
+// Input Schemas
+// =============================================================================
+
+const getProfileSchema = z.object({
+  facilityId: z.string().uuid(),
+});
+
 const updateProfileSchema = z.object({
+  facilityId: z.string().uuid(),
   name: z.string().min(3).max(100),
   phone: z.string().min(1),
   email: z.string().email().optional().or(z.literal("")),
@@ -21,27 +36,51 @@ const updateProfileSchema = z.object({
   amenities: z.array(z.string()),
 });
 
+// Setup wizard schemas
+const saveCourtsSchema = z.object({
+  facilityId: z.string().uuid(),
+  courts: z
+    .array(
+      z.object({
+        name: z.string().min(2, "El nombre de la cancha debe tener al menos 2 caracteres").max(100),
+        type: z.enum(["indoor", "outdoor"]),
+      }),
+    )
+    .min(1, "Debe agregar al menos una cancha")
+    .max(6, "Máximo 6 canchas"),
+});
+
+const operatingHourSchema = z.object({
+  dayOfWeek: z.number().min(0).max(6),
+  openTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato de hora inválido"),
+  closeTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato de hora inválido"),
+  isClosed: z.boolean().default(false),
+});
+
+const saveScheduleSchema = z.object({
+  facilityId: z.string().uuid(),
+  operatingHours: z.array(operatingHourSchema).length(7, "Debe especificar horarios para los 7 días"),
+  defaultDurationMinutes: z.enum(["60", "90", "120"]).transform(Number),
+  defaultPriceInCents: z.number().min(100, "El precio debe ser mayor a S/ 1.00"),
+});
+
+const completeSetupSchema = z.object({
+  facilityId: z.string().uuid(),
+});
+
+// =============================================================================
+// Router
+// =============================================================================
+
 export const facilityRouter = {
-  getProfile: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+  /**
+   * Get facility profile
+   */
+  getProfile: protectedProcedure.input(getProfileSchema).query(async ({ ctx, input }) => {
+    const { facilityId } = input;
 
-    const ownerAccount = await ctx.db.query.ownerAccounts.findFirst({
-      where: eq(ownerAccounts.userId, userId),
-      with: {
-        facilities: {
-          limit: 1,
-        },
-      },
-    });
-
-    const facility = ownerAccount?.facilities[0];
-
-    if (!facility) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "No se encontró el local",
-      });
-    }
+    // Verify access with facility:read permission
+    const { facility } = await verifyFacilityAccess(ctx, facilityId, "facility:read");
 
     return {
       id: facility.id,
@@ -57,47 +96,206 @@ export const facilityRouter = {
       },
       amenities: facility.amenities ?? [],
       photos: facility.photos ?? [],
+      isActive: facility.isActive,
+      onboardingCompletedAt: facility.onboardingCompletedAt,
     };
   }),
 
-  updateProfile: protectedProcedure
-    .input(updateProfileSchema)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+  /**
+   * Update facility profile
+   */
+  updateProfile: protectedProcedure.input(updateProfileSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, ...profileData } = input;
 
-      const ownerAccount = await ctx.db.query.ownerAccounts.findFirst({
-        where: eq(ownerAccounts.userId, userId),
-        with: {
-          facilities: {
-            limit: 1,
-          },
-        },
+    // Verify access with facility:write permission
+    await verifyFacilityAccess(ctx, facilityId, "facility:write");
+
+    await ctx.db
+      .update(facilities)
+      .set({
+        name: profileData.name,
+        phone: profileData.phone,
+        email: profileData.email ?? null,
+        website: profileData.website ?? null,
+        description: profileData.description ?? null,
+        address: profileData.address.street,
+        district: profileData.address.district,
+        city: profileData.address.city,
+        amenities: profileData.amenities,
+      })
+      .where(eq(facilities.id, facilityId));
+
+    return { success: true };
+  }),
+
+  // ==========================================================================
+  // Setup Wizard Procedures
+  // ==========================================================================
+
+  /**
+   * Get facility setup status
+   * Returns completion state for each setup step
+   */
+  getSetupStatus: protectedProcedure
+    .input(z.object({ facilityId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { facilityId } = input;
+
+      // Verify access
+      const { facility } = await verifyFacilityAccess(ctx, facilityId, "facility:read");
+
+      // Get courts count
+      const facilityCourts = await ctx.db.query.courts.findMany({
+        where: eq(courts.facilityId, facilityId),
+        columns: { id: true },
       });
 
-      const facility = ownerAccount?.facilities[0];
+      // Get operating hours count
+      const facilityHours = await ctx.db.query.operatingHours.findMany({
+        where: eq(operatingHours.facilityId, facilityId),
+        columns: { id: true },
+      });
 
-      if (!facility) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "No se encontró el local",
-        });
-      }
+      const hasCourts = facilityCourts.length > 0;
+      const hasSchedule = facilityHours.length > 0;
+      const isComplete = facility.onboardingCompletedAt !== null;
 
-      await ctx.db
-        .update(facilities)
-        .set({
-          name: input.name,
-          phone: input.phone,
-          email: input.email ?? null,
-          website: input.website ?? null,
-          description: input.description ?? null,
-          address: input.address.street,
-          district: input.address.district,
-          city: input.address.city,
-          amenities: input.amenities,
-        })
-        .where(eq(facilities.id, facility.id));
-
-      return { success: true };
+      return {
+        isComplete,
+        onboardingCompletedAt: facility.onboardingCompletedAt,
+        steps: {
+          courts: {
+            completed: hasCourts,
+            count: facilityCourts.length,
+          },
+          schedule: {
+            completed: hasSchedule,
+            count: facilityHours.filter((h) => !h).length, // Non-closed days
+          },
+        },
+      };
     }),
+
+  /**
+   * Save courts during setup
+   * Replaces existing courts with new ones
+   */
+  saveCourts: protectedProcedure.input(saveCourtsSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, courts: courtList } = input;
+
+    // Verify access with court:write permission
+    await verifyFacilityAccess(ctx, facilityId, "court:write");
+
+    // Delete existing courts for this facility
+    await ctx.db.delete(courts).where(eq(courts.facilityId, facilityId));
+
+    // Insert new courts
+    const createdCourts = await ctx.db
+      .insert(courts)
+      .values(
+        courtList.map((court) => ({
+          facilityId,
+          name: court.name,
+          type: court.type,
+        })),
+      )
+      .returning();
+
+    return { courtIds: createdCourts.map((c) => c.id) };
+  }),
+
+  /**
+   * Save operating hours and default pricing during setup
+   */
+  saveSchedule: protectedProcedure.input(saveScheduleSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, operatingHours: hours, defaultDurationMinutes, defaultPriceInCents } =
+      input;
+
+    // Verify access with schedule:write permission
+    await verifyFacilityAccess(ctx, facilityId, "schedule:write");
+
+    // Delete existing operating hours
+    await ctx.db.delete(operatingHours).where(eq(operatingHours.facilityId, facilityId));
+
+    // Insert new operating hours
+    await ctx.db.insert(operatingHours).values(
+      hours.map((oh) => ({
+        facilityId,
+        dayOfWeek: oh.dayOfWeek,
+        openTime: oh.openTime,
+        closeTime: oh.closeTime,
+        isClosed: oh.isClosed,
+      })),
+    );
+
+    // Delete existing time slot templates
+    await ctx.db.delete(timeSlotTemplates).where(eq(timeSlotTemplates.facilityId, facilityId));
+
+    // Create default time slot templates for each open day
+    const templates = hours
+      .filter((oh) => !oh.isClosed)
+      .map((oh) => ({
+        facilityId,
+        courtId: null,
+        dayOfWeek: oh.dayOfWeek,
+        startTime: oh.openTime,
+        endTime: oh.closeTime,
+        durationMinutes: defaultDurationMinutes,
+        priceInCents: defaultPriceInCents,
+      }));
+
+    if (templates.length > 0) {
+      await ctx.db.insert(timeSlotTemplates).values(templates);
+    }
+
+    return { success: true };
+  }),
+
+  /**
+   * Complete facility setup
+   * Marks the facility as ready and activates it
+   */
+  completeSetup: protectedProcedure.input(completeSetupSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId } = input;
+
+    // Verify access with facility:write permission
+    const { facility } = await verifyFacilityAccess(ctx, facilityId, "facility:write");
+
+    // Check that courts exist
+    const facilityCourts = await ctx.db.query.courts.findMany({
+      where: eq(courts.facilityId, facilityId),
+      columns: { id: true },
+    });
+
+    if (facilityCourts.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Debe agregar al menos una cancha antes de completar la configuración",
+      });
+    }
+
+    // Check that operating hours exist
+    const facilityHours = await ctx.db.query.operatingHours.findMany({
+      where: eq(operatingHours.facilityId, facilityId),
+      columns: { id: true },
+    });
+
+    if (facilityHours.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Debe configurar los horarios de operación antes de completar la configuración",
+      });
+    }
+
+    // Mark facility as complete and active
+    await ctx.db
+      .update(facilities)
+      .set({
+        onboardingCompletedAt: new Date(),
+        isActive: true,
+      })
+      .where(eq(facilities.id, facilityId));
+
+    return { success: true, facilityId: facility.id };
+  }),
 } satisfies TRPCRouterRecord;

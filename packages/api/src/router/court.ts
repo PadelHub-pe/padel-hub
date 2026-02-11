@@ -4,16 +4,26 @@ import { addDays, startOfDay } from "date-fns";
 import { and, count, eq, gte, lt } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import type { db as DbType } from "@wifo/db/client";
-import { bookings, courts, ownerAccounts } from "@wifo/db/schema";
+import { bookings, courts } from "@wifo/db/schema";
 
+import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
 // Input Schemas
 // =============================================================================
 
+const facilityIdSchema = z.object({
+  facilityId: z.string().uuid(),
+});
+
+const getByIdSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+});
+
 const createCourtSchema = z.object({
+  facilityId: z.string().uuid(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
   type: z.enum(["indoor", "outdoor"]),
   status: z.enum(["active", "maintenance", "inactive"]).default("active"),
@@ -23,44 +33,30 @@ const createCourtSchema = z.object({
   imageUrl: z.string().url().optional(),
 });
 
-const updateCourtSchema = createCourtSchema.partial();
+const updateCourtSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+  data: z.object({
+    name: z.string().min(2).max(100).optional(),
+    type: z.enum(["indoor", "outdoor"]).optional(),
+    status: z.enum(["active", "maintenance", "inactive"]).optional(),
+    description: z.string().max(500).optional(),
+    priceInCents: z.number().int().min(0).optional(),
+    peakPriceInCents: z.number().int().min(0).optional(),
+    imageUrl: z.string().url().optional(),
+  }),
+});
 
 const updateStatusSchema = z.object({
+  facilityId: z.string().uuid(),
   id: z.string().uuid(),
   status: z.enum(["active", "maintenance", "inactive"]),
 });
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
-async function getOwnerFacility(ctx: {
-  db: typeof DbType;
-  session: { user: { id: string } };
-}) {
-  const userId = ctx.session.user.id;
-
-  const ownerAccount = await ctx.db.query.ownerAccounts.findFirst({
-    where: eq(ownerAccounts.userId, userId),
-    with: {
-      facilities: {
-        limit: 1,
-      },
-    },
-  });
-
-  if (!ownerAccount?.facilities[0]) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "No se encontró el local",
-    });
-  }
-
-  return {
-    ownerId: ownerAccount.id,
-    facilityId: ownerAccount.facilities[0].id,
-  };
-}
+const deleteCourtSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+});
 
 // =============================================================================
 // Router
@@ -68,12 +64,15 @@ async function getOwnerFacility(ctx: {
 
 export const courtRouter = {
   /**
-   * List all courts for the owner's facility with today's bookings count
+   * List all courts for a facility with today's bookings count
    */
-  list: protectedProcedure.query(async ({ ctx }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
+  list: protectedProcedure.input(facilityIdSchema).query(async ({ ctx, input }) => {
+    const { facilityId } = input;
 
-    // Get today's date range using date-fns
+    // Verify access with court:read permission
+    await verifyFacilityAccess(ctx, facilityId, "court:read");
+
+    // Get today's date range
     const today = startOfDay(new Date());
     const tomorrow = startOfDay(addDays(new Date(), 1));
 
@@ -113,10 +112,13 @@ export const courtRouter = {
   /**
    * Get aggregate stats for courts
    */
-  getStats: protectedProcedure.query(async ({ ctx }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
+  getStats: protectedProcedure.input(facilityIdSchema).query(async ({ ctx, input }) => {
+    const { facilityId } = input;
 
-    // Get today's date range using date-fns
+    // Verify access with court:read permission
+    await verifyFacilityAccess(ctx, facilityId, "court:read");
+
+    // Get today's date range
     const today = startOfDay(new Date());
     const tomorrow = startOfDay(addDays(new Date(), 1));
 
@@ -153,30 +155,34 @@ export const courtRouter = {
   /**
    * Get a single court by ID
    */
-  getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  getById: protectedProcedure.input(getByIdSchema).query(async ({ ctx, input }) => {
+    const { facilityId, id } = input;
 
-      const court = await ctx.db.query.courts.findFirst({
-        where: and(eq(courts.id, input.id), eq(courts.facilityId, facilityId)),
+    // Verify access with court:read permission
+    await verifyFacilityAccess(ctx, facilityId, "court:read");
+
+    const court = await ctx.db.query.courts.findFirst({
+      where: and(eq(courts.id, id), eq(courts.facilityId, facilityId)),
+    });
+
+    if (!court) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Cancha no encontrada",
       });
+    }
 
-      if (!court) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Cancha no encontrada",
-        });
-      }
-
-      return court;
-    }),
+    return court;
+  }),
 
   /**
    * Create a new court
    */
   create: protectedProcedure.input(createCourtSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
+    const { facilityId, ...courtData } = input;
+
+    // Verify access with court:write permission
+    await verifyFacilityAccess(ctx, facilityId, "court:write");
 
     // Check court limit (max 10 per facility)
     const existingCourts = await ctx.db
@@ -196,13 +202,13 @@ export const courtRouter = {
       .insert(courts)
       .values({
         facilityId,
-        name: input.name,
-        type: input.type,
-        status: input.status,
-        description: input.description ?? null,
-        priceInCents: input.priceInCents ?? null,
-        peakPriceInCents: input.peakPriceInCents ?? null,
-        imageUrl: input.imageUrl ?? null,
+        name: courtData.name,
+        type: courtData.type,
+        status: courtData.status,
+        description: courtData.description ?? null,
+        priceInCents: courtData.priceInCents ?? null,
+        peakPriceInCents: courtData.peakPriceInCents ?? null,
+        imageUrl: courtData.imageUrl ?? null,
       })
       .returning();
 
@@ -219,52 +225,15 @@ export const courtRouter = {
   /**
    * Update a court
    */
-  update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        data: updateCourtSchema,
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  update: protectedProcedure.input(updateCourtSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, id, data } = input;
 
-      // Verify court belongs to facility
-      const existingCourt = await ctx.db.query.courts.findFirst({
-        where: and(eq(courts.id, input.id), eq(courts.facilityId, facilityId)),
-      });
-
-      if (!existingCourt) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Cancha no encontrada",
-        });
-      }
-
-      const [updatedCourt] = await ctx.db
-        .update(courts)
-        .set({
-          ...input.data,
-          description: input.data.description ?? existingCourt.description,
-          priceInCents: input.data.priceInCents ?? existingCourt.priceInCents,
-          peakPriceInCents: input.data.peakPriceInCents ?? existingCourt.peakPriceInCents,
-          imageUrl: input.data.imageUrl ?? existingCourt.imageUrl,
-        })
-        .where(eq(courts.id, input.id))
-        .returning();
-
-      return updatedCourt;
-    }),
-
-  /**
-   * Quick status toggle
-   */
-  updateStatus: protectedProcedure.input(updateStatusSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId } = await getOwnerFacility(ctx);
+    // Verify access with court:write permission
+    await verifyFacilityAccess(ctx, facilityId, "court:write");
 
     // Verify court belongs to facility
     const existingCourt = await ctx.db.query.courts.findFirst({
-      where: and(eq(courts.id, input.id), eq(courts.facilityId, facilityId)),
+      where: and(eq(courts.id, id), eq(courts.facilityId, facilityId)),
     });
 
     if (!existingCourt) {
@@ -276,8 +245,44 @@ export const courtRouter = {
 
     const [updatedCourt] = await ctx.db
       .update(courts)
-      .set({ status: input.status })
-      .where(eq(courts.id, input.id))
+      .set({
+        ...data,
+        description: data.description ?? existingCourt.description,
+        priceInCents: data.priceInCents ?? existingCourt.priceInCents,
+        peakPriceInCents: data.peakPriceInCents ?? existingCourt.peakPriceInCents,
+        imageUrl: data.imageUrl ?? existingCourt.imageUrl,
+      })
+      .where(eq(courts.id, id))
+      .returning();
+
+    return updatedCourt;
+  }),
+
+  /**
+   * Quick status toggle
+   */
+  updateStatus: protectedProcedure.input(updateStatusSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, id, status } = input;
+
+    // Verify access with court:write permission
+    await verifyFacilityAccess(ctx, facilityId, "court:write");
+
+    // Verify court belongs to facility
+    const existingCourt = await ctx.db.query.courts.findFirst({
+      where: and(eq(courts.id, id), eq(courts.facilityId, facilityId)),
+    });
+
+    if (!existingCourt) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Cancha no encontrada",
+      });
+    }
+
+    const [updatedCourt] = await ctx.db
+      .update(courts)
+      .set({ status })
+      .where(eq(courts.id, id))
       .returning();
 
     return updatedCourt;
@@ -286,25 +291,26 @@ export const courtRouter = {
   /**
    * Delete a court
    */
-  delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const { facilityId } = await getOwnerFacility(ctx);
+  delete: protectedProcedure.input(deleteCourtSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, id } = input;
 
-      // Verify court belongs to facility
-      const existingCourt = await ctx.db.query.courts.findFirst({
-        where: and(eq(courts.id, input.id), eq(courts.facilityId, facilityId)),
+    // Verify access with court:write permission
+    await verifyFacilityAccess(ctx, facilityId, "court:write");
+
+    // Verify court belongs to facility
+    const existingCourt = await ctx.db.query.courts.findFirst({
+      where: and(eq(courts.id, id), eq(courts.facilityId, facilityId)),
+    });
+
+    if (!existingCourt) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Cancha no encontrada",
       });
+    }
 
-      if (!existingCourt) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Cancha no encontrada",
-        });
-      }
+    await ctx.db.delete(courts).where(eq(courts.id, id));
 
-      await ctx.db.delete(courts).where(eq(courts.id, input.id));
-
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 } satisfies TRPCRouterRecord;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
+import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingDetailDrawer } from "../../_components/booking-detail-drawer";
 import { CalendarDayGrid } from "./calendar-day-grid";
@@ -22,6 +23,7 @@ interface QuickBookingSlot {
 
 export function CalendarView() {
   const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
 
   // State
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -31,18 +33,18 @@ export function CalendarView() {
   const [showMiniCalendar, setShowMiniCalendar] = useState(true);
 
   // Fetch courts for quick booking form
-  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions());
+  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions({ facilityId }));
 
   // Fetch day or week data based on view mode
   const { data: dayData, refetch: refetchDay } = useQuery({
-    ...trpc.calendar.getDayView.queryOptions({ date: currentDate }),
+    ...trpc.calendar.getDayView.queryOptions({ facilityId, date: currentDate }),
     enabled: viewMode === "day",
     placeholderData: keepPreviousData,
   });
 
   const weekStart = getWeekStart(currentDate);
   const { data: weekData, refetch: refetchWeek } = useQuery({
-    ...trpc.calendar.getWeekView.queryOptions({ weekStart }),
+    ...trpc.calendar.getWeekView.queryOptions({ facilityId, weekStart }),
     enabled: viewMode === "week",
     placeholderData: keepPreviousData,
   });
@@ -224,6 +226,7 @@ export function CalendarView() {
         <QuickBookingForm
           open={true}
           onClose={handleCloseQuickBooking}
+          facilityId={facilityId}
           courtId={quickBookingSlot.courtId}
           courtName={quickBookingSlot.courtName}
           date={quickBookingSlot.date}

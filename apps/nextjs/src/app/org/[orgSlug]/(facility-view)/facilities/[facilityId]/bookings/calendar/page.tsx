@@ -3,11 +3,16 @@ import { Suspense } from "react";
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { CalendarView } from "./_components/calendar-view";
 
-export default function FacilityCalendarPage() {
+interface FacilityCalendarPageProps {
+  params: Promise<{ orgSlug: string; facilityId: string }>;
+}
+
+export default async function FacilityCalendarPage({ params }: FacilityCalendarPageProps) {
+  const { facilityId } = await params;
+
   // Prefetch today's data for client components
-  // TODO: Update to accept facilityId for facility-scoped data
-  prefetch(trpc.calendar.getDayView.queryOptions({ date: new Date() }));
-  prefetch(trpc.court.list.queryOptions());
+  prefetch(trpc.calendar.getDayView.queryOptions({ facilityId, date: new Date() }));
+  prefetch(trpc.court.list.queryOptions({ facilityId }));
 
   return (
     <HydrateClient>

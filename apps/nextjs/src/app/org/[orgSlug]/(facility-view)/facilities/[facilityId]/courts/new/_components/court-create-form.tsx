@@ -115,6 +115,7 @@ export function CourtCreateForm() {
         : undefined;
 
     createMutation.mutate({
+      facilityId,
       name: values.name,
       type: values.type,
       status: values.status,

@@ -8,9 +8,9 @@ interface EditCourtPageProps {
 }
 
 export default async function EditCourtPage({ params }: EditCourtPageProps) {
-  const { courtId } = await params;
+  const { facilityId, courtId } = await params;
 
-  prefetch(trpc.court.getById.queryOptions({ id: courtId }));
+  prefetch(trpc.court.getById.queryOptions({ facilityId, id: courtId }));
 
   return (
     <HydrateClient>

@@ -6,6 +6,7 @@ import { Button } from "@wifo/ui/button";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
 
+import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 
 interface CancelBookingDialogProps {
@@ -22,6 +23,7 @@ export function CancelBookingDialog({
   onCancelled,
 }: CancelBookingDialogProps) {
   const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
   const [reason, setReason] = useState("");
 
   const cancelMutation = useMutation(
@@ -40,6 +42,7 @@ export function CancelBookingDialog({
 
   const handleCancel = () => {
     cancelMutation.mutate({
+      facilityId,
       id: bookingId,
       reason: reason || undefined,
     });
