@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -12,6 +13,7 @@ import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "./booking-status-badge";
 import { CancelBookingDialog } from "./cancel-booking-dialog";
 import { CourtBadge } from "./court-badge";
+import { PlayerCountBadge } from "./player-count-badge";
 
 interface BookingDetailDrawerProps {
   bookingId: string | null;
@@ -27,7 +29,7 @@ export function BookingDetailDrawer({
   onBookingUpdated,
 }: BookingDetailDrawerProps) {
   const trpc = useTRPC();
-  const { facilityId } = useFacilityContext();
+  const { facilityId, basePath } = useFacilityContext();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: booking, isLoading } = useQuery({
@@ -98,6 +100,27 @@ export function BookingDetailDrawer({
                 </span>
                 <BookingStatusBadge status={booking.status} />
               </div>
+
+              {/* Player count */}
+              {"playerCount" in booking && (
+                <section>
+                  <h3 className="text-sm font-medium text-gray-500">Jugadores</h3>
+                  <div className="mt-2">
+                    <PlayerCountBadge count={(booking as { playerCount: number }).playerCount} />
+                  </div>
+                </section>
+              )}
+
+              {/* Link to full detail page */}
+              <Link
+                href={`${basePath}/bookings/${booking.id}`}
+                className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                Ver detalle completo
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
 
               {/* Customer info */}
               <section>

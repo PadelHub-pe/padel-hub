@@ -37,6 +37,7 @@ const statusOptions = [
   { value: "in_progress", label: "En Progreso" },
   { value: "completed", label: "Completada" },
   { value: "cancelled", label: "Cancelada" },
+  { value: "open_match", label: "Partido Abierto" },
 ];
 
 export function BookingsFilters({

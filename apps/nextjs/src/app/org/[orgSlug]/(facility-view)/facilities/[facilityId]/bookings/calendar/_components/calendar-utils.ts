@@ -154,6 +154,12 @@ export function getStatusColors(status: string): {
         border: "border-l-yellow-500",
         text: "text-yellow-900",
       };
+    case "open_match":
+      return {
+        bg: "bg-amber-50",
+        border: "border-l-amber-500",
+        text: "text-amber-900",
+      };
     default:
       return {
         bg: "bg-gray-50",

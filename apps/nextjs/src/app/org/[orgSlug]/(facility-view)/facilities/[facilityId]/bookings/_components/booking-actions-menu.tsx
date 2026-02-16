@@ -20,7 +20,8 @@ type BookingStatus =
   | "confirmed"
   | "in_progress"
   | "completed"
-  | "cancelled";
+  | "cancelled"
+  | "open_match";
 
 interface BookingActionsMenuProps {
   bookingId: string;
@@ -55,8 +56,8 @@ export function BookingActionsMenu({
     confirmMutation.mutate({ facilityId, id: bookingId });
   };
 
-  const canConfirm = status === "pending";
-  const canCancel = status === "pending" || status === "confirmed";
+  const canConfirm = status === "pending" || status === "open_match";
+  const canCancel = status === "pending" || status === "confirmed" || status === "open_match";
   const canEdit = status === "confirmed";
 
   return (

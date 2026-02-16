@@ -171,6 +171,7 @@ export const bookingStatusEnum = pgEnum("booking_status", [
   "in_progress",
   "completed",
   "cancelled",
+  "open_match",
 ]);
 
 /**
@@ -399,7 +400,7 @@ export const bookings = pgTable("bookings", {
     .notNull(),
 });
 
-export const bookingsRelations = relations(bookings, ({ one }) => ({
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   user: one(user, {
     fields: [bookings.userId],
     references: [user.id],
@@ -412,7 +413,91 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
     fields: [bookings.facilityId],
     references: [facilities.id],
   }),
+  players: many(bookingPlayers),
+  activity: many(bookingActivity),
 }));
+
+// =============================================================================
+// Booking Players Schema
+// =============================================================================
+
+export const playerRoleEnum = pgEnum("player_role", ["owner", "player"]);
+
+export const bookingPlayers = pgTable(
+  "booking_players",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    bookingId: uuid("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    role: playerRoleEnum("role").notNull(),
+    position: integer("position").notNull(),
+    guestName: varchar("guest_name", { length: 100 }),
+    guestEmail: varchar("guest_email", { length: 255 }),
+    guestPhone: varchar("guest_phone", { length: 20 }),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique().on(table.bookingId, table.userId),
+    unique().on(table.bookingId, table.position),
+  ],
+);
+
+export const bookingPlayersRelations = relations(bookingPlayers, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [bookingPlayers.bookingId],
+    references: [bookings.id],
+  }),
+  user: one(user, {
+    fields: [bookingPlayers.userId],
+    references: [user.id],
+  }),
+}));
+
+// =============================================================================
+// Booking Activity Schema
+// =============================================================================
+
+export const bookingActivityTypeEnum = pgEnum("booking_activity_type", [
+  "created",
+  "confirmed",
+  "player_joined",
+  "player_left",
+  "status_changed",
+  "modified",
+  "started",
+  "completed",
+  "cancelled",
+]);
+
+export const bookingActivity = pgTable("booking_activity", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id")
+    .notNull()
+    .references(() => bookings.id, { onDelete: "cascade" }),
+  type: bookingActivityTypeEnum("type").notNull(),
+  description: text("description").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  performedBy: text("performed_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const bookingActivityRelations = relations(
+  bookingActivity,
+  ({ one }) => ({
+    booking: one(bookings, {
+      fields: [bookingActivity.bookingId],
+      references: [bookings.id],
+    }),
+    performer: one(user, {
+      fields: [bookingActivity.performedBy],
+      references: [user.id],
+    }),
+  }),
+);
 
 // =============================================================================
 // Insert Schemas for Validation
@@ -475,6 +560,15 @@ export const CreateManualBookingSchema = z.object({
   customerPhone: z.string().max(20).optional(),
   customerEmail: z.string().email().optional().or(z.literal("")),
   notes: z.string().max(500).optional(),
+  players: z
+    .array(
+      z.object({
+        position: z.number().int().min(2).max(4),
+        guestName: z.string().min(1).max(100),
+      }),
+    )
+    .max(3)
+    .optional(),
 });
 
 export const CreateOrganizationSchema = createInsertSchema(organizations, {

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PadelHub Dashboard — Screen 8: Booking Detail (v2 - 4 Players)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50:'#EFF6FF',100:'#DBEAFE',200:'#BFDBFE',300:'#93C5FD',400:'#60A5FA',500:'#3B82F6',600:'#2563EB',700:'#1D4ED8',800:'#1E40AF',900:'#1E3A8A' },
+                        secondary: { 50:'#ECFDF5',100:'#D1FAE5',200:'#A7F3D0',300:'#6EE7B7',400:'#34D399',500:'#10B981',600:'#059669',700:'#047857',800:'#065F46',900:'#064E3B' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .court-bg {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            position: relative;
+        }
+        .court-lines {
+            position: absolute;
+            inset: 0;
+            border: 3px solid rgba(255,255,255,0.4);
+            border-radius: 8px;
+        }
+        .court-net {
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            bottom: 10%;
+            width: 2px;
+            background: rgba(255,255,255,0.6);
+            transform: translateX(-50%);
+        }
+        .court-center-line {
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+        }
+        .player-slot {
+            transition: all 0.2s ease;
+        }
+        .player-slot:hover {
+            transform: scale(1.05);
+        }
+        .player-slot.empty:hover {
+            border-color: #3B82F6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <header class="max-w-[1400px] mx-auto mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
+                    <span class="text-white font-bold text-xl">P</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">PadelHub Owner Dashboard</h1>
+                    <p class="text-gray-500">Screen 8 — Booking Detail (v2 - 4 Players Support)</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 bg-amber-100 text-amber-700 text-sm font-medium rounded-full">Refactored</span>
+                <span class="px-3 py-1 bg-primary-100 text-primary-700 text-sm font-medium rounded-full">MVP Essential</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1400px] mx-auto">
+        <div class="flex gap-8">
+            <div class="flex-1">
+                <div class="bg-gray-800 rounded-xl p-3 shadow-2xl">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="flex-1 bg-gray-700 rounded-lg px-4 py-1.5 text-sm text-gray-400 ml-4">
+                            dashboard.padelhub.pe/bookings/PH-2026-8X4K
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg overflow-hidden flex" style="height: 820px;">
+                        <!-- Sidebar -->
+                        <div class="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+                            <div class="p-4 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                                        <span class="text-white font-bold text-sm">P</span>
+                                    </div>
+                                    <span class="font-bold text-gray-900">PadelHub</span>
+                                </div>
+                            </div>
+                            <nav class="flex-1 p-3 space-y-1">
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                    Dashboard
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-primary-50 text-primary-700 rounded-lg font-medium text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    Bookings
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
+                                    My Facility
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
+                                    Courts
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Schedule
+                                </a>
+                            </nav>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="flex-1 overflow-y-auto">
+                            <!-- Header -->
+                            <div class="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
+                                <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                                    <a href="#" class="hover:text-primary-600">Bookings</a>
+                                    <span>/</span>
+                                    <span class="text-gray-900 font-medium">PH-2026-8X4K</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <h1 class="text-xl font-bold text-gray-900">Booking Details</h1>
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">Confirmed</span>
+                                        <span class="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs font-medium rounded">4/4 Full</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="px-3 py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 text-sm">Edit</button>
+                                        <button class="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg font-medium hover:bg-red-50 text-sm">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-6 space-y-6">
+                                <!-- Top Row: Court Visualization + Booking Info -->
+                                <div class="grid grid-cols-5 gap-6">
+                                    <!-- Court Visualization with Players -->
+                                    <div class="col-span-3 bg-white rounded-xl border border-gray-200 p-5">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <h2 class="text-lg font-semibold text-gray-900">🎾 Match Lineup</h2>
+                                            <span class="text-sm text-gray-500">Court 1 • Indoor</span>
+                                        </div>
+                                        
+                                        <!-- Court Diagram -->
+                                        <div class="court-bg rounded-xl p-6 relative" style="height: 280px;">
+                                            <div class="court-lines"></div>
+                                            <div class="court-net"></div>
+                                            
+                                            <!-- Team Labels -->
+                                            <div class="absolute top-2 left-4 px-2 py-0.5 bg-white/20 backdrop-blur rounded text-white text-xs font-medium">Team A</div>
+                                            <div class="absolute top-2 right-4 px-2 py-0.5 bg-white/20 backdrop-blur rounded text-white text-xs font-medium">Team B</div>
+                                            
+                                            <!-- Player 1 - Owner (Top Left) -->
+                                            <div class="absolute top-12 left-8 player-slot">
+                                                <div class="flex flex-col items-center">
+                                                    <div class="relative">
+                                                        <div class="w-14 h-14 rounded-full bg-primary-100 border-3 border-white shadow-lg flex items-center justify-center">
+                                                            <span class="text-primary-700 font-bold">CM</span>
+                                                        </div>
+                                                        <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-400 rounded-full border-2 border-white flex items-center justify-center">
+                                                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                                        </span>
+                                                    </div>
+                                                    <span class="mt-2 px-2 py-0.5 bg-white/90 backdrop-blur rounded text-xs font-medium text-gray-800">Carlos M.</span>
+                                                    <span class="text-[10px] text-white/80">Owner • Lvl 4</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Player 2 (Bottom Left) -->
+                                            <div class="absolute bottom-12 left-8 player-slot">
+                                                <div class="flex flex-col items-center">
+                                                    <div class="w-14 h-14 rounded-full bg-secondary-100 border-3 border-white shadow-lg flex items-center justify-center">
+                                                        <span class="text-secondary-700 font-bold">AG</span>
+                                                    </div>
+                                                    <span class="mt-2 px-2 py-0.5 bg-white/90 backdrop-blur rounded text-xs font-medium text-gray-800">Ana G.</span>
+                                                    <span class="text-[10px] text-white/80">Player • Lvl 4</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Player 3 (Top Right) -->
+                                            <div class="absolute top-12 right-8 player-slot">
+                                                <div class="flex flex-col items-center">
+                                                    <div class="w-14 h-14 rounded-full bg-purple-100 border-3 border-white shadow-lg flex items-center justify-center">
+                                                        <span class="text-purple-700 font-bold">LV</span>
+                                                    </div>
+                                                    <span class="mt-2 px-2 py-0.5 bg-white/90 backdrop-blur rounded text-xs font-medium text-gray-800">Luis V.</span>
+                                                    <span class="text-[10px] text-white/80">Player • Lvl 3</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Player 4 (Bottom Right) -->
+                                            <div class="absolute bottom-12 right-8 player-slot">
+                                                <div class="flex flex-col items-center">
+                                                    <div class="w-14 h-14 rounded-full bg-amber-100 border-3 border-white shadow-lg flex items-center justify-center">
+                                                        <span class="text-amber-700 font-bold">MT</span>
+                                                    </div>
+                                                    <span class="mt-2 px-2 py-0.5 bg-white/90 backdrop-blur rounded text-xs font-medium text-gray-800">María T.</span>
+                                                    <span class="text-[10px] text-white/80">Player • Lvl 4</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Team Summary -->
+                                        <div class="mt-4 flex items-center justify-between px-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-500">Avg. Level:</span>
+                                                <span class="px-2 py-0.5 bg-secondary-100 text-secondary-700 text-xs font-medium rounded">3.75</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-500">Match Type:</span>
+                                                <span class="text-xs font-medium text-gray-700">Private Match</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Booking Info -->
+                                    <div class="col-span-2 space-y-4">
+                                        <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Reservation</h2>
+                                            <div class="space-y-3">
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Confirmation</span>
+                                                    <span class="font-mono text-sm font-semibold text-primary-600">PH-2026-8X4K</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Date</span>
+                                                    <span class="text-sm font-medium text-gray-900">Tue, Feb 11, 2026</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Time</span>
+                                                    <span class="text-sm font-medium text-gray-900">9:00 AM - 10:30 AM</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Duration</span>
+                                                    <span class="text-sm font-medium text-gray-900">1.5 hours</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Court</span>
+                                                    <span class="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded">Court 1</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Booked On</span>
+                                                    <span class="text-sm text-gray-600">Feb 9, 3:45 PM</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Payment</h2>
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="text-gray-500">Court rental (1.5hr)</span>
+                                                    <span class="text-gray-900">S/ 120.00</span>
+                                                </div>
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="text-gray-500">Service fee</span>
+                                                    <span class="text-gray-900">S/ 0.00</span>
+                                                </div>
+                                                <div class="border-t border-gray-100 pt-2 flex justify-between">
+                                                    <span class="font-semibold text-gray-900">Total</span>
+                                                    <span class="font-bold text-lg text-gray-900">S/ 120.00</span>
+                                                </div>
+                                                <div class="pt-1">
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">Paid via App</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Players List -->
+                                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h2 class="text-lg font-semibold text-gray-900">👥 Players (4/4)</h2>
+                                        <button class="text-sm text-primary-600 hover:text-primary-700 font-medium">+ Add Player</button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <!-- Player 1 - Owner -->
+                                        <div class="flex items-center gap-4 p-4 bg-primary-50/50 rounded-xl border border-primary-100">
+                                            <div class="relative">
+                                                <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                                                    <span class="text-primary-700 font-bold">CM</span>
+                                                </div>
+                                                <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-400 rounded-full border-2 border-white flex items-center justify-center">
+                                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                                </span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="font-medium text-gray-900">Carlos Mendoza</p>
+                                                    <span class="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">OWNER</span>
+                                                </div>
+                                                <p class="text-sm text-gray-500">carlos.m@email.com</p>
+                                                <div class="flex items-center gap-3 mt-1">
+                                                    <span class="text-xs text-gray-500">+51 999 123 456</span>
+                                                    <span class="px-1.5 py-0.5 bg-secondary-100 text-secondary-700 text-[10px] font-medium rounded">Level 4</span>
+                                                </div>
+                                            </div>
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Player 2 -->
+                                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <div class="w-12 h-12 rounded-full bg-secondary-100 flex items-center justify-center">
+                                                <span class="text-secondary-700 font-bold">AG</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="font-medium text-gray-900">Ana García</p>
+                                                <p class="text-sm text-gray-500">ana.g@email.com</p>
+                                                <div class="flex items-center gap-3 mt-1">
+                                                    <span class="text-xs text-gray-500">+51 999 234 567</span>
+                                                    <span class="px-1.5 py-0.5 bg-secondary-100 text-secondary-700 text-[10px] font-medium rounded">Level 4</span>
+                                                </div>
+                                            </div>
+                                            <button class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded" title="Remove player">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Player 3 -->
+                                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                                <span class="text-purple-700 font-bold">LV</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="font-medium text-gray-900">Luis Vargas</p>
+                                                <p class="text-sm text-gray-500">luis.v@email.com</p>
+                                                <div class="flex items-center gap-3 mt-1">
+                                                    <span class="text-xs text-gray-500">+51 999 345 678</span>
+                                                    <span class="px-1.5 py-0.5 bg-secondary-100 text-secondary-700 text-[10px] font-medium rounded">Level 3</span>
+                                                </div>
+                                            </div>
+                                            <button class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded" title="Remove player">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Player 4 -->
+                                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                                                <span class="text-amber-700 font-bold">MT</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="font-medium text-gray-900">María Torres</p>
+                                                <p class="text-sm text-gray-500">maria.t@email.com</p>
+                                                <div class="flex items-center gap-3 mt-1">
+                                                    <span class="text-xs text-gray-500">+51 999 456 789</span>
+                                                    <span class="px-1.5 py-0.5 bg-secondary-100 text-secondary-700 text-[10px] font-medium rounded">Level 4</span>
+                                                </div>
+                                            </div>
+                                            <button class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded" title="Remove player">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Activity Log -->
+                                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                    <h2 class="text-lg font-semibold text-gray-900 mb-4">📋 Activity</h2>
+                                    <div class="space-y-3">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                            <div>
+                                                <p class="text-sm text-gray-900"><span class="font-medium">María Torres</span> joined the match</p>
+                                                <p class="text-xs text-gray-500">Today, 8:30 AM</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                            <div>
+                                                <p class="text-sm text-gray-900"><span class="font-medium">Luis Vargas</span> joined the match</p>
+                                                <p class="text-xs text-gray-500">Yesterday, 6:15 PM</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                                            <div>
+                                                <p class="text-sm text-gray-900"><span class="font-medium">Ana García</span> joined the match</p>
+                                                <p class="text-xs text-gray-500">Feb 9, 4:00 PM</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-primary-500 mt-2"></div>
+                                            <div>
+                                                <p class="text-sm text-gray-900"><span class="font-medium">Carlos Mendoza</span> created the booking</p>
+                                                <p class="text-xs text-gray-500">Feb 9, 3:45 PM</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specification Panel -->
+            <div class="w-72 shrink-0 space-y-5">
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-900 mb-3">🔄 Refactored Changes</h3>
+                    <div class="space-y-2 text-xs text-gray-700">
+                        <div class="flex items-start gap-2">
+                            <span class="text-primary-500 mt-0.5">●</span>
+                            <span><strong>Court Visualization</strong> — Shows 4 player positions on court diagram</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-amber-500 mt-0.5">●</span>
+                            <span><strong>Owner Badge</strong> — Star icon identifies booking owner</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-secondary-500 mt-0.5">●</span>
+                            <span><strong>Players Grid</strong> — Full player cards with contact info</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-purple-500 mt-0.5">●</span>
+                            <span><strong>Skill Levels</strong> — Each player shows their level</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-rose-400 mt-0.5">●</span>
+                            <span><strong>Player Actions</strong> — Remove player button per card</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-indigo-500 mt-0.5">●</span>
+                            <span><strong>Activity Log</strong> — Player join history</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-900 mb-3">🎾 Court Layout</h3>
+                    <div class="bg-gray-800 rounded-lg p-3 relative" style="height: 120px;">
+                        <div class="absolute inset-2 border border-gray-500 rounded"></div>
+                        <div class="absolute left-1/2 top-2 bottom-2 w-px bg-gray-500"></div>
+                        <div class="absolute top-4 left-4 w-6 h-6 rounded-full bg-primary-400 flex items-center justify-center text-[8px] text-white font-bold">P1</div>
+                        <div class="absolute bottom-4 left-4 w-6 h-6 rounded-full bg-secondary-400 flex items-center justify-center text-[8px] text-white font-bold">P2</div>
+                        <div class="absolute top-4 right-4 w-6 h-6 rounded-full bg-purple-400 flex items-center justify-center text-[8px] text-white font-bold">P3</div>
+                        <div class="absolute bottom-4 right-4 w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-[8px] text-white font-bold">P4</div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Team A vs Team B formation</p>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-900 mb-3">👤 Player Roles</h3>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center gap-2 p-2 bg-amber-50 rounded-lg">
+                            <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            <div>
+                                <p class="font-medium text-amber-800">Owner</p>
+                                <p class="text-amber-600">Created booking, pays</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                            <div class="w-4 h-4 rounded-full bg-gray-300"></div>
+                            <div>
+                                <p class="font-medium text-gray-800">Player</p>
+                                <p class="text-gray-600">Joined the match</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-900 mb-3">🗄️ booking_players</h3>
+                    <div class="bg-gray-50 rounded p-3 font-mono text-[10px] text-gray-700">
+                        <p class="text-purple-600 font-semibold">Schema</p>
+                        <p>id UUID PK</p>
+                        <p>booking_id FK → bookings</p>
+                        <p>user_id FK → users</p>
+                        <p>role: 'owner' | 'player'</p>
+                        <p>position: 1-4 (court)</p>
+                        <p>joined_at TIMESTAMP</p>
+                        <p class="mt-2 text-gray-500">UNIQUE(booking_id, user_id)</p>
+                        <p class="text-gray-500">MAX 4 per booking</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-900 mb-3">⚡ tRPC Procedures</h3>
+                    <div class="space-y-2">
+                        <div class="bg-gray-50 rounded p-2">
+                            <code class="text-[10px] text-primary-700">booking.getDetail</code>
+                            <p class="text-[10px] text-gray-500">Returns booking + 4 players</p>
+                        </div>
+                        <div class="bg-gray-50 rounded p-2">
+                            <code class="text-[10px] text-primary-700">booking.addPlayer</code>
+                            <p class="text-[10px] text-gray-500">(bookingId, userId, position)</p>
+                        </div>
+                        <div class="bg-gray-50 rounded p-2">
+                            <code class="text-[10px] text-primary-700">booking.removePlayer</code>
+                            <p class="text-[10px] text-gray-500">(bookingId, playerId)</p>
+                        </div>
+                        <div class="bg-gray-50 rounded p-2">
+                            <code class="text-[10px] text-primary-700">booking.getActivity</code>
+                            <p class="text-[10px] text-gray-500">Player join/leave history</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-900 mb-3">🎨 Design Inspiration</h3>
+                    <div class="space-y-2 text-xs text-gray-600">
+                        <p>• <strong>Sports lineup builders</strong> — Court formation view</p>
+                        <p>• <strong>Team member grids</strong> — Player cards layout</p>
+                        <p>• <strong>Avatar groups</strong> — Stacked player avatars</p>
+                        <p>• <strong>Playtomic/OpenCourt</strong> — 4-player padel UX</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -140,6 +140,7 @@ export const calendarRouter = {
         with: {
           court: true,
           user: true,
+          players: true,
         },
         orderBy: [asc(bookings.startTime)],
       }),
@@ -185,6 +186,7 @@ export const calendarRouter = {
         isPeakRate: b.isPeakRate,
         status: b.status,
         customerName: b.customerName,
+        playerCount: b.players.length,
         user: b.user
           ? {
               name: b.user.name,
@@ -232,6 +234,7 @@ export const calendarRouter = {
         with: {
           court: true,
           user: true,
+          players: true,
         },
         orderBy: [asc(bookings.date), asc(bookings.startTime)],
       }),
@@ -310,6 +313,7 @@ export const calendarRouter = {
         isPeakRate: b.isPeakRate,
         status: b.status,
         customerName: b.customerName,
+        playerCount: b.players.length,
         user: b.user
           ? {
               name: b.user.name,

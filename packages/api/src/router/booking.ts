@@ -1,25 +1,43 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { addDays, startOfDay } from "date-fns";
-import { and, count, desc, eq, gte, ilike, lt, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, gte, ilike, lt, ne, or } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { bookings, courts, CreateManualBookingSchema } from "@wifo/db/schema";
+import {
+  blockedSlots,
+  bookingActivity,
+  bookingPlayers,
+  bookings,
+  courts,
+  CreateManualBookingSchema,
+  operatingHours,
+  peakPeriods,
+  user,
+} from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
+import { logBookingActivity } from "../lib/booking-activity";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
 // Input Schemas
 // =============================================================================
 
+const bookingStatusValues = [
+  "pending",
+  "confirmed",
+  "in_progress",
+  "completed",
+  "cancelled",
+  "open_match",
+] as const;
+
 const listBookingsSchema = z.object({
   facilityId: z.string().uuid(),
   search: z.string().optional(),
   courtId: z.string().uuid().optional(),
-  status: z
-    .enum(["pending", "confirmed", "in_progress", "completed", "cancelled"])
-    .optional(),
+  status: z.enum(bookingStatusValues).optional(),
   date: z.date().optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
@@ -44,7 +62,7 @@ const cancelBookingSchema = z.object({
 const updateStatusSchema = z.object({
   facilityId: z.string().uuid(),
   id: z.string().uuid(),
-  status: z.enum(["pending", "confirmed", "in_progress", "completed", "cancelled"]),
+  status: z.enum(bookingStatusValues),
 });
 
 const createManualSchema = CreateManualBookingSchema.extend({
@@ -53,6 +71,38 @@ const createManualSchema = CreateManualBookingSchema.extend({
 
 const getStatsSchema = z.object({
   facilityId: z.string().uuid(),
+});
+
+const addPlayerSchema = z.object({
+  facilityId: z.string().uuid(),
+  bookingId: z.string().uuid(),
+  position: z.number().int().min(1).max(4),
+  userId: z.string().optional(),
+  guestName: z.string().max(100).optional(),
+  guestEmail: z.string().email().optional().or(z.literal("")),
+  guestPhone: z.string().max(20).optional(),
+});
+
+const removePlayerSchema = z.object({
+  facilityId: z.string().uuid(),
+  bookingId: z.string().uuid(),
+  playerId: z.string().uuid(),
+});
+
+const getActivitySchema = z.object({
+  facilityId: z.string().uuid(),
+  bookingId: z.string().uuid(),
+});
+
+const searchUsersSchema = z.object({
+  facilityId: z.string().uuid(),
+  bookingId: z.string().uuid(),
+  query: z.string().min(1).max(100),
+});
+
+const getSlotInfoSchema = z.object({
+  facilityId: z.string().uuid(),
+  date: z.date(),
 });
 
 // =============================================================================
@@ -123,12 +173,13 @@ export const bookingRouter = {
       .where(whereClause);
     const total = totalResult?.count ?? 0;
 
-    // Get bookings with court info
+    // Get bookings with court info and players
     const bookingsList = await ctx.db.query.bookings.findMany({
       where: whereClause,
       with: {
         court: true,
         user: true,
+        players: true,
       },
       orderBy: [desc(bookings.date), desc(bookings.createdAt)],
       limit,
@@ -136,7 +187,10 @@ export const bookingRouter = {
     });
 
     return {
-      bookings: bookingsList,
+      bookings: bookingsList.map((b) => ({
+        ...b,
+        playerCount: b.players.length,
+      })),
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -144,7 +198,7 @@ export const bookingRouter = {
   }),
 
   /**
-   * Get a single booking by ID
+   * Get a single booking by ID with players and activity
    */
   getById: protectedProcedure.input(getByIdSchema).query(async ({ ctx, input }) => {
     const { facilityId, id } = input;
@@ -157,6 +211,17 @@ export const bookingRouter = {
       with: {
         court: true,
         user: true,
+        players: {
+          with: {
+            user: true,
+          },
+        },
+        activity: {
+          with: {
+            performer: true,
+          },
+          orderBy: [desc(bookingActivity.createdAt)],
+        },
       },
     });
 
@@ -167,7 +232,10 @@ export const bookingRouter = {
       });
     }
 
-    return booking;
+    return {
+      ...booking,
+      playerCount: booking.players.length,
+    };
   }),
 
   /**
@@ -190,10 +258,10 @@ export const bookingRouter = {
       });
     }
 
-    if (booking.status !== "pending") {
+    if (booking.status !== "pending" && booking.status !== "open_match") {
       throw new TRPCError({
         code: "BAD_REQUEST",
-        message: "Solo se pueden confirmar reservas pendientes",
+        message: "Solo se pueden confirmar reservas pendientes o partidos abiertos",
       });
     }
 
@@ -205,6 +273,14 @@ export const bookingRouter = {
       })
       .where(eq(bookings.id, id))
       .returning();
+
+    await logBookingActivity({
+      db: ctx.db,
+      bookingId: id,
+      type: "confirmed",
+      description: "Reserva confirmada",
+      performedBy: ctx.session.user.id,
+    });
 
     return updatedBooking;
   }),
@@ -254,6 +330,16 @@ export const bookingRouter = {
       .where(eq(bookings.id, id))
       .returning();
 
+    await logBookingActivity({
+      db: ctx.db,
+      bookingId: id,
+      type: "cancelled",
+      description: reason
+        ? `Reserva cancelada: ${reason}`
+        : "Reserva cancelada",
+      performedBy: ctx.session.user.id,
+    });
+
     return updatedBooking;
   }),
 
@@ -294,6 +380,15 @@ export const bookingRouter = {
       .where(eq(bookings.id, id))
       .returning();
 
+    await logBookingActivity({
+      db: ctx.db,
+      bookingId: id,
+      type: "status_changed",
+      description: `Estado cambiado a ${status}`,
+      metadata: { oldStatus: booking.status, newStatus: status },
+      performedBy: ctx.session.user.id,
+    });
+
     return updatedBooking;
   }),
 
@@ -315,6 +410,27 @@ export const bookingRouter = {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Cancha no encontrada",
+      });
+    }
+
+    // Check for overlapping active bookings on same court + date + time range
+    const dayStart = startOfDay(input.date);
+    const dayEnd = startOfDay(addDays(input.date, 1));
+    const overlapping = await ctx.db.query.bookings.findFirst({
+      where: and(
+        eq(bookings.courtId, input.courtId),
+        gte(bookings.date, dayStart),
+        lt(bookings.date, dayEnd),
+        ne(bookings.status, "cancelled"),
+        lt(bookings.startTime, input.endTime),
+        gt(bookings.endTime, input.startTime),
+      ),
+    });
+
+    if (overlapping) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: `La cancha ya tiene una reserva de ${overlapping.startTime.slice(0, 5)} a ${overlapping.endTime.slice(0, 5)}`,
       });
     }
 
@@ -351,6 +467,38 @@ export const bookingRouter = {
         confirmedAt: new Date(),
       })
       .returning();
+
+    if (booking) {
+      // Add customer as owner player at position 1 (guest, since manual bookings are walk-ins)
+      await ctx.db.insert(bookingPlayers).values({
+        bookingId: booking.id,
+        role: "owner",
+        position: 1,
+        guestName: input.customerName,
+        guestEmail: input.customerEmail ?? null,
+        guestPhone: input.customerPhone ?? null,
+      });
+
+      // Add additional players if provided (positions 2-4)
+      if (input.players?.length) {
+        await ctx.db.insert(bookingPlayers).values(
+          input.players.map((p) => ({
+            bookingId: booking.id,
+            role: "player" as const,
+            position: p.position,
+            guestName: p.guestName,
+          })),
+        );
+      }
+
+      await logBookingActivity({
+        db: ctx.db,
+        bookingId: booking.id,
+        type: "created",
+        description: `Reserva manual creada para ${input.customerName}`,
+        performedBy: ctx.session.user.id,
+      });
+    }
 
     return booking;
   }),
@@ -396,6 +544,291 @@ export const bookingRouter = {
       todayBookings: todayResult?.count ?? 0,
       pendingBookings: pendingResult?.count ?? 0,
       totalBookings: totalResult?.count ?? 0,
+    };
+  }),
+
+  /**
+   * Add a player to a booking
+   */
+  addPlayer: protectedProcedure.input(addPlayerSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, bookingId, position, userId, guestName, guestEmail, guestPhone } = input;
+
+    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+
+    const booking = await ctx.db.query.bookings.findFirst({
+      where: and(eq(bookings.id, bookingId), eq(bookings.facilityId, facilityId)),
+      with: { players: true },
+    });
+
+    if (!booking) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Reserva no encontrada" });
+    }
+
+    // Check max 4 players
+    if (booking.players.length >= 4) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "La reserva ya tiene 4 jugadores" });
+    }
+
+    // Check position available
+    if (booking.players.some((p) => p.position === position)) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "La posición ya está ocupada" });
+    }
+
+    // Check user not duplicate
+    if (userId && booking.players.some((p) => p.userId === userId)) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "El jugador ya está en la reserva" });
+    }
+
+    const [player] = await ctx.db
+      .insert(bookingPlayers)
+      .values({
+        bookingId,
+        userId: userId ?? null,
+        role: "player",
+        position,
+        guestName: guestName ?? null,
+        guestEmail: guestEmail ?? null,
+        guestPhone: guestPhone ?? null,
+      })
+      .returning();
+
+    // Determine player name for activity log
+    let playerName = guestName ?? "Jugador";
+    if (userId) {
+      const playerUser = await ctx.db.query.user.findFirst({
+        where: eq(user.id, userId),
+      });
+      if (playerUser?.name) playerName = playerUser.name;
+    }
+
+    await logBookingActivity({
+      db: ctx.db,
+      bookingId,
+      type: "player_joined",
+      description: `${playerName} se unió en posición ${position}`,
+      metadata: { position, userId, guestName },
+      performedBy: ctx.session.user.id,
+    });
+
+    // Auto-confirm if full (4/4) and was open_match
+    const newPlayerCount = booking.players.length + 1;
+    if (newPlayerCount >= 4 && booking.status === "open_match") {
+      await ctx.db
+        .update(bookings)
+        .set({ status: "confirmed", confirmedAt: new Date() })
+        .where(eq(bookings.id, bookingId));
+
+      await logBookingActivity({
+        db: ctx.db,
+        bookingId,
+        type: "confirmed",
+        description: "Partido completo (4/4) - confirmado automáticamente",
+        performedBy: ctx.session.user.id,
+      });
+    }
+
+    return player;
+  }),
+
+  /**
+   * Remove a non-owner player from a booking
+   */
+  removePlayer: protectedProcedure.input(removePlayerSchema).mutation(async ({ ctx, input }) => {
+    const { facilityId, bookingId, playerId } = input;
+
+    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+
+    const booking = await ctx.db.query.bookings.findFirst({
+      where: and(eq(bookings.id, bookingId), eq(bookings.facilityId, facilityId)),
+    });
+
+    if (!booking) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Reserva no encontrada" });
+    }
+
+    const player = await ctx.db.query.bookingPlayers.findFirst({
+      where: and(
+        eq(bookingPlayers.id, playerId),
+        eq(bookingPlayers.bookingId, bookingId),
+      ),
+      with: { user: true },
+    });
+
+    if (!player) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Jugador no encontrado" });
+    }
+
+    if (player.role === "owner") {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "No se puede remover al creador de la reserva",
+      });
+    }
+
+    await ctx.db.delete(bookingPlayers).where(eq(bookingPlayers.id, playerId));
+
+    const playerName = player.user?.name ?? player.guestName ?? "Jugador";
+
+    await logBookingActivity({
+      db: ctx.db,
+      bookingId,
+      type: "player_left",
+      description: `${playerName} fue removido de la posición ${player.position}`,
+      metadata: { position: player.position, playerName },
+      performedBy: ctx.session.user.id,
+    });
+
+    return { success: true };
+  }),
+
+  /**
+   * Get activity log for a booking
+   */
+  getActivity: protectedProcedure.input(getActivitySchema).query(async ({ ctx, input }) => {
+    const { facilityId, bookingId } = input;
+
+    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+
+    const activities = await ctx.db.query.bookingActivity.findMany({
+      where: eq(bookingActivity.bookingId, bookingId),
+      with: { performer: true },
+      orderBy: [desc(bookingActivity.createdAt)],
+    });
+
+    return activities;
+  }),
+
+  /**
+   * Search users for add-player modal
+   */
+  searchUsers: protectedProcedure.input(searchUsersSchema).query(async ({ ctx, input }) => {
+    const { facilityId, bookingId, query } = input;
+
+    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+
+    // Get current players to exclude
+    const currentPlayers = await ctx.db.query.bookingPlayers.findMany({
+      where: eq(bookingPlayers.bookingId, bookingId),
+      columns: { userId: true },
+    });
+
+    const excludeIds = currentPlayers
+      .map((p) => p.userId)
+      .filter((id): id is string => id !== null);
+
+    const searchPattern = `%${query}%`;
+    const searchCondition = or(
+      ilike(user.name, searchPattern),
+      ilike(user.email, searchPattern),
+    );
+
+    let whereClause = searchCondition;
+    if (excludeIds.length > 0) {
+      const excludeConditions = excludeIds.map((id) => ne(user.id, id));
+      whereClause = and(searchCondition, ...excludeConditions);
+    }
+
+    const users = await ctx.db.query.user.findMany({
+      where: whereClause,
+      columns: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+      },
+      limit: 10,
+    });
+
+    return users;
+  }),
+
+  /**
+   * Get slot info for create booking dialog (operating hours, peak periods, existing bookings, blocked slots)
+   */
+  getSlotInfo: protectedProcedure.input(getSlotInfoSchema).query(async ({ ctx, input }) => {
+    const { facilityId, date } = input;
+
+    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+
+    const dayStart = startOfDay(date);
+    const dayEnd = startOfDay(addDays(date, 1));
+    const dayOfWeek = date.getDay(); // 0 = Sunday
+
+    const [operatingHoursList, peakPeriodsList, bookingsList, blockedSlotsList] =
+      await Promise.all([
+        ctx.db.query.operatingHours.findMany({
+          where: eq(operatingHours.facilityId, facilityId),
+        }),
+        ctx.db.query.peakPeriods.findMany({
+          where: and(
+            eq(peakPeriods.facilityId, facilityId),
+            eq(peakPeriods.isActive, true),
+          ),
+        }),
+        ctx.db.query.bookings.findMany({
+          where: and(
+            eq(bookings.facilityId, facilityId),
+            gte(bookings.date, dayStart),
+            lt(bookings.date, dayEnd),
+            ne(bookings.status, "cancelled"),
+          ),
+          columns: {
+            id: true,
+            courtId: true,
+            startTime: true,
+            endTime: true,
+            status: true,
+            customerName: true,
+          },
+          orderBy: [asc(bookings.startTime)],
+        }),
+        ctx.db.query.blockedSlots.findMany({
+          where: and(
+            eq(blockedSlots.facilityId, facilityId),
+            gte(blockedSlots.date, dayStart),
+            lt(blockedSlots.date, dayEnd),
+          ),
+          columns: {
+            courtId: true,
+            startTime: true,
+            endTime: true,
+            reason: true,
+          },
+        }),
+      ]);
+
+    // Find operating hours for this day of week
+    const dayHours = operatingHoursList.find((h) => h.dayOfWeek === dayOfWeek);
+    const opHours = dayHours
+      ? { openTime: dayHours.openTime, closeTime: dayHours.closeTime, isClosed: dayHours.isClosed }
+      : { openTime: "08:00:00", closeTime: "22:00:00", isClosed: false };
+
+    // Filter peak periods that apply to this day of week
+    const dayPeakPeriods = peakPeriodsList
+      .filter((p) => p.daysOfWeek.includes(dayOfWeek))
+      .map((p) => ({
+        startTime: p.startTime,
+        endTime: p.endTime,
+        markupPercent: p.markupPercent,
+      }));
+
+    return {
+      operatingHours: opHours,
+      peakPeriods: dayPeakPeriods,
+      existingBookings: bookingsList.map((b) => ({
+        id: b.id,
+        courtId: b.courtId,
+        startTime: b.startTime,
+        endTime: b.endTime,
+        status: b.status,
+        customerName: b.customerName,
+      })),
+      blockedSlots: blockedSlotsList.map((b) => ({
+        courtId: b.courtId,
+        startTime: b.startTime,
+        endTime: b.endTime,
+        reason: b.reason,
+      })),
     };
   }),
 } satisfies TRPCRouterRecord;

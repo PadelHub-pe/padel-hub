@@ -1,6 +1,10 @@
 import { Button } from "@wifo/ui/button";
 
-export function BookingsHeader() {
+interface BookingsHeaderProps {
+  onAddBooking: () => void;
+}
+
+export function BookingsHeader({ onAddBooking }: BookingsHeaderProps) {
   return (
     <header className="flex items-center justify-between">
       <div>
@@ -9,7 +13,7 @@ export function BookingsHeader() {
           Gestiona todas las reservas de tu local
         </p>
       </div>
-      <Button>
+      <Button onClick={onAddBooking}>
         <PlusIcon className="h-4 w-4" />
         Agregar Reserva
       </Button>

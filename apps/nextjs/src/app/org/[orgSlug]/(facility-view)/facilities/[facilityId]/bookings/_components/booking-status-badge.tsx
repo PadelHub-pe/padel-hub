@@ -5,7 +5,8 @@ type BookingStatus =
   | "confirmed"
   | "in_progress"
   | "completed"
-  | "cancelled";
+  | "cancelled"
+  | "open_match";
 
 interface BookingStatusBadgeProps {
   status: BookingStatus;
@@ -39,6 +40,11 @@ const statusConfig: Record<
     label: "Cancelada",
     bgClass: "bg-red-100",
     textClass: "text-red-700",
+  },
+  open_match: {
+    label: "Partido Abierto",
+    bgClass: "bg-amber-100",
+    textClass: "text-amber-700",
   },
 };
 

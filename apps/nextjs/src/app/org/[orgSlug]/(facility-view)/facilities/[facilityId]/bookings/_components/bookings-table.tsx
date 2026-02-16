@@ -10,12 +10,14 @@ interface BookingsTableProps {
   bookings: BookingRow[];
   onBookingClick: (bookingId: string) => void;
   onBookingUpdated: () => void;
+  basePath: string;
 }
 
 export function BookingsTable({
   bookings,
   onBookingClick,
   onBookingUpdated,
+  basePath,
 }: BookingsTableProps) {
   // Create a map of court IDs to their index for consistent coloring
   const courtIndexMap = useMemo(() => {
@@ -30,8 +32,8 @@ export function BookingsTable({
   }, [bookings]);
 
   const columns = useMemo(
-    () => getBookingsColumns({ courtIndexMap, onBookingUpdated }),
-    [courtIndexMap, onBookingUpdated],
+    () => getBookingsColumns({ courtIndexMap, onBookingUpdated, basePath }),
+    [courtIndexMap, onBookingUpdated, basePath],
   );
 
   if (bookings.length === 0) {

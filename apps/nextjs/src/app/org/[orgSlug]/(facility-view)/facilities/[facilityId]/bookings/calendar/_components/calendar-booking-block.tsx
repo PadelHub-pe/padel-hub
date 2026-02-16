@@ -13,6 +13,7 @@ interface CalendarBookingBlockProps {
     status: string;
     isPeakRate: boolean;
     customerName: string | null;
+    playerCount: number;
     user: { name: string | null; email: string } | null;
   };
   topPercent: number;
@@ -48,6 +49,9 @@ export const CalendarBookingBlock = forwardRef<
         {isCompact ? (
           <div className="flex items-center gap-1 truncate text-xs font-medium">
             <span className="truncate">{displayName}</span>
+            <span className="shrink-0 rounded bg-white/60 px-1 text-[10px] font-medium">
+              {booking.playerCount}/4
+            </span>
             {booking.isPeakRate && (
               <span className="shrink-0 rounded bg-orange-100 px-1 text-[10px] font-medium text-orange-700">
                 P
@@ -58,6 +62,9 @@ export const CalendarBookingBlock = forwardRef<
           <>
             <div className="flex items-center gap-1">
               <span className="truncate text-xs font-medium">{displayName}</span>
+              <span className="shrink-0 rounded bg-white/60 px-1 text-[10px] font-medium">
+                {booking.playerCount}/4
+              </span>
               {booking.isPeakRate && (
                 <span className="shrink-0 rounded bg-orange-100 px-1 text-[10px] font-medium text-orange-700">
                   Peak

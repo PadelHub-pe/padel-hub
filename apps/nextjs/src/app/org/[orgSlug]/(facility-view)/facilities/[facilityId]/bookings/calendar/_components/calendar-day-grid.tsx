@@ -29,6 +29,7 @@ interface Booking {
   isPeakRate: boolean;
   status: string;
   customerName: string | null;
+  playerCount: number;
   user: { name: string | null; email: string } | null;
 }
 

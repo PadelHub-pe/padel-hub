@@ -10,10 +10,11 @@ import { BookingsFilters } from "./bookings-filters";
 import { BookingsHeader } from "./bookings-header";
 import { BookingsPagination } from "./bookings-pagination";
 import { BookingsTable } from "./bookings-table";
+import { CreateBookingDialog } from "./create-booking-dialog";
 
 export function BookingsView() {
   const trpc = useTRPC();
-  const { facilityId } = useFacilityContext();
+  const { facilityId, basePath } = useFacilityContext();
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -25,6 +26,9 @@ export function BookingsView() {
 
   // Selected booking for detail drawer
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+
+  // Create booking dialog
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions({ facilityId }));
   const { data: bookingsData, refetch, isFetching } = useQuery({
@@ -38,6 +42,7 @@ export function BookingsView() {
         | "in_progress"
         | "completed"
         | "cancelled"
+        | "open_match"
         | undefined,
       date,
       page,
@@ -88,7 +93,7 @@ export function BookingsView() {
 
   return (
     <div className="p-8">
-      <BookingsHeader />
+      <BookingsHeader onAddBooking={() => setShowCreateDialog(true)} />
 
       <div className="mt-6">
         <BookingsFilters
@@ -110,6 +115,7 @@ export function BookingsView() {
           bookings={bookingsData?.bookings ?? []}
           onBookingClick={handleBookingClick}
           onBookingUpdated={handleBookingUpdated}
+          basePath={basePath}
         />
       </div>
 
@@ -128,6 +134,12 @@ export function BookingsView() {
         open={selectedBookingId !== null}
         onClose={handleCloseDrawer}
         onBookingUpdated={handleBookingUpdated}
+      />
+
+      <CreateBookingDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onBookingCreated={handleBookingUpdated}
       />
     </div>
   );

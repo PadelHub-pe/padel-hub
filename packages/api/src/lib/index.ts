@@ -15,3 +15,5 @@ export {
   getFacilityWithCourts,
   getFacilityWithOperatingHours,
 } from "./facility-context";
+
+export { logBookingActivity } from "./booking-activity";

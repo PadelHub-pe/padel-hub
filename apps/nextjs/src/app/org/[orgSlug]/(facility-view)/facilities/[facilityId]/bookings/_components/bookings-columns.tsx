@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import { format, isToday, isTomorrow, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@wifo/ui";
@@ -8,13 +9,15 @@ import { cn } from "@wifo/ui";
 import { BookingActionsMenu } from "./booking-actions-menu";
 import { BookingStatusBadge } from "./booking-status-badge";
 import { CourtBadge } from "./court-badge";
+import { PlayerCountBadge } from "./player-count-badge";
 
 type BookingStatus =
   | "pending"
   | "confirmed"
   | "in_progress"
   | "completed"
-  | "cancelled";
+  | "cancelled"
+  | "open_match";
 
 export interface BookingRow {
   id: string;
@@ -25,6 +28,7 @@ export interface BookingRow {
   priceInCents: number;
   isPeakRate: boolean;
   status: BookingStatus;
+  playerCount: number;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -42,11 +46,13 @@ export interface BookingRow {
 interface ColumnsOptions {
   courtIndexMap: Map<string, number>;
   onBookingUpdated: () => void;
+  basePath: string;
 }
 
 export function getBookingsColumns({
   courtIndexMap,
   onBookingUpdated,
+  basePath,
 }: ColumnsOptions): ColumnDef<BookingRow>[] {
   return [
     {
@@ -55,14 +61,16 @@ export function getBookingsColumns({
       cell: ({ row }) => {
         const isCancelled = row.original.status === "cancelled";
         return (
-          <span
+          <Link
+            href={`${basePath}/bookings/${row.original.id}`}
+            onClick={(e) => e.stopPropagation()}
             className={cn(
-              "font-mono text-sm text-blue-600",
+              "font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline",
               isCancelled && "line-through opacity-60",
             )}
           >
             {row.original.code}
-          </span>
+          </Link>
         );
       },
     },
@@ -96,6 +104,11 @@ export function getBookingsColumns({
         const courtIndex = courtIndexMap.get(row.original.court.id) ?? 0;
         return <CourtBadge name={row.original.court.name} index={courtIndex} />;
       },
+    },
+    {
+      accessorKey: "playerCount",
+      header: "JUGADORES",
+      cell: ({ row }) => <PlayerCountBadge count={row.original.playerCount} />,
     },
     {
       accessorKey: "date",
