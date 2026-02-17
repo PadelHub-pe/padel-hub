@@ -45,12 +45,12 @@ function useFormField() {
   const itemContext = useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
 
-  const fieldState = getFieldState(fieldContext.name, formState);
-
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard from shadcn/ui
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
   }
 
+  const fieldState = getFieldState(fieldContext.name, formState);
   const { id } = itemContext;
 
   return {
@@ -120,7 +120,7 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
 
 function FormMessage({ className, children, ...props }: React.ComponentProps<"p">) {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message) : children;
+  const body = error ? String(error.message) : children;
 
   if (!body) {
     return null;

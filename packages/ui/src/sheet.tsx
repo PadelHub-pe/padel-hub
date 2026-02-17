@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
 import { Cross2Icon } from "@radix-ui/react-icons"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
