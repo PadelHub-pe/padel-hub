@@ -23,7 +23,8 @@
     "./toast": "./src/toast.tsx",
     "./sheet": "./src/sheet.tsx",
     "./dialog": "./src/dialog.tsx",
-    "./popover": "./src/popover.tsx"
+    "./popover": "./src/popover.tsx",
+    "./tabs": "./src/tabs.tsx"
   },
   "license": "MIT",
   "scripts": {

@@ -50,11 +50,6 @@ function getNavSections(orgSlug: string): NavSection[] {
       title: "CONFIGURACIÓN",
       items: [
         {
-          label: "Equipo",
-          href: `/org/${orgSlug}/team`,
-          icon: TeamIcon,
-        },
-        {
           label: "Ajustes",
           href: `/org/${orgSlug}/settings`,
           icon: SettingsIcon,

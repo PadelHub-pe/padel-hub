@@ -12,6 +12,7 @@ import {
   bookings,
   organizations,
   organizationMembers,
+  organizationInvites,
   bookingPlayers,
   bookingActivity,
 } from "./schema";
@@ -100,6 +101,7 @@ async function seed() {
       }
 
       await db.delete(organizationMembers).where(eq(organizationMembers.organizationId, existingOrg[0].id));
+      await db.delete(organizationInvites).where(eq(organizationInvites.organizationId, existingOrg[0].id));
       await db.delete(organizations).where(eq(organizations.id, existingOrg[0].id));
     }
 
@@ -262,6 +264,21 @@ async function seed() {
     console.log("   • Carlos Mendoza (org_admin)");
     console.log("   • Ana García (facility_manager)");
     console.log("   • Luis Vargas (staff)\n");
+
+    // Pending invite
+    await db.insert(organizationInvites).values({
+      id: randomUUID(),
+      organizationId: orgId,
+      email: "invited@padelhub.pe",
+      role: "facility_manager",
+      facilityIds: [facility1Id],
+      status: "pending",
+      invitedBy: userId,
+      token: randomUUID().replace(/-/g, ""),
+      expiresAt: addDays(new Date(), 7),
+    });
+
+    console.log("✅ Created pending invite: invited@padelhub.pe (facility_manager)\n");
 
     // ==========================================================================
     // CREATE FACILITIES

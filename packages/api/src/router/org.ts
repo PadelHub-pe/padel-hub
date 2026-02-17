@@ -1,11 +1,19 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import type { db as DbType } from "@wifo/db/client";
+import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
 import { addDays, startOfDay, startOfMonth } from "date-fns";
 import { and, count, eq, gte, inArray, lt, ne, sum } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { bookings, facilities, organizationMembers } from "@wifo/db/schema";
+import {
+  bookings,
+  facilities,
+  organizationInvites,
+  organizationMembers,
+  organizations,
+  user,
+} from "@wifo/db/schema";
 
 import { protectedProcedure } from "../trpc";
 
@@ -33,6 +41,28 @@ const createFacilitySchema = z.object({
   district: z.string().min(2, "El distrito es requerido").max(100),
   phone: z.string().min(6, "El teléfono debe tener al menos 6 caracteres").max(20),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
+});
+
+const updateOrgProfileSchema = z.object({
+  organizationId: z.string().uuid(),
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(200),
+  description: z.string().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
+  contactEmail: z.string().email("Email inválido").optional().or(z.literal("")),
+  contactPhone: z.string().max(20).optional().or(z.literal("")),
+});
+
+const inviteMemberSchema = z.object({
+  organizationId: z.string().uuid(),
+  email: z.string().email("Email inválido"),
+  role: z.enum(["org_admin", "facility_manager", "staff"]),
+  facilityIds: z.array(z.string().uuid()).optional(),
+});
+
+const updateMemberSchema = z.object({
+  organizationId: z.string().uuid(),
+  memberId: z.string().uuid(),
+  role: z.enum(["org_admin", "facility_manager", "staff"]),
+  facilityIds: z.array(z.string().uuid()).optional(),
 });
 
 // =============================================================================
@@ -465,5 +495,351 @@ export const orgRouter = {
         id: facility.id,
         name: facility.name,
       };
+    }),
+
+  // ===========================================================================
+  // Organization Settings Procedures
+  // ===========================================================================
+
+  getOrgProfile: protectedProcedure
+    .input(z.object({ organizationId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const membership = await verifyOrgMembership(ctx, input.organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden ver la configuración",
+        });
+      }
+
+      const org = await ctx.db.query.organizations.findFirst({
+        where: eq(organizations.id, input.organizationId),
+      });
+
+      if (!org) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Organización no encontrada" });
+      }
+
+      return org;
+    }),
+
+  updateOrgProfile: protectedProcedure
+    .input(updateOrgProfileSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, name, description, contactEmail, contactPhone } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden editar la organización",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(organizations)
+        .set({
+          name,
+          description: description || null,
+          contactEmail: contactEmail || null,
+          contactPhone: contactPhone || null,
+        })
+        .where(eq(organizations.id, organizationId))
+        .returning();
+
+      return updated;
+    }),
+
+  getTeamMembers: protectedProcedure
+    .input(z.object({ organizationId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { organizationId } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden ver el equipo",
+        });
+      }
+
+      // Get members with user info
+      const members = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.organizationId, organizationId),
+        with: { user: true },
+      });
+
+      // Get pending invites
+      const invites = await ctx.db.query.organizationInvites.findMany({
+        where: and(
+          eq(organizationInvites.organizationId, organizationId),
+          eq(organizationInvites.status, "pending"),
+        ),
+      });
+
+      // Get facilities for name mapping
+      const orgFacilities = await ctx.db.query.facilities.findMany({
+        where: eq(facilities.organizationId, organizationId),
+        columns: { id: true, name: true },
+      });
+
+      const facilityMap = new Map(orgFacilities.map((f) => [f.id, f.name]));
+
+      const memberList = members.map((m) => ({
+        id: m.id,
+        type: "member" as const,
+        name: m.user.name,
+        email: m.user.email,
+        image: m.user.image,
+        role: m.role,
+        facilityIds: m.facilityIds ?? [],
+        facilityNames: (m.facilityIds ?? [])
+          .map((id) => facilityMap.get(id))
+          .filter(Boolean) as string[],
+        isCurrentUser: m.userId === ctx.session.user.id,
+        createdAt: m.createdAt,
+      }));
+
+      const inviteList = invites.map((inv) => ({
+        id: inv.id,
+        type: "invite" as const,
+        name: inv.email,
+        email: inv.email,
+        image: null,
+        role: inv.role,
+        facilityIds: inv.facilityIds ?? [],
+        facilityNames: (inv.facilityIds ?? [])
+          .map((id) => facilityMap.get(id))
+          .filter(Boolean) as string[],
+        isCurrentUser: false,
+        createdAt: inv.createdAt,
+      }));
+
+      return {
+        members: [...memberList, ...inviteList],
+        facilities: orgFacilities,
+      };
+    }),
+
+  inviteMember: protectedProcedure
+    .input(inviteMemberSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, email, role, facilityIds } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden invitar miembros",
+        });
+      }
+
+      // Check no existing member with same email
+      const existingMembers = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.organizationId, organizationId),
+        with: { user: true },
+      });
+
+      if (existingMembers.some((m) => m.user.email === email)) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Este email ya es miembro de la organización",
+        });
+      }
+
+      // Check no pending invite with same email
+      const existingInvite = await ctx.db.query.organizationInvites.findFirst({
+        where: and(
+          eq(organizationInvites.organizationId, organizationId),
+          eq(organizationInvites.email, email),
+          eq(organizationInvites.status, "pending"),
+        ),
+      });
+
+      if (existingInvite) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Ya existe una invitación pendiente para este email",
+        });
+      }
+
+      const token = randomUUID().replace(/-/g, "");
+
+      const [invite] = await ctx.db
+        .insert(organizationInvites)
+        .values({
+          organizationId,
+          email,
+          role,
+          facilityIds: facilityIds ?? [],
+          invitedBy: ctx.session.user.id,
+          token,
+          expiresAt: addDays(new Date(), 7),
+        })
+        .returning();
+
+      // eslint-disable-next-line no-console
+      console.log("TODO: Send invite email to", email, "with token", token);
+
+      return invite;
+    }),
+
+  updateMember: protectedProcedure
+    .input(updateMemberSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, memberId, role, facilityIds } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden editar miembros",
+        });
+      }
+
+      // Get the member to check it's not self-edit
+      const target = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.id, memberId),
+          eq(organizationMembers.organizationId, organizationId),
+        ),
+      });
+
+      if (!target) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Miembro no encontrado" });
+      }
+
+      if (target.userId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No puedes editar tu propio rol",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(organizationMembers)
+        .set({ role, facilityIds: facilityIds ?? [] })
+        .where(eq(organizationMembers.id, memberId))
+        .returning();
+
+      return updated;
+    }),
+
+  removeMember: protectedProcedure
+    .input(z.object({ organizationId: z.string().uuid(), memberId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, memberId } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden eliminar miembros",
+        });
+      }
+
+      const target = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.id, memberId),
+          eq(organizationMembers.organizationId, organizationId),
+        ),
+      });
+
+      if (!target) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Miembro no encontrado" });
+      }
+
+      if (target.userId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No puedes eliminarte a ti mismo",
+        });
+      }
+
+      await ctx.db
+        .delete(organizationMembers)
+        .where(eq(organizationMembers.id, memberId));
+
+      return { success: true };
+    }),
+
+  cancelInvite: protectedProcedure
+    .input(z.object({ organizationId: z.string().uuid(), inviteId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, inviteId } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden cancelar invitaciones",
+        });
+      }
+
+      const invite = await ctx.db.query.organizationInvites.findFirst({
+        where: and(
+          eq(organizationInvites.id, inviteId),
+          eq(organizationInvites.organizationId, organizationId),
+        ),
+      });
+
+      if (!invite) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invitación no encontrada" });
+      }
+
+      await ctx.db
+        .delete(organizationInvites)
+        .where(eq(organizationInvites.id, inviteId));
+
+      return { success: true };
+    }),
+
+  resendInvite: protectedProcedure
+    .input(z.object({ organizationId: z.string().uuid(), inviteId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId, inviteId } = input;
+
+      const membership = await verifyOrgMembership(ctx, organizationId);
+
+      if (membership.role !== "org_admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo los administradores pueden reenviar invitaciones",
+        });
+      }
+
+      const invite = await ctx.db.query.organizationInvites.findFirst({
+        where: and(
+          eq(organizationInvites.id, inviteId),
+          eq(organizationInvites.organizationId, organizationId),
+        ),
+      });
+
+      if (!invite) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invitación no encontrada" });
+      }
+
+      const newToken = randomUUID().replace(/-/g, "");
+
+      const [updated] = await ctx.db
+        .update(organizationInvites)
+        .set({
+          token: newToken,
+          expiresAt: addDays(new Date(), 7),
+        })
+        .where(eq(organizationInvites.id, inviteId))
+        .returning();
+
+      // eslint-disable-next-line no-console
+      console.log("TODO: Resend invite email to", invite.email, "with token", newToken);
+
+      return updated;
     }),
 } satisfies TRPCRouterRecord;

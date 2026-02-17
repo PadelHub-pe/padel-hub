@@ -40,6 +40,8 @@ export const organizations = pgTable("organizations", {
   logoUrl: text("logo_url"),
   contactEmail: varchar("contact_email", { length: 255 }),
   contactPhone: varchar("contact_phone", { length: 20 }),
+  description: text("description"),
+  billingEnabled: boolean("billing_enabled").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -51,6 +53,7 @@ export const organizations = pgTable("organizations", {
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   facilities: many(facilities),
+  invites: many(organizationInvites),
 }));
 
 /**
@@ -87,6 +90,50 @@ export const organizationMembersRelations = relations(
     }),
     user: one(user, {
       fields: [organizationMembers.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+/**
+ * Invite status enum
+ */
+export const inviteStatusEnum = pgEnum("invite_status", [
+  "pending",
+  "accepted",
+  "expired",
+]);
+
+/**
+ * Organization invites table - pending invitations to join an organization
+ */
+export const organizationInvites = pgTable("organization_invites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: orgRoleEnum("role").notNull(),
+  facilityIds: jsonb("facility_ids").$type<string[]>().default([]),
+  status: inviteStatusEnum("status").notNull().default("pending"),
+  invitedBy: text("invited_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const organizationInvitesRelations = relations(
+  organizationInvites,
+  ({ one }) => ({
+    organization: one(organizations, {
+      fields: [organizationInvites.organizationId],
+      references: [organizations.id],
+    }),
+    inviter: one(user, {
+      fields: [organizationInvites.invitedBy],
       references: [user.id],
     }),
   }),

@@ -1,0 +1,222 @@
+"use client";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { Button } from "@wifo/ui/button";
+import { Checkbox } from "@wifo/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@wifo/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@wifo/ui/form";
+import { Input } from "@wifo/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@wifo/ui/select";
+import { toast } from "@wifo/ui/toast";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { useTRPC } from "~/trpc/react";
+
+const inviteSchema = z.object({
+  email: z.string().email("Email inválido"),
+  role: z.enum(["org_admin", "facility_manager", "staff"]),
+  facilityIds: z.array(z.string()),
+});
+
+type InviteFormValues = z.infer<typeof inviteSchema>;
+
+interface InviteMemberDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  organizationId: string;
+  facilities: Array<{ id: string; name: string }>;
+}
+
+export function InviteMemberDialog({
+  open,
+  onOpenChange,
+  organizationId,
+  facilities,
+}: InviteMemberDialogProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const form = useForm<InviteFormValues>({
+    resolver: standardSchemaResolver(inviteSchema),
+    defaultValues: {
+      email: "",
+      role: "facility_manager",
+      facilityIds: [],
+    },
+  });
+
+  const watchedRole = form.watch("role");
+
+  const inviteMember = useMutation(
+    trpc.org.inviteMember.mutationOptions({
+      onSuccess: () => {
+        toast.success("Invitación enviada");
+        void queryClient.invalidateQueries(
+          trpc.org.getTeamMembers.queryOptions({ organizationId }),
+        );
+        form.reset();
+        onOpenChange(false);
+      },
+      onError: (error) => {
+        form.setError("root", { message: error.message });
+      },
+    }),
+  );
+
+  function onSubmit(values: InviteFormValues) {
+    inviteMember.mutate({
+      organizationId,
+      email: values.email,
+      role: values.role,
+      facilityIds: values.role === "org_admin" ? [] : values.facilityIds,
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invitar Miembro</DialogTitle>
+          <DialogDescription>
+            Envía una invitación para unirse a la organización
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="usuario@ejemplo.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rol</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="org_admin">
+                        Administrador
+                      </SelectItem>
+                      <SelectItem value="facility_manager">
+                        Gerente de Local
+                      </SelectItem>
+                      <SelectItem value="staff">Staff</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {watchedRole !== "org_admin" && (
+              <FormField
+                control={form.control}
+                name="facilityIds"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Locales asignados</FormLabel>
+                    <div className="space-y-2">
+                      {facilities.map((facility) => (
+                        <FormField
+                          key={facility.id}
+                          control={form.control}
+                          name="facilityIds"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(facility.id)}
+                                  onCheckedChange={(checked) => {
+                                    const current = field.value ?? [];
+                                    field.onChange(
+                                      checked
+                                        ? [...current, facility.id]
+                                        : current.filter(
+                                            (id) => id !== facility.id,
+                                          ),
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <span className="text-sm">{facility.name}</span>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {form.formState.errors.root && (
+              <div className="text-sm text-red-500">
+                {form.formState.errors.root.message}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={inviteMember.isPending}>
+                {inviteMember.isPending ? "Enviando..." : "Enviar Invitación"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
