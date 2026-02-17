@@ -30,6 +30,7 @@ interface AddPeakPeriodDialogProps {
   open: boolean;
   onClose: () => void;
   facilityId: string;
+  onSuccess?: () => void;
 }
 
 const dayOptions = [
@@ -61,6 +62,7 @@ export function AddPeakPeriodDialog({
   open,
   onClose,
   facilityId,
+  onSuccess,
 }: AddPeakPeriodDialogProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -88,6 +90,7 @@ export function AddPeakPeriodDialog({
         void queryClient.invalidateQueries({
           queryKey: trpc.schedule.getDayOverview.queryKey(),
         });
+        onSuccess?.();
       },
       onError: (error) => {
         form.setError("root", { message: error.message });

@@ -6,6 +6,7 @@ import { dashboardRouter } from "./router/dashboard";
 import { facilityRouter } from "./router/facility";
 import { orgRouter } from "./router/org";
 import { postRouter } from "./router/post";
+import { pricingRouter } from "./router/pricing";
 import { scheduleRouter } from "./router/schedule";
 import { createTRPCRouter } from "./trpc";
 
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   facility: facilityRouter,
   org: orgRouter,
   post: postRouter,
+  pricing: pricingRouter,
   schedule: scheduleRouter,
 });
 
