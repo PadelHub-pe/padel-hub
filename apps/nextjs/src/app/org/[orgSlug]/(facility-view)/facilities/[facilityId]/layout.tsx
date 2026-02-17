@@ -46,8 +46,20 @@ export default async function FacilityLayout({
   return (
     <div className="flex h-screen bg-gray-50">
       <FacilitySidebar
-        facilityName={facility.name}
-        organizationName={currentOrg.name}
+        facilityId={facilityId}
+        facilities={facilities.map((f) => ({
+          id: f.id,
+          name: f.name,
+          district: f.district,
+          isActive: f.isActive,
+          isSetupComplete: f.isSetupComplete,
+        }))}
+        organization={{
+          name: currentOrg.name,
+          slug: currentOrg.slug,
+          logoUrl: currentOrg.logoUrl,
+        }}
+        userRole={currentOrg.role}
         userEmail={session.user.email}
         userName={session.user.name}
       />

@@ -1,29 +1,41 @@
 "use client";
 
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signOut } from "@wifo/auth/client";
 import { Avatar, AvatarFallback } from "@wifo/ui/avatar";
 import { Button } from "@wifo/ui/button";
 
 import { FacilitySidebarNav } from "./facility-sidebar-nav";
+import { FacilitySwitcher } from "./facility-switcher";
 
 interface FacilitySidebarProps {
-  facilityName: string;
-  organizationName: string;
+  facilityId: string;
+  facilities: Array<{
+    id: string;
+    name: string;
+    district: string;
+    isActive: boolean;
+    isSetupComplete: boolean;
+  }>;
+  organization: {
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  };
+  userRole: "org_admin" | "facility_manager" | "staff";
   userEmail: string;
   userName?: string;
 }
 
 export function FacilitySidebar({
-  facilityName,
-  organizationName,
+  facilityId,
+  facilities,
+  organization,
+  userRole,
   userEmail,
   userName,
 }: FacilitySidebarProps) {
   const router = useRouter();
-  const params = useParams();
-  const orgSlug = params.orgSlug as string;
 
   const initials = userName
     ? userName
@@ -49,18 +61,14 @@ export function FacilitySidebar({
         <span className="text-xl font-semibold">PadelHub</span>
       </div>
 
-      {/* Facility Header with Back Link */}
-      <div className="border-b border-gray-800 px-4 py-4">
-        <Link
-          href={`/org/${orgSlug}/facilities`}
-          className="mb-2 flex items-center gap-2 text-xs text-gray-400 hover:text-white"
-        >
-          <BackIcon className="h-3 w-3" />
-          {organizationName}
-        </Link>
-        <h2 className="truncate text-sm font-semibold text-white">
-          {facilityName}
-        </h2>
+      {/* Facility Switcher */}
+      <div className="border-b border-gray-800 py-1">
+        <FacilitySwitcher
+          currentFacilityId={facilityId}
+          facilities={facilities}
+          organization={organization}
+          userRole={userRole}
+        />
       </div>
 
       {/* Navigation */}
@@ -94,24 +102,6 @@ export function FacilitySidebar({
         </Button>
       </div>
     </aside>
-  );
-}
-
-function BackIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-      />
-    </svg>
   );
 }
 
