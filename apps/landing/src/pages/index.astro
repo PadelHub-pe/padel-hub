@@ -1,0 +1,28 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Navbar from "~/components/Navbar.astro";
+import Hero from "~/components/Hero.astro";
+import SocialProof from "~/components/SocialProof.astro";
+import ProblemSolution from "~/components/ProblemSolution.astro";
+import Features from "~/components/Features.astro";
+import HowItWorks from "~/components/HowItWorks.astro";
+import ComparisonTable from "~/components/ComparisonTable.astro";
+import CtaSection from "~/components/CtaSection.astro";
+import Footer from "~/components/Footer.astro";
+
+export const prerender = true;
+---
+
+<Layout>
+  <Navbar />
+  <main>
+    <Hero />
+    <SocialProof />
+    <ProblemSolution />
+    <Features />
+    <HowItWorks />
+    <ComparisonTable />
+    <CtaSection />
+  </main>
+  <Footer />
+</Layout>

@@ -1,0 +1,39 @@
+{
+  "name": "@wifo/landing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm with-env astro build",
+    "clean": "git clean -xdf .cache dist .turbo node_modules",
+    "dev": "pnpm with-env astro dev",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "typecheck": "astro check",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.2.1",
+    "@astrojs/vercel": "^8.1.4",
+    "@wifo/db": "workspace:*",
+    "astro": "^5.8.4",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@tailwindcss/vite": "catalog:",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@wifo/eslint-config": "workspace:*",
+    "@wifo/prettier-config": "workspace:*",
+    "@wifo/tailwind-config": "workspace:*",
+    "@wifo/tsconfig": "workspace:*",
+    "dotenv-cli": "^10.0.0",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@wifo/prettier-config"
+}

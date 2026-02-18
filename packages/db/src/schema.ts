@@ -664,4 +664,60 @@ export const CreateBlockedSlotSchema = createInsertSchema(blockedSlots, {
   createdBy: true,
 });
 
+// =============================================================================
+// Access Request Schema (Landing Page)
+// =============================================================================
+
+export const accessRequestStatusEnum = pgEnum("access_request_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
+
+/**
+ * Access Requests - B2B landing page "Solicitar Acceso" submissions
+ */
+export const accessRequests = pgTable("access_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 200 }),
+  facilityName: varchar("facility_name", { length: 200 }),
+  district: varchar("district", { length: 100 }),
+  courtCount: integer("court_count"),
+  phone: varchar("phone", { length: 20 }),
+  status: accessRequestStatusEnum("status").notNull().default("pending"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: text("reviewed_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const accessRequestsRelations = relations(
+  accessRequests,
+  ({ one }) => ({
+    reviewer: one(user, {
+      fields: [accessRequests.reviewedBy],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const CreateAccessRequestSchema = createInsertSchema(accessRequests, {
+  email: z.string().email("Email inválido"),
+  name: z.string().max(200).optional(),
+  facilityName: z.string().max(200).optional(),
+  district: z.string().max(100).optional(),
+  courtCount: z.number().int().min(1).max(50).optional(),
+  phone: z.string().max(20).optional(),
+}).omit({
+  id: true,
+  status: true,
+  reviewedAt: true,
+  reviewedBy: true,
+  notes: true,
+  createdAt: true,
+});
+
 export * from "./auth-schema";

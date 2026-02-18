@@ -1,0 +1,25 @@
+---
+import AccessRequestForm from "./AccessRequestForm";
+---
+
+<section class="relative overflow-hidden bg-gradient-to-br from-gray-900 to-[#0B1120] px-8 py-24" id="solicitar">
+  <!-- Decorative bg -->
+  <div
+    class="pointer-events-none absolute -top-1/2 -left-[20%] h-[200%] w-[140%] bg-[radial-gradient(ellipse_at_30%_50%,rgba(59,130,246,0.12)_0%,transparent_50%),radial-gradient(ellipse_at_70%_30%,rgba(99,102,241,0.08)_0%,transparent_50%)]"
+  >
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-[700px] text-center">
+    <h2
+      class="mb-5 font-display text-3xl leading-tight font-extrabold tracking-tight text-white lg:text-[44px]"
+    >
+      ¿Listo para llenar tus canchas?
+    </h2>
+    <p class="mb-10 text-lg leading-relaxed text-gray-400">
+      Unite a los locales que ya estan creciendo con PadelHub. Sin contratos,
+      sin fees de setup — solo resultados.
+    </p>
+
+    <AccessRequestForm client:visible />
+  </div>
+</section>

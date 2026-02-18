@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PadelHub — Llena tus canchas con jugadores reales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3B82F6;
+      --primary-dark: #2563EB;
+      --primary-light: #DBEAFE;
+      --secondary: #10B981;
+      --secondary-light: #D1FAE5;
+      --amber: #F59E0B;
+      --amber-light: #FEF3C7;
+      --dark: #0F172A;
+      --dark-soft: #1E293B;
+      --gray-900: #111827;
+      --gray-800: #1F2937;
+      --gray-700: #374151;
+      --gray-600: #4B5563;
+      --gray-500: #6B7280;
+      --gray-400: #9CA3AF;
+      --gray-300: #D1D5DB;
+      --gray-200: #E5E7EB;
+      --gray-100: #F3F4F6;
+      --gray-50: #F9FAFB;
+      --white: #FFFFFF;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --font-display: 'Sora', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--gray-900);
+      background: var(--white);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 0;
+      transition: all 0.3s ease;
+    }
+
+    .navbar.scrolled {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 12px 0;
+    }
+
+    .navbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      font-family: var(--font-display);
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--dark);
+    }
+
+    .logo-text span { color: var(--primary); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--gray-600);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--dark); }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-ghost {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost:hover { background: var(--gray-100); }
+
+    .btn-primary {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      background: var(--primary);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-family: var(--font-body);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 160px 32px 100px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(165deg, var(--white) 0%, #F0F7FF 40%, #E8F4FD 100%);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -100px;
+      left: -100px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px 6px 8px;
+      background: var(--secondary-light);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #065F46;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--secondary);
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--dark);
+      margin-bottom: 24px;
+      letter-spacing: -1.5px;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--primary) 0%, #6366F1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-description {
+      font-size: 18px;
+      line-height: 1.7;
+      color: var(--gray-600);
+      margin-bottom: 40px;
+      max-width: 500px;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .btn-large {
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 14px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-large.primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.25);
+    }
+
+    .btn-large.primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+    }
+
+    .btn-large.outline {
+      background: white;
+      color: var(--gray-700);
+      border: 1.5px solid var(--gray-300);
+    }
+
+    .btn-large.outline:hover {
+      border-color: var(--gray-400);
+      background: var(--gray-50);
+    }
+
+    .hero-visual {
+      position: relative;
+      animation: fadeInUp 0.8s ease 0.3s both;
+    }
+
+    .hero-mockup {
+      width: 100%;
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.04),
+        0 8px 32px rgba(0,0,0,0.08),
+        0 24px 60px rgba(0,0,0,0.06);
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+    }
+
+    .mockup-topbar {
+      background: var(--gray-50);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .mockup-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gray-300);
+    }
+
+    .mockup-dot:nth-child(1) { background: #FCA5A5; }
+    .mockup-dot:nth-child(2) { background: #FCD34D; }
+    .mockup-dot:nth-child(3) { background: #6EE7B7; }
+
+    .mockup-content {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 20px;
+      min-height: 340px;
+    }
+
+    .mockup-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mockup-sidebar-item {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mockup-sidebar-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .mockup-sidebar-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: currentColor;
+      opacity: 0.3;
+    }
+
+    .mockup-main {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mockup-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .mockup-stat {
+      background: var(--gray-50);
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid var(--gray-100);
+    }
+
+    .mockup-stat-value {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .mockup-stat-label {
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+
+    .mockup-chart {
+      flex: 1;
+      background: var(--gray-50);
+      border-radius: 10px;
+      border: 1px solid var(--gray-100);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mockup-chart-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mockup-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 100px;
+      margin-top: 12px;
+      padding: 0 8px;
+    }
+
+    .mockup-bar {
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.5s ease;
+    }
+
+    /* Floating notification card */
+    .hero-float-card {
+      position: absolute;
+      bottom: 40px;
+      left: -40px;
+      background: white;
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: float 3s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    .float-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--secondary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .float-text-main {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .float-text-sub {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    /* Second floating card */
+    .hero-float-card-2 {
+      position: absolute;
+      top: 20px;
+      right: -30px;
+      background: white;
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: float 3s ease-in-out 1.5s infinite;
+      z-index: 2;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== SOCIAL PROOF BAR ===== */
+    .social-proof {
+      padding: 48px 32px;
+      background: var(--white);
+      border-top: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .social-proof-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .social-proof-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 32px;
+    }
+
+    .social-proof-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+    }
+
+    .sp-stat {
+      text-align: center;
+    }
+
+    .sp-stat-value {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--dark);
+      letter-spacing: -1px;
+    }
+
+    .sp-stat-value .accent { color: var(--primary); }
+
+    .sp-stat-label {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    /* ===== PROBLEM / SOLUTION ===== */
+    .problem-section {
+      padding: 100px 32px;
+      background: var(--dark);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .problem-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 50%);
+    }
+
+    .problem-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .problem-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 64px;
+    }
+
+    .section-eyebrow {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .problem-header h2 {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.2;
+      letter-spacing: -1px;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr;
+      align-items: start;
+      gap: 0;
+    }
+
+    .problem-col, .solution-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .problem-col-title, .solution-col-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .problem-col-title { color: #F87171; }
+    .solution-col-title { color: var(--secondary); }
+
+    .ps-card {
+      padding: 20px;
+      border-radius: var(--radius);
+      display: flex;
+      gap: 14px;
+    }
+
+    .problem-col .ps-card {
+      background: rgba(248,113,113,0.06);
+      border: 1px solid rgba(248,113,113,0.1);
+    }
+
+    .solution-col .ps-card {
+      background: rgba(16,185,129,0.06);
+      border: 1px solid rgba(16,185,129,0.1);
+    }
+
+    .ps-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .problem-col .ps-icon { background: rgba(248,113,113,0.12); }
+    .solution-col .ps-icon { background: rgba(16,185,129,0.12); }
+
+    .ps-text h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    .ps-text p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--gray-400);
+    }
+
+    .vs-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+    }
+
+    .vs-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, #6366F1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 12px;
+      color: white;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== FEATURES ===== */
+    .features {
+      padding: 100px 32px;
+      background: var(--gray-50);
+    }
+
+    .features-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .features-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 64px;
+    }
+
+    .features-header h2 {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.2;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .features-header p {
+      font-size: 17px;
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      border: 1px solid var(--gray-200);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 32px rgba(59,130,246,0.08);
+      transform: translateY(-4px);
+    }
+
+    .feature-card.featured {
+      grid-column: span 2;
+      grid-row: span 2;
+      background: linear-gradient(165deg, var(--dark) 0%, var(--dark-soft) 100%);
+      border-color: transparent;
+    }
+
+    .feature-card.featured:hover {
+      border-color: var(--primary);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card:not(.featured) .feature-icon { background: var(--primary-light); }
+    .feature-card.featured .feature-icon { background: rgba(59,130,246,0.15); }
+
+    .feature-card h3 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-card:not(.featured) h3 { color: var(--dark); }
+    .feature-card.featured h3 { color: white; font-size: 24px; }
+
+    .feature-card p {
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .feature-card:not(.featured) p { color: var(--gray-500); }
+    .feature-card.featured p { color: var(--gray-400); font-size: 16px; }
+
+    .feature-preview {
+      margin-top: 32px;
+      background: var(--dark-soft);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 20px;
+      min-height: 200px;
+    }
+
+    .feature-preview-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .feature-preview-row:last-child { border-bottom: none; }
+
+    .fp-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), #6366F1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .fp-details { flex: 1; }
+
+    .fp-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .fp-meta {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    .fp-status {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .fp-status.confirmed { background: rgba(16,185,129,0.12); color: var(--secondary); }
+    .fp-status.pending { background: rgba(245,158,11,0.12); color: var(--amber); }
+
+    .feature-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(59,130,246,0.1);
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .feature-card.featured .feature-tag {
+      background: rgba(59,130,246,0.15);
+    }
+
+    /* ===== HOW IT WORKS ===== */
+    .how-it-works {
+      padding: 100px 32px;
+      background: white;
+    }
+
+    .how-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .how-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 72px;
+    }
+
+    .how-header h2 {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .how-header p {
+      font-size: 17px;
+      color: var(--gray-500);
+    }
+
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      left: 16.66%;
+      right: 16.66%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      opacity: 0.2;
+    }
+
+    .how-step {
+      text-align: center;
+      padding: 0 32px;
+      position: relative;
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 auto 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .how-step:nth-child(1) .step-number { background: var(--primary-light); color: var(--primary); }
+    .how-step:nth-child(2) .step-number { background: var(--amber-light); color: #B45309; }
+    .how-step:nth-child(3) .step-number { background: var(--secondary-light); color: #065F46; }
+
+    .step-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .how-step h3 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+
+    .how-step p {
+      font-size: 14px;
+      color: var(--gray-500);
+      line-height: 1.7;
+    }
+
+    /* ===== COMPARISON ===== */
+    .comparison {
+      padding: 100px 32px;
+      background: var(--gray-50);
+    }
+
+    .comparison-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .comparison-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .comparison-header h2 {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .comparison-header p {
+      font-size: 16px;
+      color: var(--gray-500);
+    }
+
+    .comparison-table {
+      background: white;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .comp-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .comp-row:last-child { border-bottom: none; }
+
+    .comp-row.header {
+      background: var(--gray-50);
+    }
+
+    .comp-cell {
+      padding: 16px 24px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    .comp-row.header .comp-cell {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .comp-cell:first-child {
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+
+    .comp-cell.padelhub {
+      background: rgba(59,130,246,0.04);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .comp-row.header .comp-cell.padelhub {
+      background: rgba(59,130,246,0.08);
+      color: var(--primary);
+    }
+
+    .comp-cell .check { color: var(--secondary); font-size: 18px; }
+    .comp-cell .x { color: var(--gray-300); font-size: 14px; }
+
+    /* ===== TESTIMONIAL ===== */
+    .testimonial {
+      padding: 100px 32px;
+      background: white;
+    }
+
+    .testimonial-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .testimonial-quote {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--dark);
+      line-height: 1.5;
+      letter-spacing: -0.5px;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .testimonial-quote::before {
+      content: '"';
+      font-size: 80px;
+      color: var(--primary);
+      opacity: 0.15;
+      position: absolute;
+      top: -30px;
+      left: -20px;
+      font-family: Georgia, serif;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .testimonial-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), #6366F1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .testimonial-info { text-align: left; }
+
+    .testimonial-name {
+      font-weight: 600;
+      color: var(--dark);
+      font-size: 15px;
+    }
+
+    .testimonial-role {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    /* ===== CTA SECTION ===== */
+    .cta-section {
+      padding: 100px 32px;
+      background: linear-gradient(165deg, var(--dark) 0%, #0B1120 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -20%;
+      width: 140%;
+      height: 200%;
+      background:
+        radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 30%, rgba(99,102,241,0.08) 0%, transparent 50%);
+    }
+
+    .cta-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-inner h2 {
+      font-family: var(--font-display);
+      font-size: 44px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -1.5px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .cta-inner p {
+      font-size: 18px;
+      color: var(--gray-400);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .cta-form {
+      display: flex;
+      gap: 12px;
+      max-width: 480px;
+      margin: 0 auto 24px;
+    }
+
+    .cta-input {
+      flex: 1;
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      font-size: 15px;
+      font-family: var(--font-body);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .cta-input::placeholder { color: var(--gray-500); }
+
+    .cta-input:focus {
+      border-color: var(--primary);
+      background: rgba(59,130,246,0.06);
+    }
+
+    .cta-btn {
+      padding: 16px 28px;
+      border-radius: 14px;
+      background: var(--primary);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      white-space: nowrap;
+      transition: all 0.25s;
+    }
+
+    .cta-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+    }
+
+    .cta-note {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .cta-note svg {
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      padding: 48px 32px;
+      background: #060A13;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: var(--font-display);
+    }
+
+    .footer-logo-text {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--gray-400);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--gray-500);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--gray-300); }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+
+    /* ===== SPEC PANEL ===== */
+    .spec-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 340px;
+      height: 100vh;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      overflow-y: auto;
+      z-index: 200;
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: none;
+      border-left: 2px solid #3B82F6;
+    }
+
+    .spec-panel.active { display: block; }
+
+    .spec-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 201;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--dark);
+      color: white;
+      border: 1px solid var(--gray-700);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+    }
+
+    .spec-toggle:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .spec-panel h3 {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: #3B82F6;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .spec-panel h4 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 20px 0 8px;
+    }
+
+    .spec-panel ul {
+      padding-left: 16px;
+      margin-bottom: 16px;
+    }
+
+    .spec-panel li {
+      margin-bottom: 6px;
+      color: #d1d5db;
+    }
+
+    .spec-panel code {
+      background: rgba(59,130,246,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #93C5FD;
+    }
+
+    .spec-section {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero h1 { font-size: 40px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .feature-card.featured { grid-column: span 2; grid-row: span 1; }
+      .problem-grid { grid-template-columns: 1fr; gap: 32px; }
+      .vs-divider { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      .hero { padding: 120px 20px 60px; }
+      .hero h1 { font-size: 32px; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+      .features-grid { grid-template-columns: 1fr; }
+      .feature-card.featured { grid-column: span 1; }
+      .how-steps { grid-template-columns: 1fr; gap: 40px; }
+      .how-steps::before { display: none; }
+      .social-proof-stats { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+      .comp-cell { padding: 12px 14px; font-size: 12px; }
+      .cta-form { flex-direction: column; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="#" class="logo">
+      <div class="logo-icon">P</div>
+      <div class="logo-text">Padel<span>Hub</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Funcionalidades</a></li>
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#comparacion">Comparación</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="/login" class="btn-ghost">Iniciar sesión</a>
+      <a href="#solicitar" class="btn-primary">Solicitar Acceso</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        Beta activa en Lima
+      </div>
+      <h1>Llena tus canchas con <span class="highlight">jugadores reales</span></h1>
+      <p class="hero-description">PadelHub conecta tu local con miles de jugadores buscando dónde jugar. Tú gestionas tus canchas, nosotros te traemos la demanda.</p>
+      <div class="hero-actions">
+        <a href="#solicitar" class="btn-large primary">
+          Solicitar Acceso
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#como-funciona" class="btn-large outline">Ver cómo funciona</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-mockup">
+        <div class="mockup-topbar">
+          <div class="mockup-dot"></div>
+          <div class="mockup-dot"></div>
+          <div class="mockup-dot"></div>
+        </div>
+        <div class="mockup-content">
+          <div class="mockup-sidebar">
+            <div class="mockup-sidebar-item active">
+              <div class="mockup-sidebar-icon"></div>
+              Vista General
+            </div>
+            <div class="mockup-sidebar-item">
+              <div class="mockup-sidebar-icon"></div>
+              Reservas
+            </div>
+            <div class="mockup-sidebar-item">
+              <div class="mockup-sidebar-icon"></div>
+              Canchas
+            </div>
+            <div class="mockup-sidebar-item">
+              <div class="mockup-sidebar-icon"></div>
+              Horarios
+            </div>
+            <div class="mockup-sidebar-item">
+              <div class="mockup-sidebar-icon"></div>
+              Precios
+            </div>
+            <div class="mockup-sidebar-item">
+              <div class="mockup-sidebar-icon"></div>
+              Configuración
+            </div>
+          </div>
+          <div class="mockup-main">
+            <div class="mockup-stats">
+              <div class="mockup-stat">
+                <div class="mockup-stat-value">127</div>
+                <div class="mockup-stat-label">Reservas este mes</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-value" style="color: var(--secondary);">89%</div>
+                <div class="mockup-stat-label">Ocupación</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-value" style="color: var(--primary);">S/ 18.4k</div>
+                <div class="mockup-stat-label">Ingresos</div>
+              </div>
+            </div>
+            <div class="mockup-chart">
+              <div class="mockup-chart-label">Reservas por día</div>
+              <div class="mockup-bars">
+                <div class="mockup-bar" style="height: 45%; background: var(--primary-light);"></div>
+                <div class="mockup-bar" style="height: 65%; background: var(--primary-light);"></div>
+                <div class="mockup-bar" style="height: 55%; background: var(--primary-light);"></div>
+                <div class="mockup-bar" style="height: 85%; background: var(--primary);"></div>
+                <div class="mockup-bar" style="height: 90%; background: var(--primary);"></div>
+                <div class="mockup-bar" style="height: 95%; background: linear-gradient(180deg, var(--primary), #6366F1);"></div>
+                <div class="mockup-bar" style="height: 78%; background: var(--primary);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating notification cards -->
+      <div class="hero-float-card">
+        <div class="float-icon">🎾</div>
+        <div>
+          <div class="float-text-main">+3 reservas nuevas</div>
+          <div class="float-text-sub">Desde la app de jugadores</div>
+        </div>
+      </div>
+      <div class="hero-float-card-2">
+        <div class="float-icon" style="background: var(--amber-light); font-size: 16px;">⚡</div>
+        <div>
+          <div class="float-text-main" style="font-size: 12px;">Hora pico activa</div>
+          <div class="float-text-sub" style="font-size: 11px;">18:00 – 21:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOCIAL PROOF ===== -->
+<section class="social-proof">
+  <div class="social-proof-inner">
+    <div class="social-proof-label">La plataforma de padel que está creciendo en Lima</div>
+    <div class="social-proof-stats">
+      <div class="sp-stat">
+        <div class="sp-stat-value"><span class="accent">500+</span></div>
+        <div class="sp-stat-label">Jugadores registrados</div>
+      </div>
+      <div class="sp-stat">
+        <div class="sp-stat-value">12</div>
+        <div class="sp-stat-label">Locales asociados</div>
+      </div>
+      <div class="sp-stat">
+        <div class="sp-stat-value"><span class="accent">2,400+</span></div>
+        <div class="sp-stat-label">Reservas procesadas</div>
+      </div>
+      <div class="sp-stat">
+        <div class="sp-stat-value">4.8<span style="font-size: 20px; color: var(--amber);">★</span></div>
+        <div class="sp-stat-label">Rating promedio</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROBLEM / SOLUTION ===== -->
+<section class="problem-section">
+  <div class="problem-inner">
+    <div class="problem-header">
+      <div class="section-eyebrow">El problema</div>
+      <h2>Tus canchas vacías no generan ingresos</h2>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-col">
+        <div class="problem-col-title">❌ Sin PadelHub</div>
+        <div class="ps-card">
+          <div class="ps-icon">📱</div>
+          <div class="ps-text">
+            <h4>Dependes de WhatsApp</h4>
+            <p>Reservas por mensaje, sin control ni historial. Se pierden clientes por respuestas tardías.</p>
+          </div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-icon">👻</div>
+          <div class="ps-text">
+            <h4>Jugadores invisibles</h4>
+            <p>Miles de jugadores buscan cancha y no saben que existes. Solo te llegan los que ya te conocen.</p>
+          </div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-icon">📊</div>
+          <div class="ps-text">
+            <h4>Cero visibilidad</h4>
+            <p>No sabes tu ocupación real, no puedes optimizar precios, ni saber cuánto dejas en la mesa.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="vs-divider">
+        <div class="vs-badge">VS</div>
+      </div>
+
+      <div class="solution-col">
+        <div class="solution-col-title">✅ Con PadelHub</div>
+        <div class="ps-card">
+          <div class="ps-icon">🚀</div>
+          <div class="ps-text">
+            <h4>Reservas automáticas 24/7</h4>
+            <p>Los jugadores reservan directo desde la app. Sin mensajes, sin llamadas, sin demoras.</p>
+          </div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-icon">🎯</div>
+          <div class="ps-text">
+            <h4>Demanda que llega sola</h4>
+            <p>Tu local aparece frente a cientos de jugadores activos buscando cancha en tu zona.</p>
+          </div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-icon">📈</div>
+          <div class="ps-text">
+            <h4>Dashboard completo</h4>
+            <p>Reservas, ingresos, ocupación, horarios pico — toda la data que necesitas para crecer.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <div class="features-header">
+      <div class="section-eyebrow" style="color: var(--primary);">Funcionalidades</div>
+      <h2>Todo lo que necesitas para gestionar tu local</h2>
+      <p>Un dashboard profesional diseñado específicamente para operadores de padel. Sin complejidad innecesaria.</p>
+    </div>
+    <div class="features-grid">
+      <!-- Featured card: Booking Management -->
+      <div class="feature-card featured">
+        <div class="feature-tag">Core</div>
+        <div class="feature-icon">📋</div>
+        <h3>Gestión de reservas inteligente</h3>
+        <p>Visualiza, confirma y gestiona todas las reservas en un solo lugar. Soporte para hasta 4 jugadores por cancha, calendario visual y detección de conflictos.</p>
+        <div class="feature-preview">
+          <div class="feature-preview-row">
+            <div class="fp-avatar">ML</div>
+            <div class="fp-details">
+              <div class="fp-name">Martín López</div>
+              <div class="fp-meta">Cancha 1 · Hoy 18:00–19:30 · 4 jugadores</div>
+            </div>
+            <div class="fp-status confirmed">Confirmada</div>
+          </div>
+          <div class="feature-preview-row">
+            <div class="fp-avatar" style="background: linear-gradient(135deg, var(--secondary), #059669);">AS</div>
+            <div class="fp-details">
+              <div class="fp-name">Ana Solís</div>
+              <div class="fp-meta">Cancha 2 · Hoy 19:00–20:30 · 2 jugadores</div>
+            </div>
+            <div class="fp-status pending">Pendiente</div>
+          </div>
+          <div class="feature-preview-row">
+            <div class="fp-avatar" style="background: linear-gradient(135deg, var(--amber), #D97706);">CR</div>
+            <div class="fp-details">
+              <div class="fp-name">Carlos Reyes</div>
+              <div class="fp-meta">Cancha 1 · Mañana 08:00–09:30 · 4 jugadores</div>
+            </div>
+            <div class="fp-status confirmed">Confirmada</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Small cards -->
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Horarios y calendario</h3>
+        <p>Configura horarios de apertura, horas pico y días especiales. Vista de calendario por día y semana con zonas visuales.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>Precios dinámicos</h3>
+        <p>Define precios base y markups por hora pico. Calculadora de ingresos estimados por ocupación.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🏟️</div>
+        <h3>Gestión de canchas</h3>
+        <p>Administra hasta 10 canchas por local. Tipo de cancha, estado, imágenes y precios individuales.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Equipo y roles</h3>
+        <p>Invita a tu equipo con roles definidos. Org Admins ven todo, los managers solo sus locales asignados.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h3>Multi-local</h3>
+        <p>¿Tienes más de una sede? Gestiona todas desde un solo panel con switching instantáneo entre locales.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how-it-works" id="como-funciona">
+  <div class="how-inner">
+    <div class="how-header">
+      <div class="section-eyebrow" style="color: var(--primary);">Proceso</div>
+      <h2>Activo en menos de 48 horas</h2>
+      <p>Sin contratos largos, sin fees de setup. Te acompañamos en cada paso.</p>
+    </div>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-number">1</div>
+        <div class="step-icon">✍️</div>
+        <h3>Solicita acceso</h3>
+        <p>Completa el formulario con los datos de tu local. Revisamos en menos de 24 horas y te enviamos tu invitación.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-number">2</div>
+        <div class="step-icon">⚙️</div>
+        <h3>Configura tu local</h3>
+        <p>Agrega tus canchas, define horarios y precios. Nuestro wizard te guía paso a paso — en 15 minutos estás listo.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-number">3</div>
+        <div class="step-icon">🎾</div>
+        <h3>Recibe reservas</h3>
+        <p>Tu local aparece en la app de jugadores. Las reservas llegan automáticamente a tu dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPARISON ===== -->
+<section class="comparison" id="comparacion">
+  <div class="comparison-inner">
+    <div class="comparison-header">
+      <div class="section-eyebrow" style="color: var(--primary);">¿Por qué PadelHub?</div>
+      <h2>No somos otro software de gestión</h2>
+      <p>Somos el marketplace que trae jugadores a tu cancha.</p>
+    </div>
+    <div class="comparison-table">
+      <div class="comp-row header">
+        <div class="comp-cell">Característica</div>
+        <div class="comp-cell padelhub">PadelHub</div>
+        <div class="comp-cell">Software tradicional</div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Marketplace de jugadores</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="x">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Demanda orgánica de nuevos jugadores</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="x">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Dashboard de gestión</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="check">✓</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">App móvil para jugadores</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="x">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Social matchmaking</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="x">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Soporte multi-local</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="check">✓</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Sin costo de setup</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="x">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-cell">Enfocado en padel (Perú)</div>
+        <div class="comp-cell padelhub"><span class="check">✓</span></div>
+        <div class="comp-cell"><span class="x">✗</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIAL ===== -->
+<section class="testimonial">
+  <div class="testimonial-inner">
+    <div class="testimonial-quote">
+      Antes dependíamos 100% de nuestro grupo de WhatsApp. Con PadelHub, en el primer mes recibimos reservas de jugadores que ni sabían que existíamos.
+    </div>
+    <div class="testimonial-author">
+      <div class="testimonial-avatar">RP</div>
+      <div class="testimonial-info">
+        <div class="testimonial-name">Roberto Paredes</div>
+        <div class="testimonial-role">Gerente — OnePadel Trigal, San Isidro</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section" id="solicitar">
+  <div class="cta-inner">
+    <h2>¿Listo para llenar tus canchas?</h2>
+    <p>Únete a los locales que ya están creciendo con PadelHub. Sin contratos, sin fees de setup — solo resultados.</p>
+    <div class="cta-form">
+      <input type="email" class="cta-input" placeholder="tu@correo.com">
+      <button class="cta-btn">Solicitar Acceso</button>
+    </div>
+    <div class="cta-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Revisamos cada solicitud en menos de 24 horas. Solo locales verificados.
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="footer-logo-icon">P</div>
+      <div class="footer-logo-text">PadelHub</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#">Términos</a></li>
+      <li><a href="#">Privacidad</a></li>
+      <li><a href="#">Contacto</a></li>
+    </ul>
+    <div class="footer-copy">© 2025 PadelHub. Hecho en Lima 🇵🇪</div>
+  </div>
+</footer>
+
+<!-- ===== SPEC PANEL ===== -->
+<button class="spec-toggle" onclick="toggleSpec()">📐</button>
+<div class="spec-panel" id="specPanel">
+  <h3>📐 Landing Page — Spec Sheet</h3>
+
+  <div class="spec-section">
+    <h4>Page Purpose</h4>
+    <ul>
+      <li>B2B landing page for padel facility owners</li>
+      <li>Primary goal: drive "Solicitar Acceso" conversions</li>
+      <li>Secondary: educate on marketplace value prop</li>
+      <li>Route: <code>/</code> or <code>/para-locales</code></li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>Target Audience</h4>
+    <ul>
+      <li>~30-50 padel facility owners in Lima</li>
+      <li>Facility managers / operations staff</li>
+      <li>Decision makers evaluating booking solutions</li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>Page Sections</h4>
+    <ul>
+      <li><strong>Navbar</strong> — Fixed, transparent → white on scroll</li>
+      <li><strong>Hero</strong> — Value prop + dashboard mockup + floating cards</li>
+      <li><strong>Social Proof</strong> — 4 key platform stats</li>
+      <li><strong>Problem/Solution</strong> — Dark bg, 3v3 comparison</li>
+      <li><strong>Features</strong> — 6 cards, 1 featured (2x2 grid)</li>
+      <li><strong>How it Works</strong> — 3-step process</li>
+      <li><strong>Comparison</strong> — PadelHub vs traditional software table</li>
+      <li><strong>Testimonial</strong> — Single quote (placeholder)</li>
+      <li><strong>CTA</strong> — Email capture + submit button</li>
+      <li><strong>Footer</strong> — Minimal links</li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>Key Messaging Hierarchy</h4>
+    <ul>
+      <li><strong>H1:</strong> "Llena tus canchas con jugadores reales"</li>
+      <li><strong>Subhead:</strong> Marketplace demand generation</li>
+      <li><strong>Differentiator:</strong> We bring players TO you (vs. you managing yourself)</li>
+      <li><strong>Trust:</strong> Beta activa, locales verificados, 24h review</li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>CTA Strategy</h4>
+    <ul>
+      <li>Primary CTA: "Solicitar Acceso" (hero + footer)</li>
+      <li>Secondary CTA: "Ver cómo funciona" (scroll anchor)</li>
+      <li>MVP flow: Email → Manual review → Invite email</li>
+      <li>Post-MVP: Full "Solicitar Acceso" form (name, facility, district, courts, phone)</li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>Design System</h4>
+    <ul>
+      <li>Display font: <code>Sora</code> (headings)</li>
+      <li>Body font: <code>DM Sans</code> (paragraphs, UI)</li>
+      <li>Primary: <code>#3B82F6</code></li>
+      <li>Secondary: <code>#10B981</code></li>
+      <li>Dark sections: <code>#0F172A</code></li>
+      <li>Border radius: 12px (cards), 14px (buttons), 28px (large)</li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>Technical Notes</h4>
+    <ul>
+      <li>Framework: Next.js 15 (same app as dashboard)</li>
+      <li>Route: Public route, no auth required</li>
+      <li>Navbar "Iniciar sesión" → <code>/login</code></li>
+      <li>Email capture → <code>trpc.accessRequest.create</code></li>
+      <li>Social proof stats: Static for MVP, dynamic later</li>
+      <li>Responsive: 3-col → 2-col → 1-col breakpoints</li>
+    </ul>
+  </div>
+
+  <div class="spec-section">
+    <h4>Post-MVP Enhancements</h4>
+    <ul>
+      <li>Replace email-only with full "Solicitar Acceso" form modal</li>
+      <li>Add video demo / Loom walkthrough</li>
+      <li>Real testimonials with photos</li>
+      <li>Dynamic stats from API</li>
+      <li>Localized SEO content per district</li>
+      <li>Blog / resources section</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Navbar scroll effect
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  });
+
+  // Spec panel toggle
+  function toggleSpec() {
+    document.getElementById('specPanel').classList.toggle('active');
+  }
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Applications
 - **Mobile App** (Expo): Player-facing app for court discovery, booking, and open match coordination
 - **Web Dashboard** (Next.js): Court owner dashboard for facility management, reservations, and analytics
+- **Landing Page** (Astro): B2B marketing page for facility owner lead generation ("Solicitar Acceso")
 
 ### Product Requirements
 See `PRD.MD` for complete functional requirements, data models, and user flows.
@@ -46,6 +47,7 @@ Organization ─┬─► OrganizationMember (role: org_admin | facility_manager
 ```bash
 pnpm dev              # Run all apps in watch mode
 pnpm dev:next         # Run only Next.js app
+pnpm dev:landing      # Run only Astro landing page (http://localhost:4321)
 ```
 
 ### Building & Quality
@@ -76,7 +78,9 @@ pnpm turbo gen init   # Scaffold new package from templates
 ```
 /apps
   ├─ nextjs           # Court Owner Dashboard (web)
+  ├─ landing          # B2B Landing Page (Astro)
   └─ expo             # Player App (iOS + Android)
+/assets               # Brand assets (logos, favicons, OG images)
 /packages
   ├─ api              # tRPC v11 router definitions
   ├─ auth             # Better Auth authentication
@@ -89,6 +93,24 @@ pnpm turbo gen init   # Scaffold new package from templates
   ├─ tailwind         # Shared Tailwind CSS config
   └─ typescript       # Shared TypeScript configs
 ```
+
+### Landing Page (`apps/landing`)
+
+Astro app with zero-JS-by-default static sections and one React island for the email form.
+
+- **Stack**: Astro 5, `@astrojs/react` (island), `@astrojs/vercel` adapter, Tailwind CSS v4
+- **Output**: `server` mode — static pages prerendered, API endpoint as serverless function
+- **Fonts**: Sora (display) + DM Sans (body) via Google Fonts
+- **Pages**: `/` (landing), `/terminos`, `/privacidad`, `/api/access-request` (POST)
+- **React island**: `AccessRequestForm.tsx` with `client:visible` (lazy hydration)
+- **DB table**: `access_requests` — stores "Solicitar Acceso" email submissions
+
+**Vercel deployment:**
+- Root Directory: `apps/landing`
+- Build Command: `astro build` (not `pnpm build`, to skip `with-env` on Vercel)
+- Env var: `POSTGRES_URL` required for the API endpoint
+
+**Scoped `<style>` in Astro pages** need `@reference "../styles/global.css"` to access Tailwind theme tokens (e.g., `font-display`, color vars). Use relative paths, not `~/` alias.
 
 ### Web Dashboard Route Structure
 
@@ -137,6 +159,27 @@ apps/nextjs/src/app/
 3. Complete Setup - Activates facility (sets `onboardingCompletedAt`, `isActive=true`)
 
 Incomplete facilities show "Pendiente" badge on cards and setup banner on dashboard.
+
+### Brand Assets (`/assets`)
+
+Organized brand assets with three color variants (fullcolor, navy, reversed) and multiple densities (@1x, @2x, @3x):
+
+| Folder | Contents |
+|--------|----------|
+| `logomark/` | Icon-only logo (padel ball shape, blue+green) |
+| `horizontal/` | Icon + "PadelHub" text side by side |
+| `stacked/` | Icon + text stacked vertically |
+| `wordmark/` | Text-only "PadelHub" |
+| `favicons/` | PNG at 16, 32, 48, 180, 192, 512px |
+| `app-icons/` | Android + iOS app icons |
+| `social/` | Avatar, OG images |
+
+**Color variants:**
+- `fullcolor` — Blue (#3B82F6) + green (#10B981) + navy text
+- `navy` — All navy monochrome
+- `reversed` — All white (for dark backgrounds)
+
+Landing page copies the needed assets to `apps/landing/public/images/` (logomark, horizontal logos, OG image) and `apps/landing/public/` (favicons).
 
 ### Package Dependencies Flow
 ```

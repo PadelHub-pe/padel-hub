@@ -1,0 +1,95 @@
+---
+const rows = [
+  { feature: "Marketplace de jugadores", padelhub: true, traditional: false },
+  {
+    feature: "Demanda organica de nuevos jugadores",
+    padelhub: true,
+    traditional: false,
+  },
+  { feature: "Dashboard de gestion", padelhub: true, traditional: true },
+  { feature: "App movil para jugadores", padelhub: true, traditional: false },
+  { feature: "Social matchmaking", padelhub: true, traditional: false },
+  { feature: "Soporte multi-local", padelhub: true, traditional: true },
+  { feature: "Sin costo de setup", padelhub: true, traditional: false },
+  {
+    feature: "Enfocado en padel (Peru)",
+    padelhub: true,
+    traditional: false,
+  },
+];
+---
+
+<section class="bg-gray-50 px-8 py-24" id="comparacion">
+  <div class="mx-auto max-w-[900px]">
+    <!-- Header -->
+    <div class="mb-12 text-center">
+      <div
+        class="mb-4 text-[13px] font-semibold tracking-[2px] text-primary uppercase"
+      >
+        ¿Por que PadelHub?
+      </div>
+      <h2
+        class="mb-3 font-display text-3xl font-bold tracking-tight text-gray-900 lg:text-4xl"
+      >
+        No somos otro software de gestion
+      </h2>
+      <p class="text-base text-gray-500">
+        Somos el marketplace que trae jugadores a tu cancha.
+      </p>
+    </div>
+
+    <!-- Table -->
+    <div
+      class="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
+    >
+      <!-- Header row -->
+      <div class="grid grid-cols-3 border-b border-gray-100 bg-gray-50">
+        <div
+          class="p-4 px-6 text-[13px] font-semibold tracking-wider text-gray-500 uppercase"
+        >
+          Caracteristica
+        </div>
+        <div
+          class="bg-primary/[0.08] p-4 px-6 text-center text-[13px] font-semibold tracking-wider text-primary uppercase"
+        >
+          PadelHub
+        </div>
+        <div
+          class="p-4 px-6 text-center text-[13px] font-semibold tracking-wider text-gray-500 uppercase"
+        >
+          Software tradicional
+        </div>
+      </div>
+
+      <!-- Data rows -->
+      {
+        rows.map((row, i) => (
+          <div
+            class:list={[
+              "grid grid-cols-3",
+              i < rows.length - 1 && "border-b border-gray-100",
+            ]}
+          >
+            <div class="flex items-center p-4 px-6 text-sm font-medium text-gray-700">
+              {row.feature}
+            </div>
+            <div class="flex items-center justify-center bg-primary/[0.04] p-4 px-6 font-semibold text-primary">
+              {row.padelhub ? (
+                <span class="text-lg text-secondary">✓</span>
+              ) : (
+                <span class="text-sm text-gray-300">✗</span>
+              )}
+            </div>
+            <div class="flex items-center justify-center p-4 px-6 text-sm">
+              {row.traditional ? (
+                <span class="text-lg text-secondary">✓</span>
+              ) : (
+                <span class="text-sm text-gray-300">✗</span>
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,80 @@
+---
+const steps = [
+  {
+    number: 1,
+    icon: "✍️",
+    title: "Solicita acceso",
+    description:
+      "Completa el formulario con los datos de tu local. Revisamos en menos de 24 horas y te enviamos tu invitacion.",
+    numberBg: "bg-primary-100",
+    numberColor: "text-primary",
+  },
+  {
+    number: 2,
+    icon: "⚙️",
+    title: "Configura tu local",
+    description:
+      "Agrega tus canchas, define horarios y precios. Nuestro wizard te guia paso a paso — en 15 minutos estas listo.",
+    numberBg: "bg-warning-light",
+    numberColor: "text-warning-dark",
+  },
+  {
+    number: 3,
+    icon: "🎾",
+    title: "Recibe reservas",
+    description:
+      "Tu local aparece en la app de jugadores. Las reservas llegan automaticamente a tu dashboard.",
+    numberBg: "bg-secondary-100",
+    numberColor: "text-secondary-800",
+  },
+];
+---
+
+<section class="bg-white px-8 py-24" id="como-funciona">
+  <div class="mx-auto max-w-[1200px]">
+    <!-- Header -->
+    <div class="mx-auto mb-[72px] max-w-[600px] text-center">
+      <div
+        class="mb-4 text-[13px] font-semibold tracking-[2px] text-primary uppercase"
+      >
+        Proceso
+      </div>
+      <h2
+        class="mb-4 font-display text-3xl font-bold tracking-tight text-gray-900 lg:text-[40px]"
+      >
+        Activo en menos de 48 horas
+      </h2>
+      <p class="text-[17px] text-gray-500">
+        Sin contratos largos, sin fees de setup. Te acompanamos en cada paso.
+      </p>
+    </div>
+
+    <!-- Steps -->
+    <div class="relative grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-0">
+      <!-- Connecting line -->
+      <div
+        class="pointer-events-none absolute top-11 right-[16.66%] left-[16.66%] hidden h-0.5 bg-gradient-to-r from-primary to-secondary opacity-20 lg:block"
+      >
+      </div>
+
+      {
+        steps.map((step) => (
+          <div class="relative px-8 text-center">
+            <div
+              class={`relative z-10 mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl font-display text-[22px] font-bold ${step.numberBg} ${step.numberColor}`}
+            >
+              {step.number}
+            </div>
+            <div class="mb-4 text-[32px]">{step.icon}</div>
+            <h3 class="mb-2 font-display text-lg font-semibold text-gray-900">
+              {step.title}
+            </h3>
+            <p class="text-sm leading-relaxed text-gray-500">
+              {step.description}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

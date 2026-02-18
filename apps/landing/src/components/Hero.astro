@@ -1,0 +1,214 @@
+---
+
+---
+
+<section
+  class="relative overflow-hidden bg-gradient-to-br from-white via-[#F0F7FF] to-[#E8F4FD] px-8 pt-40 pb-24"
+>
+  <!-- Decorative gradients -->
+  <div
+    class="pointer-events-none absolute -top-[200px] -right-[200px] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.08)_0%,transparent_70%)]"
+  >
+  </div>
+  <div
+    class="pointer-events-none absolute -bottom-[100px] -left-[100px] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.06)_0%,transparent_70%)]"
+  >
+  </div>
+
+  <div
+    class="relative z-10 mx-auto grid max-w-[1200px] items-center gap-20 lg:grid-cols-2"
+  >
+    <!-- Left: Content -->
+    <div>
+      <div
+        class="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-secondary-200 bg-secondary-100 px-3.5 py-1.5 pr-3.5 pl-2 text-[13px] font-medium text-secondary-800"
+      >
+        <div class="h-2 w-2 animate-pulse-dot rounded-full bg-secondary"></div>
+        Beta activa en Lima
+      </div>
+
+      <h1
+        class="animate-fade-in-up mb-6 font-display text-4xl leading-[1.1] font-extrabold tracking-tight text-gray-900 lg:text-[52px]"
+        style="animation-delay: 0.1s"
+      >
+        Llena tus canchas con <span
+          class="bg-gradient-to-br from-primary to-[#6366F1] bg-clip-text text-transparent"
+          >jugadores reales</span
+        >
+      </h1>
+
+      <p
+        class="animate-fade-in-up mb-10 max-w-[500px] text-lg leading-relaxed text-gray-500"
+        style="animation-delay: 0.2s"
+      >
+        PadelHub conecta tu local con miles de jugadores buscando donde jugar.
+        Tu gestionas tus canchas, nosotros te traemos la demanda.
+      </p>
+
+      <div
+        class="animate-fade-in-up flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+        style="animation-delay: 0.3s"
+      >
+        <a
+          href="#solicitar"
+          class="inline-flex items-center gap-2 rounded-[14px] bg-primary px-8 py-4 text-base font-semibold text-white shadow-[0_2px_8px_rgba(59,130,246,0.25)] transition-all hover:-translate-y-0.5 hover:bg-primary-600 hover:shadow-[0_8px_24px_rgba(59,130,246,0.35)]"
+        >
+          Solicitar Acceso
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+            ><path d="M5 12h14M12 5l7 7-7 7"></path></svg
+          >
+        </a>
+        <a
+          href="#como-funciona"
+          class="inline-flex items-center gap-2 rounded-[14px] border-[1.5px] border-gray-300 bg-white px-8 py-4 text-base font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50"
+        >
+          Ver como funciona
+        </a>
+      </div>
+    </div>
+
+    <!-- Right: Dashboard mockup -->
+    <div class="animate-fade-in-up relative" style="animation-delay: 0.3s">
+      <div
+        class="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_32px_rgba(0,0,0,0.08),0_24px_60px_rgba(0,0,0,0.06)]"
+      >
+        <!-- Top bar -->
+        <div
+          class="flex items-center gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3"
+        >
+          <div class="h-2.5 w-2.5 rounded-full bg-[#FCA5A5]"></div>
+          <div class="h-2.5 w-2.5 rounded-full bg-[#FCD34D]"></div>
+          <div class="h-2.5 w-2.5 rounded-full bg-[#6EE7B7]"></div>
+        </div>
+        <!-- Content area -->
+        <div class="grid min-h-[340px] grid-cols-[200px_1fr] gap-5 p-6">
+          <!-- Sidebar -->
+          <div class="flex flex-col gap-1.5">
+            <div
+              class="flex items-center gap-2 rounded-lg bg-primary-100 px-3 py-2 text-xs font-medium text-primary"
+            >
+              <div class="h-4 w-4 rounded bg-current opacity-30"></div>
+              Vista General
+            </div>
+            {
+              ["Reservas", "Canchas", "Horarios", "Precios", "Configuracion"].map(
+                (item) => (
+                  <div class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-gray-500">
+                    <div class="h-4 w-4 rounded bg-current opacity-30" />
+                    {item}
+                  </div>
+                ),
+              )
+            }
+          </div>
+          <!-- Main -->
+          <div class="flex flex-col gap-4">
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-3">
+              <div
+                class="rounded-[10px] border border-gray-100 bg-gray-50 p-3.5"
+              >
+                <div class="font-display text-xl font-bold text-gray-900">
+                  127
+                </div>
+                <div class="mt-0.5 text-[11px] text-gray-500">
+                  Reservas este mes
+                </div>
+              </div>
+              <div
+                class="rounded-[10px] border border-gray-100 bg-gray-50 p-3.5"
+              >
+                <div class="font-display text-xl font-bold text-secondary">
+                  89%
+                </div>
+                <div class="mt-0.5 text-[11px] text-gray-500">Ocupacion</div>
+              </div>
+              <div
+                class="rounded-[10px] border border-gray-100 bg-gray-50 p-3.5"
+              >
+                <div class="font-display text-xl font-bold text-primary">
+                  S/ 18.4k
+                </div>
+                <div class="mt-0.5 text-[11px] text-gray-500">Ingresos</div>
+              </div>
+            </div>
+            <!-- Chart -->
+            <div
+              class="flex flex-1 flex-col overflow-hidden rounded-[10px] border border-gray-100 bg-gray-50 p-4"
+            >
+              <div
+                class="text-[11px] font-semibold tracking-wider text-gray-400 uppercase"
+              >
+                Reservas por dia
+              </div>
+              <div class="mt-3 flex flex-1 items-end gap-1.5 px-2">
+                {
+                  [
+                    { h: "45%", color: "bg-primary-100" },
+                    { h: "65%", color: "bg-primary-100" },
+                    { h: "55%", color: "bg-primary-100" },
+                    { h: "85%", color: "bg-primary" },
+                    { h: "90%", color: "bg-primary" },
+                    {
+                      h: "95%",
+                      color:
+                        "bg-gradient-to-t from-[#6366F1] to-primary",
+                    },
+                    { h: "78%", color: "bg-primary" },
+                  ].map((bar) => (
+                    <div
+                      class={`flex-1 rounded-t ${bar.color}`}
+                      style={`height: ${bar.h}`}
+                    />
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating card 1 -->
+      <div
+        class="absolute -bottom-4 -left-10 z-20 flex animate-float items-center gap-3 rounded-2xl bg-white p-3.5 px-4.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+      >
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-[10px] bg-secondary-100 text-lg"
+        >
+          🎾
+        </div>
+        <div>
+          <div class="text-[13px] font-semibold text-gray-900">
+            +3 reservas nuevas
+          </div>
+          <div class="text-[11px] text-gray-500">
+            Desde la app de jugadores
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating card 2 -->
+      <div
+        class="absolute -right-8 top-5 z-20 flex animate-float-delayed items-center gap-2.5 rounded-[14px] bg-white p-3 px-4 shadow-[0_8px_32px_rgba(0,0,0,0.1)]"
+      >
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-[10px] bg-warning-light text-base"
+        >
+          ⚡
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-900">
+            Hora pico activa
+          </div>
+          <div class="text-[11px] text-gray-500">18:00 – 21:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

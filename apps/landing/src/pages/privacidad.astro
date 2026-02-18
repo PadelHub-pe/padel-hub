@@ -1,0 +1,211 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Navbar from "~/components/Navbar.astro";
+import Footer from "~/components/Footer.astro";
+
+export const prerender = true;
+---
+
+<Layout title="Politica de Privacidad — PadelHub">
+  <Navbar />
+  <main class="px-8 pt-32 pb-24">
+    <article class="prose prose-gray mx-auto max-w-[720px]">
+      <h1 class="font-display text-3xl font-bold tracking-tight text-gray-900">
+        Politica de Privacidad
+      </h1>
+      <p class="text-sm text-gray-500">Ultima actualizacion: 18 de febrero de 2026</p>
+
+      <hr class="my-8 border-gray-200" />
+
+      <h2>1. Identidad del Responsable</h2>
+      <p>
+        PadelHub S.A.C. ("PadelHub", "nosotros") es responsable del tratamiento de tus datos
+        personales. Para consultas de privacidad, puedes contactarnos en:
+      </p>
+      <ul>
+        <li><strong>Correo:</strong> <a href="mailto:privacy@padelhub.pe">privacy@padelhub.pe</a></li>
+        <li><strong>Ubicacion:</strong> Lima, Peru</li>
+      </ul>
+      <p>
+        Esta politica se rige por la Ley N° 29733, Ley de Proteccion de Datos Personales del Peru,
+        y su reglamento actualizado (Decreto Supremo 016-2024-JUS).
+      </p>
+
+      <h2>2. Datos Personales que Recopilamos</h2>
+
+      <h3>Datos proporcionados por ti</h3>
+      <ul>
+        <li><strong>Registro de cuenta:</strong> Nombre, correo electronico, telefono, contraseña.</li>
+        <li><strong>Formulario de acceso (landing page):</strong> Correo electronico.</li>
+        <li><strong>Perfil de operador:</strong> Nombre de la organizacion, datos de la instalacion (direccion, telefono, email, fotos, horarios, precios).</li>
+        <li><strong>Reservas:</strong> Nombre del cliente, telefono, email (para reservas manuales).</li>
+      </ul>
+
+      <h3>Datos generados por el uso</h3>
+      <ul>
+        <li>Historial de reservas y actividad en la plataforma.</li>
+        <li>Datos del dispositivo: tipo de dispositivo, sistema operativo, navegador.</li>
+        <li>Direccion IP y datos de sesion.</li>
+        <li>Datos de ubicacion (si autorizas el acceso para la funcion de descubrimiento de canchas).</li>
+      </ul>
+
+      <h2>3. Finalidades del Tratamiento</h2>
+      <p>Utilizamos tus datos personales para las siguientes finalidades:</p>
+      <ul>
+        <li>Crear y gestionar tu cuenta en la Plataforma.</li>
+        <li>Procesar y gestionar reservas de canchas.</li>
+        <li>Facilitar pagos y liquidaciones a operadores.</li>
+        <li>Enviar confirmaciones de reserva, recordatorios y notificaciones operativas.</li>
+        <li>Facilitar la coordinacion de partidos abiertos entre jugadores.</li>
+        <li>Brindar soporte al cliente.</li>
+        <li>Prevenir fraude y garantizar la seguridad de la Plataforma.</li>
+        <li>Mejorar la Plataforma mediante analisis de uso agregados.</li>
+        <li>Enviar comunicaciones de marketing (solo con tu consentimiento previo).</li>
+        <li>Cumplir con obligaciones legales y regulatorias.</li>
+      </ul>
+
+      <h2>4. Base Legal del Tratamiento</h2>
+      <p>El tratamiento de tus datos se fundamenta en las siguientes bases legales:</p>
+      <ul>
+        <li><strong>Ejecucion de contrato:</strong> Para gestionar tu cuenta, procesar reservas y facilitar pagos.</li>
+        <li><strong>Consentimiento:</strong> Para el envio de comunicaciones de marketing y funciones opcionales como la geolocalizacion.</li>
+        <li><strong>Interes legitimo:</strong> Para prevencion de fraude, seguridad de la plataforma y analisis de uso.</li>
+        <li><strong>Obligacion legal:</strong> Para el cumplimiento de obligaciones tributarias y regulatorias.</li>
+      </ul>
+
+      <h2>5. Comparticion de Datos con Terceros</h2>
+      <p>Podemos compartir tus datos con las siguientes categorias de terceros:</p>
+      <ul>
+        <li><strong>Operadores de instalaciones:</strong> Al realizar una reserva, el operador recibe tu nombre y datos de contacto para gestionar la reserva.</li>
+        <li><strong>Jugadores:</strong> Los datos publicos de las instalaciones (nombre, direccion, horarios, precios) son visibles para los jugadores.</li>
+        <li><strong>Proveedores de infraestructura:</strong> Supabase (base de datos), Vercel (hosting).</li>
+        <li><strong>Procesadores de pago:</strong> Para procesar transacciones de forma segura.</li>
+        <li><strong>Proveedores de correo electronico:</strong> Para el envio de notificaciones y comunicaciones.</li>
+        <li><strong>Autoridades legales:</strong> Cuando sea requerido por ley o por orden judicial.</li>
+      </ul>
+      <p>
+        No vendemos tus datos personales a terceros.
+      </p>
+
+      <h2>6. Transferencias Internacionales</h2>
+      <p>
+        Tus datos pueden ser almacenados y procesados en servidores ubicados fuera del Peru
+        (Estados Unidos) a traves de nuestros proveedores de infraestructura (Supabase, Vercel).
+        En estos casos, garantizamos un nivel de proteccion equivalente al exigido por la legislacion
+        peruana mediante clausulas contractuales y acuerdos de procesamiento de datos con dichos
+        proveedores.
+      </p>
+
+      <h2>7. Conservacion de Datos</h2>
+      <p>Conservamos tus datos personales durante los siguientes periodos:</p>
+      <ul>
+        <li><strong>Datos de cuenta:</strong> Mientras tu cuenta este activa, mas 2 años despues de su eliminacion.</li>
+        <li><strong>Historial de reservas:</strong> Minimo 2 años desde la fecha de la reserva.</li>
+        <li><strong>Registros tributarios y de pago:</strong> 5 años (conforme a la legislacion tributaria peruana).</li>
+        <li><strong>Solicitudes de acceso (landing page):</strong> 12 meses si no se otorga acceso.</li>
+        <li><strong>Registros de consentimiento de marketing:</strong> Hasta que revoques tu consentimiento.</li>
+      </ul>
+
+      <h2>8. Tus Derechos (Derechos ARCO)</h2>
+      <p>
+        De acuerdo con la Ley N° 29733, tienes los siguientes derechos sobre tus datos personales:
+      </p>
+      <ul>
+        <li><strong>Acceso (A):</strong> Conocer que datos tenemos sobre ti, para que fines y con quien los compartimos.</li>
+        <li><strong>Rectificacion (R):</strong> Corregir datos inexactos o incompletos.</li>
+        <li><strong>Cancelacion (C):</strong> Solicitar la eliminacion de tus datos cuando el tratamiento ya no este justificado.</li>
+        <li><strong>Oposicion (O):</strong> Oponerte al tratamiento de tus datos, particularmente para fines de marketing.</li>
+        <li><strong>Portabilidad:</strong> Recibir tus datos en un formato estructurado y de lectura mecanica.</li>
+      </ul>
+      <p>
+        Para ejercer cualquiera de estos derechos, envia un correo a
+        <a href="mailto:privacy@padelhub.pe">privacy@padelhub.pe</a> con el asunto
+        "Solicitud ARCO". Responderemos en un plazo maximo de 20 dias habiles.
+      </p>
+      <p>
+        Si consideras que tus derechos no han sido atendidos adecuadamente, puedes presentar una
+        reclamacion ante la Autoridad Nacional de Proteccion de Datos Personales (ANPDP) del
+        Ministerio de Justicia y Derechos Humanos del Peru.
+      </p>
+
+      <h2>9. Consentimiento y Revocacion</h2>
+      <p>
+        Obtenemos tu consentimiento de forma expresa al momento del registro y mediante opciones
+        separadas para comunicaciones de marketing. Puedes revocar tu consentimiento en cualquier
+        momento a traves de la configuracion de tu cuenta o contactandonos en
+        <a href="mailto:privacy@padelhub.pe">privacy@padelhub.pe</a>.
+      </p>
+      <p>
+        La revocacion del consentimiento no afecta la licitud del tratamiento realizado antes de
+        dicha revocacion.
+      </p>
+
+      <h2>10. Seguridad de los Datos</h2>
+      <p>
+        Implementamos medidas tecnicas y organizativas para proteger tus datos personales,
+        incluyendo:
+      </p>
+      <ul>
+        <li>Cifrado de datos en transito (TLS/HTTPS) y en reposo.</li>
+        <li>Control de acceso basado en roles (org_admin, facility_manager, staff).</li>
+        <li>Monitoreo de accesos y deteccion de actividades anomalas.</li>
+        <li>Notificacion a usuarios afectados y a la ANPDP en caso de brechas de seguridad significativas.</li>
+      </ul>
+
+      <h2>11. Cookies</h2>
+      <p>
+        Utilizamos cookies estrictamente necesarias para el funcionamiento de la Plataforma
+        (autenticacion y sesion). No utilizamos cookies de terceros con fines publicitarios.
+      </p>
+      <p>
+        Si en el futuro incorporamos cookies de analisis o preferencias, te informaremos y
+        solicitaremos tu consentimiento previo.
+      </p>
+
+      <h2>12. Menores de Edad</h2>
+      <p>
+        La Plataforma no esta dirigida a menores de 18 años. No recopilamos conscientemente datos
+        de menores. Si un padre o tutor detecta que un menor se ha registrado, puede contactarnos
+        para solicitar la eliminacion de la cuenta y datos asociados.
+      </p>
+
+      <h2>13. Cambios a esta Politica</h2>
+      <p>
+        Podemos actualizar esta Politica de Privacidad periodicamente. Los cambios materiales seran
+        notificados por correo electronico con al menos 30 dias de anticipacion. La version vigente
+        siempre estara disponible en esta pagina.
+      </p>
+
+      <h2>14. Contacto</h2>
+      <p>
+        Para consultas sobre esta Politica de Privacidad o el tratamiento de tus datos, contactanos en:
+        <a href="mailto:privacy@padelhub.pe">privacy@padelhub.pe</a>
+      </p>
+      <p>
+        <strong>Autoridad de control:</strong> Autoridad Nacional de Proteccion de Datos Personales
+        (ANPDP), Ministerio de Justicia y Derechos Humanos del Peru.
+      </p>
+    </article>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  @reference "../styles/global.css";
+
+  .prose h2 {
+    @apply font-display mt-10 mb-3 text-xl font-semibold text-gray-900;
+  }
+  .prose h3 {
+    @apply mt-6 mb-2 text-base font-semibold text-gray-800;
+  }
+  .prose p {
+    @apply mb-4 text-[15px] leading-relaxed text-gray-600;
+  }
+  .prose ul {
+    @apply mb-4 list-disc space-y-1.5 pl-6 text-[15px] leading-relaxed text-gray-600;
+  }
+  .prose a {
+    @apply text-primary no-underline hover:underline;
+  }
+</style>
