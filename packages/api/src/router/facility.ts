@@ -82,6 +82,16 @@ export const facilityRouter = {
     // Verify access with facility:read permission
     const { facility } = await verifyFacilityAccess(ctx, facilityId, "facility:read");
 
+    // Get court counts by type
+    const facilityCourts = await ctx.db.query.courts.findMany({
+      where: eq(courts.facilityId, facilityId),
+      columns: { id: true, type: true },
+    });
+
+    const courtCount = facilityCourts.length;
+    const indoorCount = facilityCourts.filter((c) => c.type === "indoor").length;
+    const outdoorCount = facilityCourts.filter((c) => c.type === "outdoor").length;
+
     return {
       id: facility.id,
       name: facility.name,
@@ -98,6 +108,9 @@ export const facilityRouter = {
       photos: facility.photos ?? [],
       isActive: facility.isActive,
       onboardingCompletedAt: facility.onboardingCompletedAt,
+      courtCount,
+      indoorCount,
+      outdoorCount,
     };
   }),
 
