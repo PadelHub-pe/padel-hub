@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { signIn } from "@wifo/auth/client";
+import { signIn, useSession } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@wifo/ui/card";
 import { Checkbox } from "@wifo/ui/checkbox";
@@ -29,6 +30,14 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace("/org");
+    }
+  }, [session, isPending, router]);
 
   const form = useForm<LoginFormValues>({
     resolver: standardSchemaResolver(loginSchema),
@@ -49,30 +58,34 @@ export default function LoginPage() {
 
       if (result.error) {
         form.setError("root", {
-          message: result.error.message ?? "Email or password is incorrect",
+          message: "Email o contraseña incorrectos",
         });
       } else {
         router.push("/org");
       }
     } catch {
       form.setError("root", {
-        message: "An unexpected error occurred. Please try again.",
+        message: "Ocurrió un error inesperado. Intenta nuevamente.",
       });
     }
   }
 
   async function handleGoogleSignIn() {
+    setIsGoogleLoading(true);
     try {
       await signIn.social({
         provider: "google",
         callbackURL: "/org",
       });
     } catch {
+      setIsGoogleLoading(false);
       form.setError("root", {
-        message: "Failed to sign in with Google. Please try again.",
+        message: "Error al iniciar sesión con Google. Intenta nuevamente.",
       });
     }
   }
+
+  const isSubmitting = form.formState.isSubmitting;
 
   return (
     <div className="flex min-h-screen">
@@ -89,20 +102,20 @@ export default function LoginPage() {
 
           {/* Headline */}
           <h1 className="text-4xl font-bold leading-tight mb-4">
-            Manage Your Padel Courts
+            Gestiona tus canchas de pádel
           </h1>
 
           {/* Tagline */}
           <p className="text-lg text-blue-100 mb-10">
-            The all-in-one platform to manage bookings, schedules, and grow your
-            padel business.
+            La plataforma todo-en-uno para gestionar reservas, horarios y hacer
+            crecer tu negocio de pádel.
           </p>
 
           {/* Feature highlights */}
           <div className="space-y-4">
-            <FeatureItem icon={<CalendarIcon />} text="Real-time booking management" />
-            <FeatureItem icon={<ChartIcon />} text="Analytics & insights" />
-            <FeatureItem icon={<UsersIcon />} text="Connect with players" />
+            <FeatureItem icon={<CalendarIcon />} text="Gestión de reservas en tiempo real" />
+            <FeatureItem icon={<ChartIcon />} text="Analíticas e insights" />
+            <FeatureItem icon={<UsersIcon />} text="Conecta con jugadores" />
           </div>
         </div>
       </div>
@@ -111,8 +124,8 @@ export default function LoginPage() {
       <div className="flex w-full lg:w-1/2 items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-sm">
           <CardHeader className="text-center lg:text-left">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to your owner dashboard</CardDescription>
+            <CardTitle className="text-2xl">Bienvenido de vuelta</CardTitle>
+            <CardDescription>Ingresa a tu panel de administración</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -123,11 +136,11 @@ export default function LoginPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email address</FormLabel>
+                      <FormLabel>Correo electrónico</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="owner@example.com"
+                          placeholder="admin@miclub.pe"
                           autoComplete="email"
                           {...field}
                         />
@@ -144,12 +157,12 @@ export default function LoginPage() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Contraseña</FormLabel>
                         <Link
                           href="/forgot-password"
                           className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
                         >
-                          Forgot password?
+                          ¿Olvidaste tu contraseña?
                         </Link>
                       </div>
                       <FormControl>
@@ -178,7 +191,7 @@ export default function LoginPage() {
                         />
                       </FormControl>
                       <FormLabel className="text-sm font-normal cursor-pointer">
-                        Remember me for 30 days
+                        Recordarme por 30 días
                       </FormLabel>
                     </FormItem>
                   )}
@@ -196,9 +209,9 @@ export default function LoginPage() {
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   size="lg"
-                  disabled={form.formState.isSubmitting}
+                  disabled={isSubmitting || isGoogleLoading}
                 >
-                  {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
+                  {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
                 </Button>
               </form>
             </Form>
@@ -209,7 +222,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-4 text-gray-500">or continue with</span>
+                <span className="bg-white px-4 text-gray-500">o continúa con</span>
               </div>
             </div>
 
@@ -220,20 +233,27 @@ export default function LoginPage() {
               className="w-full"
               size="lg"
               onClick={handleGoogleSignIn}
+              disabled={isSubmitting || isGoogleLoading}
             >
-              <GoogleIcon className="mr-2 h-5 w-5" />
+              {isGoogleLoading ? (
+                <LoadingSpinner className="mr-2 h-5 w-5" />
+              ) : (
+                <GoogleIcon className="mr-2 h-5 w-5" />
+              )}
               Google
             </Button>
 
-            {/* Register link */}
+            {/* Landing page link */}
             <p className="mt-6 text-center text-sm text-gray-600">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/register"
+              ¿Administras un centro de pádel?{" "}
+              <a
+                href="https://padelhub.pe"
                 className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Register your facility
-              </Link>
+                Solicita acceso
+              </a>
             </p>
           </CardContent>
         </Card>
@@ -250,6 +270,15 @@ function FeatureItem({ icon, text }: { icon: React.ReactNode; text: string }) {
       </div>
       <span className="text-blue-50">{text}</span>
     </div>
+  );
+}
+
+function LoadingSpinner({ className }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
   );
 }
 

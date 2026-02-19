@@ -31,8 +31,8 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
       // Redirect to first available org
       redirect(`/org/${firstOrg.slug}/facilities`);
     } else {
-      // No orgs, redirect to onboarding
-      redirect("/onboarding");
+      // No orgs
+      redirect("/no-organization");
     }
   }
 

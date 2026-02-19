@@ -14,8 +14,8 @@ export default async function OrgIndexPage() {
   const organizations = await caller.org.getMyOrganizations();
 
   if (organizations.length === 0) {
-    // User has no organizations - redirect to onboarding
-    redirect("/onboarding");
+    // User has no organizations
+    redirect("/no-organization");
   }
 
   // Redirect to first organization's facilities page

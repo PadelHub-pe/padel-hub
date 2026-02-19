@@ -9,6 +9,8 @@ export function authEnv() {
           ? z.string().min(1)
           : z.string().min(1).optional(),
       NODE_ENV: z.enum(["development", "production"]).optional(),
+      GOOGLE_CLIENT_ID: z.string().optional(),
+      GOOGLE_CLIENT_SECRET: z.string().optional(),
     },
     runtimeEnv: process.env,
     skipValidation:
