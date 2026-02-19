@@ -24,6 +24,7 @@
     "@wifo/api": "workspace:*",
     "@wifo/auth": "workspace:*",
     "@wifo/db": "workspace:*",
+    "@wifo/email": "workspace:*",
     "@wifo/ui": "workspace:*",
     "@wifo/validators": "workspace:*",
     "better-auth": "catalog:",

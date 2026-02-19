@@ -14,20 +14,17 @@ import {
 } from "@wifo/ui/dialog";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
+import { toast } from "@wifo/ui/toast";
 
 import type { AccessRequestRow } from "./access-requests-columns";
 import { useTRPC } from "~/trpc/react";
 
 interface FormState {
-  contactName: string;
-  phone: string;
   organizationName: string;
   facilityName: string;
 }
 
 const INITIAL_FORM: FormState = {
-  contactName: "",
-  phone: "",
   organizationName: "",
   facilityName: "",
 };
@@ -56,6 +53,7 @@ export function ApproveDialog({
     trpc.admin.approveAccessRequest.mutationOptions({
       onSuccess: (data) => {
         setResult(data);
+        toast.success("Solicitud aprobada exitosamente");
         void queryClient.invalidateQueries({
           queryKey: trpc.admin.listAccessRequests.queryKey(),
         });
@@ -76,13 +74,14 @@ export function ApproveDialog({
 
   function validate(): boolean {
     const newErrors: Partial<Record<keyof FormState, string>> = {};
-    if (form.contactName.trim().length < 2)
-      newErrors.contactName = "Mínimo 2 caracteres";
-    if (form.phone.trim().length < 6) newErrors.phone = "Mínimo 6 caracteres";
-    if (form.organizationName.trim().length < 2)
-      newErrors.organizationName = "Mínimo 2 caracteres";
-    if (form.facilityName.trim().length < 2)
-      newErrors.facilityName = "Mínimo 2 caracteres";
+    const orgName = form.organizationName.trim();
+    const facName = form.facilityName.trim();
+    if (orgName.length < 2) newErrors.organizationName = "Mínimo 2 caracteres";
+    else if (orgName.length > 200)
+      newErrors.organizationName = "Máximo 200 caracteres";
+    if (facName.length < 2) newErrors.facilityName = "Mínimo 2 caracteres";
+    else if (facName.length > 200)
+      newErrors.facilityName = "Máximo 200 caracteres";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -91,8 +90,6 @@ export function ApproveDialog({
     if (!request || !validate()) return;
     approveMutation.mutate({
       id: request.id,
-      contactName: form.contactName.trim(),
-      phone: form.phone.trim(),
       organizationName: form.organizationName.trim(),
       facilityName: form.facilityName.trim(),
     });
@@ -100,10 +97,13 @@ export function ApproveDialog({
 
   if (!request) return null;
 
-  const dashboardUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin.replace(":3001", ":3000")}/register?token=${result?.inviteToken}`
-      : "";
+  const dashboardUrl = (() => {
+    if (typeof window === "undefined" || !result?.inviteToken) return "";
+    const base = window.location.origin.replace(":3001", ":3000");
+    const url = new URL("/register", base);
+    url.searchParams.set("token", result.inviteToken);
+    return url.toString();
+  })();
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -134,9 +134,10 @@ export function ApproveDialog({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() =>
-                      void navigator.clipboard.writeText(dashboardUrl)
-                    }
+                    onClick={() => {
+                      void navigator.clipboard.writeText(dashboardUrl);
+                      toast.success("Link copiado");
+                    }}
                   >
                     Copiar
                   </Button>
@@ -152,40 +153,22 @@ export function ApproveDialog({
             <DialogHeader>
               <DialogTitle>Aprobar solicitud</DialogTitle>
               <DialogDescription>
-                Completa los datos del cliente para crear la organización, sede
-                e invitación para <strong>{request.email}</strong>.
+                Define la organización y sede para{" "}
+                <strong>{request.email}</strong>.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="contactName">Nombre de contacto</Label>
-                <Input
-                  id="contactName"
-                  placeholder="Juan Pérez"
-                  value={form.contactName}
-                  onChange={(e) => {
-                    setForm((f) => ({ ...f, contactName: e.target.value }));
-                    setErrors((e) => ({ ...e, contactName: undefined }));
-                  }}
-                />
-                {errors.contactName && (
-                  <p className="text-sm text-red-500">{errors.contactName}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  placeholder="+51999888777"
-                  value={form.phone}
-                  onChange={(e) => {
-                    setForm((f) => ({ ...f, phone: e.target.value }));
-                    setErrors((e) => ({ ...e, phone: undefined }));
-                  }}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-red-500">{errors.phone}</p>
-                )}
+              {/* Read-only contact info from access request */}
+              <div className="rounded-md bg-gray-50 p-3">
+                <p className="mb-1 text-xs font-medium text-gray-500">
+                  Contacto
+                </p>
+                <p className="text-sm">
+                  {request.name ?? "—"}{" "}
+                  {request.phone && (
+                    <span className="text-gray-500">· {request.phone}</span>
+                  )}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="organizationName">Nombre de organización</Label>

@@ -14,6 +14,7 @@ import {
 } from "@wifo/ui/dialog";
 import { Label } from "@wifo/ui/label";
 import { Textarea } from "@wifo/ui/textarea";
+import { toast } from "@wifo/ui/toast";
 
 import type { AccessRequestRow } from "./access-requests-columns";
 import { useTRPC } from "~/trpc/react";
@@ -34,6 +35,7 @@ export function RejectDialog({
   const rejectMutation = useMutation(
     trpc.admin.rejectAccessRequest.mutationOptions({
       onSuccess: () => {
+        toast.success("Solicitud rechazada");
         void queryClient.invalidateQueries({
           queryKey: trpc.admin.listAccessRequests.queryKey(),
         });
@@ -71,6 +73,7 @@ export function RejectDialog({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
+            maxLength={500}
           />
         </div>
         {rejectMutation.error && (

@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   ),
   title: "PadelHub Admin",
   description: "Panel de administración interno de PadelHub",
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

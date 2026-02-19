@@ -4,12 +4,14 @@ type FormState = "idle" | "loading" | "success" | "error";
 
 export default function AccessRequestForm() {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [state, setState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !name.trim()) return;
 
     setState("loading");
     setErrorMessage("");
@@ -18,7 +20,11 @@ export default function AccessRequestForm() {
       const res = await fetch("/api/access-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          name: name.trim(),
+          phone: phone.trim() || undefined,
+        }),
       });
 
       const data = (await res.json()) as { error?: string };
@@ -53,27 +59,49 @@ export default function AccessRequestForm() {
     );
   }
 
+  const inputClassName =
+    "focus:border-primary focus:bg-primary/6 w-full rounded-[14px] border-[1.5px] border-white/12 bg-white/6 px-5 py-4 text-[15px] text-white transition-all outline-none placeholder:text-gray-500";
+
   return (
     <div>
       <form
         onSubmit={handleSubmit}
-        className="mx-auto mb-6 flex max-w-[480px] flex-col gap-3 sm:flex-row"
+        className="mx-auto mb-6 max-w-[480px] space-y-3"
       >
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="tu@correo.com"
-          required
-          className="focus:border-primary focus:bg-primary/6 flex-1 rounded-[14px] border-[1.5px] border-white/12 bg-white/6 px-5 py-4 text-[15px] text-white transition-all outline-none placeholder:text-gray-500"
-        />
-        <button
-          type="submit"
-          disabled={state === "loading"}
-          className="bg-primary hover:bg-primary-600 cursor-pointer rounded-[14px] border-none px-7 py-4 text-[15px] font-semibold whitespace-nowrap text-white transition-all hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {state === "loading" ? "Enviando..." : "Solicitar Acceso"}
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tu nombre completo"
+            required
+            className={inputClassName}
+          />
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Teléfono (opcional)"
+            className={inputClassName}
+          />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@correo.com"
+            required
+            className={inputClassName}
+          />
+          <button
+            type="submit"
+            disabled={state === "loading"}
+            className="bg-primary hover:bg-primary-600 cursor-pointer rounded-[14px] border-none px-7 py-4 text-[15px] font-semibold whitespace-nowrap text-white transition-all hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {state === "loading" ? "Enviando..." : "Solicitar Acceso"}
+          </button>
+        </div>
       </form>
       {state === "error" && (
         <p className="mb-4 text-center text-sm text-red-400">{errorMessage}</p>

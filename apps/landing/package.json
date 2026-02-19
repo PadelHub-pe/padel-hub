@@ -15,6 +15,7 @@
     "@astrojs/react": "^4.2.1",
     "@astrojs/vercel": "^8.1.4",
     "@wifo/db": "workspace:*",
+    "@wifo/email": "workspace:*",
     "astro": "^5.8.4",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

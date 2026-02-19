@@ -21,6 +21,7 @@
     "@trpc/server": "catalog:",
     "@wifo/auth": "workspace:*",
     "@wifo/db": "workspace:*",
+    "@wifo/email": "workspace:*",
     "@wifo/validators": "workspace:*",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",

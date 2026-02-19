@@ -8,6 +8,7 @@ export interface AccessRequestRow {
   id: string;
   email: string;
   name: string | null;
+  phone: string | null;
   status: "pending" | "approved" | "rejected";
   createdAt: Date;
   reviewerName: string | null;

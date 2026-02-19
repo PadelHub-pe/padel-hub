@@ -13,6 +13,9 @@ export const env = createEnv({
   },
   server: {
     POSTGRES_URL: z.url(),
+    ADMIN_SITE_PASSWORD: z.string().optional(),
+    UPSTASH_REDIS_REST_URL: z.url().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   },
   client: {},
   experimental__runtimeEnv: {

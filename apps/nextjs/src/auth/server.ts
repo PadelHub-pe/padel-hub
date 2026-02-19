@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { nextCookies } from "better-auth/next-js";
 
 import { initAuth } from "@wifo/auth";
+import { sendPasswordReset } from "@wifo/email";
 
 import { env } from "~/env";
 
@@ -17,9 +18,12 @@ const baseUrl =
 
 export const auth = initAuth({
   baseUrl,
-  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL ?? "turbo.t3.gg"}`,
+  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL ?? "padelhub.pe"}`,
   secret: env.AUTH_SECRET,
   extraPlugins: [nextCookies()],
+  onSendResetPassword: async ({ email, url }) => {
+    await sendPasswordReset({ userEmail: email, resetUrl: url });
+  },
 });
 
 export const getSession = cache(async () =>

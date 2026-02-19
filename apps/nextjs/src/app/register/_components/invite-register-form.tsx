@@ -75,6 +75,7 @@ export function InviteRegisterForm({ token }: { token: string }) {
       email={data.invite.email}
       organizationName={data.invite.organizationName}
       roleLabel={data.invite.roleLabel}
+      suggestedName={data.invite.suggestedName ?? ""}
       router={router}
       trpc={trpc}
       isGoogleLoading={isGoogleLoading}
@@ -88,6 +89,7 @@ function InviteForm({
   email,
   organizationName,
   roleLabel,
+  suggestedName,
   router,
   trpc,
   isGoogleLoading,
@@ -97,6 +99,7 @@ function InviteForm({
   email: string;
   organizationName: string;
   roleLabel: string;
+  suggestedName: string;
   router: ReturnType<typeof useRouter>;
   trpc: ReturnType<typeof useTRPC>;
   isGoogleLoading: boolean;
@@ -107,7 +110,7 @@ function InviteForm({
   const form = useForm<RegisterFormValues>({
     resolver: standardSchemaResolver(registerSchema),
     defaultValues: {
-      name: "",
+      name: suggestedName,
       password: "",
       confirmPassword: "",
     },

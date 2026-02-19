@@ -51,7 +51,11 @@
     "AUTH_SECRET",
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
-    "PORT"
+    "PORT",
+    "RESEND_API_KEY",
+    "ADMIN_SITE_PASSWORD",
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

@@ -149,7 +149,10 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   });
 
   if (!admin) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Not a platform admin" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "No eres administrador de la plataforma",
+    });
   }
 
   return next({

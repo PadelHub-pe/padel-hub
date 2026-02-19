@@ -13,6 +13,10 @@ export function initAuth<
   productionUrl: string;
   secret: string | undefined;
   extraPlugins?: TExtraPlugins;
+  onSendResetPassword?: (params: {
+    email: string;
+    url: string;
+  }) => Promise<void>;
 }) {
   const config = {
     database: drizzleAdapter(db, {
@@ -38,11 +42,16 @@ export function initAuth<
         user: { email: string };
         url: string;
       }) => {
-        // TODO: Replace with Resend email service
-        await Promise.resolve();
-        console.log(
-          `[AUTH] Password reset requested for ${resetUser.email}: ${url}`,
-        );
+        if (options.onSendResetPassword) {
+          await options.onSendResetPassword({
+            email: resetUser.email,
+            url,
+          });
+        } else {
+          console.log(
+            `[AUTH] Password reset requested for ${resetUser.email}: ${url}`,
+          );
+        }
       },
     },
     socialProviders: {

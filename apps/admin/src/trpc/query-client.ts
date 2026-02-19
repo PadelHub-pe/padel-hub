@@ -16,6 +16,8 @@ export const createQueryClient = () =>
           defaultShouldDehydrateQuery(query) ||
           query.state.status === "pending",
         shouldRedactErrors: () => {
+          // Next.js automatically redacts errors with better digests.
+          // Returning false allows Next.js to handle error redaction.
           return false;
         },
       },

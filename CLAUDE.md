@@ -101,6 +101,7 @@ pnpm turbo gen init   # Scaffold new package from templates
   ├─ api              # tRPC v11 router definitions
   ├─ auth             # Better Auth authentication
   ├─ db               # Drizzle ORM + schema definitions
+  ├─ email            # Email templates & sending (React Email + Resend)
   ├─ ui               # Shared React components (shadcn-ui)
   └─ validators       # Shared Zod validation schemas
 /tooling
@@ -127,6 +128,40 @@ Astro app with zero-JS-by-default static sections and one React island for the e
 - Env var: `POSTGRES_URL` required for the API endpoint
 
 **Scoped `<style>` in Astro pages** need `@reference "../styles/global.css"` to access Tailwind theme tokens (e.g., `font-display`, color vars). Use relative paths, not `~/` alias.
+
+### Email Package (`packages/email`)
+
+Transactional email system using React Email for templates and Resend for delivery.
+
+- **Stack**: React Email, Resend, `@t3-oss/env-core`
+- **Templates**: `src/templates/` — React components rendered to HTML
+- **Senders**: `src/senders/` — High-level functions that compose template + delivery
+- **Dev mode**: When `RESEND_API_KEY` is not set, emails log to console instead of sending
+- **Preview**: `pnpm -F @wifo/email preview` opens React Email preview on `:3333`
+
+**Templates:**
+- `OrganizationInvite` — Team member invite (used by `org.inviteMember`, `org.resendInvite`)
+- `AccessRequestApproval` — Congratulations email when admin approves access request
+- `AccessRequestConfirmation` — Thank-you email when user submits on landing page
+- `PasswordReset` — Password reset link (wired via Better Auth `sendResetPassword` hook)
+
+**Public API** (exported from `@wifo/email`):
+```typescript
+import {
+  sendOrganizationInvite,
+  sendAccessRequestApproval,
+  sendAccessRequestConfirmation,
+  sendPasswordReset,
+} from "@wifo/email";
+```
+
+**Environment**: Uses Vercel env vars (`VERCEL_ENV`, `VERCEL_URL`, `VERCEL_PROJECT_PRODUCTION_URL`) for `baseUrl` resolution. `RESEND_API_KEY` is optional in dev.
+
+**Integration points:**
+- `packages/api/src/router/admin.ts` — `sendAccessRequestApproval` on approve
+- `packages/api/src/router/org.ts` — `sendOrganizationInvite` on invite/resend
+- `apps/nextjs/src/auth/server.ts` — `sendPasswordReset` via `onSendResetPassword` callback
+- `apps/landing/src/pages/api/access-request.ts` — `sendAccessRequestConfirmation` on submit
 
 ### Admin Panel (`apps/admin`)
 
@@ -248,8 +283,8 @@ Landing page copies the needed assets to `apps/landing/public/images/` (logomark
 ### Package Dependencies Flow
 ```
 @wifo/db → @wifo/auth → @wifo/api → Apps
-                ↓
-           @wifo/validators
+                ↓            ↑
+           @wifo/validators  @wifo/email
                 ↓
            @wifo/ui
 ```
@@ -428,6 +463,7 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 Required in `.env` (copy from `.env.example`):
 - `POSTGRES_URL` - Supabase/Vercel Postgres connection string
 - `AUTH_SECRET` - Generate via `openssl rand -base64 32`
+- `RESEND_API_KEY` - Resend API key for transactional emails (optional in dev — logs to console)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth credentials
 - OAuth credentials for player auth (Google, Apple per PRD requirements)
 

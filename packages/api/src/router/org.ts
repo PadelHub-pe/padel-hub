@@ -13,6 +13,7 @@ import {
   organizationMembers,
   organizations,
 } from "@wifo/db/schema";
+import { sendOrganizationInvite } from "@wifo/email";
 
 import { protectedProcedure } from "../trpc";
 
@@ -718,7 +719,27 @@ export const orgRouter = {
         })
         .returning();
 
-      console.log("TODO: Send invite email to", email, "with token", token);
+      // Get facility names for scoped roles
+      let facilityNames: string[] | undefined;
+      if (facilityIds && facilityIds.length > 0) {
+        const orgFacilities = await ctx.db.query.facilities.findMany({
+          where: and(
+            eq(facilities.organizationId, organizationId),
+            inArray(facilities.id, facilityIds),
+          ),
+          columns: { name: true },
+        });
+        facilityNames = orgFacilities.map((f) => f.name);
+      }
+
+      await sendOrganizationInvite({
+        inviteeEmail: email,
+        organizationName: membership.organization.name,
+        inviterName: ctx.session.user.name,
+        role,
+        facilityNames,
+        inviteToken: token,
+      });
 
       return invite;
     }),
@@ -899,12 +920,33 @@ export const orgRouter = {
         .where(eq(organizationInvites.id, inviteId))
         .returning();
 
-      console.log(
-        "TODO: Resend invite email to",
-        invite.email,
-        "with token",
-        newToken,
-      );
+      // Get org name for email
+      const org = await ctx.db.query.organizations.findFirst({
+        where: eq(organizations.id, organizationId),
+        columns: { name: true },
+      });
+
+      // Get facility names for scoped roles
+      let facilityNames: string[] | undefined;
+      if (invite.facilityIds && invite.facilityIds.length > 0) {
+        const orgFacilities = await ctx.db.query.facilities.findMany({
+          where: and(
+            eq(facilities.organizationId, organizationId),
+            inArray(facilities.id, invite.facilityIds),
+          ),
+          columns: { name: true },
+        });
+        facilityNames = orgFacilities.map((f) => f.name);
+      }
+
+      await sendOrganizationInvite({
+        inviteeEmail: invite.email,
+        organizationName: org?.name ?? "Tu organización",
+        inviterName: ctx.session.user.name,
+        role: invite.role,
+        facilityNames,
+        inviteToken: newToken,
+      });
 
       return updated;
     }),

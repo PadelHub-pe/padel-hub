@@ -58,3 +58,6 @@ dist/
 
 # tanstack
 .tanstack
+
+# react-email
+.react-email

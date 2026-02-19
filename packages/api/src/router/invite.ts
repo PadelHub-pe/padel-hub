@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import {
+  accessRequests,
   organizationInvites,
   organizationMembers,
   user,
@@ -48,6 +49,12 @@ export const inviteRouter = createTRPCRouter({
         where: eq(user.email, invite.email),
       });
 
+      // Look up access request for suggested name
+      const accessRequest = await ctx.db.query.accessRequests.findFirst({
+        where: eq(accessRequests.email, invite.email),
+        columns: { name: true },
+      });
+
       return {
         valid: true as const,
         invite: {
@@ -56,6 +63,7 @@ export const inviteRouter = createTRPCRouter({
           roleLabel: ROLE_LABELS[invite.role] ?? invite.role,
           organizationName: invite.organization.name,
           organizationSlug: invite.organization.slug,
+          suggestedName: accessRequest?.name ?? null,
         },
         emailHasAccount: !!existingUser,
       };

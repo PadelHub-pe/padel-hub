@@ -3,6 +3,8 @@
 A two-sided platform connecting padel players with court facilities in Lima, Peru.
 
 - **Web Dashboard** (Next.js): Court owner dashboard for facility management, reservations, and analytics
+- **Admin Panel** (Next.js): Internal platform admin for managing access requests and organizations
+- **Landing Page** (Astro): B2B marketing page for facility owner lead generation
 - **Mobile App** (Expo): Player-facing app for court discovery, booking, and open match coordination
 
 ---
@@ -154,6 +156,8 @@ pnpm supabase:stop
 | Command | Description |
 |---------|-------------|
 | `pnpm dev:next` | Start Next.js development server |
+| `pnpm dev:admin` | Start Admin panel (port 3001) |
+| `pnpm dev:landing` | Start Landing page (port 4321) |
 | `pnpm supabase:start` | Start local Supabase containers |
 | `pnpm supabase:stop` | Stop local Supabase containers |
 | `pnpm supabase:status` | Check Supabase status and URLs |
@@ -201,7 +205,7 @@ Open [http://127.0.0.1:54324](http://127.0.0.1:54324) to view captured emails.
 ```
 padel-hub/
 ├── apps/
-│   ├── nextjs/              # Court Owner Dashboard (Web)
+│   ├── nextjs/              # Court Owner Dashboard (Web, port 3000)
 │   │   ├── src/
 │   │   │   ├── app/         # Next.js App Router pages
 │   │   │   │   ├── (auth)/  # Authentication pages (login, register)
@@ -212,6 +216,8 @@ padel-hub/
 │   │   │   ├── components/  # Shared React components
 │   │   │   └── trpc/        # tRPC client setup
 │   │   └── public/          # Static assets
+│   ├── admin/               # PadelHub Admin Panel (Web, port 3001)
+│   ├── landing/             # B2B Landing Page (Astro, port 4321)
 │   └── expo/                # Player Mobile App (not covered here)
 │
 ├── packages/
@@ -230,6 +236,12 @@ padel-hub/
 │   │       ├── schema.ts    # Database schema (includes organizations, organizationMembers)
 │   │       ├── client.ts    # Database client
 │   │       └── seed.ts      # Seed data script
+│   │
+│   ├── email/               # Transactional Emails (React Email + Resend)
+│   │   └── src/
+│   │       ├── templates/   # React Email templates (OrganizationInvite, PasswordReset, etc.)
+│   │       ├── senders/     # High-level send functions
+│   │       └── index.ts     # Public API exports
 │   │
 │   ├── ui/                  # Shared UI Components (shadcn/ui)
 │   │   └── src/
@@ -442,10 +454,12 @@ pnpm auth:generate
 |----------|-------------|-----------------|
 | `POSTGRES_URL` | Database connection string | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 | `AUTH_SECRET` | Better Auth secret key | `supersecret` |
+| `RESEND_API_KEY` | Resend API key for emails | Not set (logs to console) |
 
 For production, you'll need:
 - A Supabase cloud project connection string
 - A secure `AUTH_SECRET` (generate with `openssl rand -base64 32`)
+- A Resend API key for transactional emails
 - OAuth credentials for Google/Apple sign-in
 
 ---

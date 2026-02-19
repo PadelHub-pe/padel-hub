@@ -10,6 +10,7 @@ import {
   organizations,
   user,
 } from "@wifo/db/schema";
+import { sendAccessRequestApproval } from "@wifo/email";
 
 import { adminProcedure, createTRPCRouter } from "../trpc";
 
@@ -54,7 +55,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         status: z.enum(["pending", "approved", "rejected"]).optional(),
-        search: z.string().optional(),
+        search: z.string().max(100).optional(),
         limit: z.number().int().min(1).max(100).default(50),
         offset: z.number().int().min(0).default(0),
       }),
@@ -112,106 +113,132 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().uuid(),
-        contactName: z.string().min(2),
-        phone: z.string().min(6),
-        organizationName: z.string().min(2),
-        facilityName: z.string().min(2),
+        organizationName: z.string().min(2).max(200),
+        facilityName: z.string().min(2).max(200),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const request = await ctx.db.query.accessRequests.findFirst({
-        where: eq(accessRequests.id, input.id),
-      });
-
-      if (!request) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Solicitud no encontrada",
-        });
-      }
-
-      if (request.status !== "pending") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Solo se pueden aprobar solicitudes pendientes",
-        });
-      }
-
-      // Generate unique slug from org name
-      let slug = slugify(input.organizationName);
-      let attempt = 0;
-      while (true) {
-        const candidate = attempt === 0 ? slug : `${slug}-${attempt}`;
-        const existing = await ctx.db.query.organizations.findFirst({
-          where: eq(organizations.slug, candidate),
-        });
-        if (!existing) {
-          slug = candidate;
-          break;
-        }
-        attempt++;
-      }
-
-      // 1. Create organization
-      const [org] = await ctx.db
-        .insert(organizations)
-        .values({
-          name: input.organizationName,
-          slug,
-          contactEmail: request.email,
-          contactPhone: input.phone,
-          isActive: true,
-        })
-        .returning();
-
-      if (!org) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Error al crear organización",
-        });
-      }
-
-      // 2. Create facility shell (inactive, needs setup)
-      await ctx.db.insert(facilities).values({
-        organizationId: org.id,
-        name: input.facilityName,
-        address: "Por configurar",
-        district: "Lima",
-        city: "Lima",
-        phone: input.phone,
-        email: request.email,
-        isActive: false,
-      });
-
-      // 3. Create invite (org_admin, 7 days)
       const token = randomBytes(32).toString("hex");
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
-      await ctx.db.insert(organizationInvites).values({
-        organizationId: org.id,
-        email: request.email,
-        role: "org_admin",
-        facilityIds: [],
-        status: "pending",
-        invitedBy: ctx.session.user.id,
-        token,
-        expiresAt,
+      const result = await ctx.db.transaction(async (tx) => {
+        // Fetch and lock the access request inside the transaction
+        const request = await tx.query.accessRequests.findFirst({
+          where: eq(accessRequests.id, input.id),
+        });
+
+        if (!request) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Solicitud no encontrada",
+          });
+        }
+
+        if (request.status !== "pending") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Solo se pueden aprobar solicitudes pendientes",
+          });
+        }
+
+        // Mark approved first to prevent double-approval race condition
+        await tx
+          .update(accessRequests)
+          .set({
+            status: "approved",
+            reviewedAt: new Date(),
+            reviewedBy: ctx.session.user.id,
+          })
+          .where(
+            and(
+              eq(accessRequests.id, input.id),
+              eq(accessRequests.status, "pending"),
+            ),
+          );
+
+        // Generate unique slug with retry on constraint violation
+        let slug = slugify(input.organizationName);
+        let attempt = 0;
+        const MAX_SLUG_ATTEMPTS = 100;
+        while (attempt < MAX_SLUG_ATTEMPTS) {
+          const candidate = attempt === 0 ? slug : `${slug}-${attempt}`;
+          const existing = await tx.query.organizations.findFirst({
+            where: eq(organizations.slug, candidate),
+          });
+          if (!existing) {
+            slug = candidate;
+            break;
+          }
+          attempt++;
+        }
+        if (attempt >= MAX_SLUG_ATTEMPTS) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No se pudo generar un slug único",
+          });
+        }
+
+        // 1. Create organization
+        const [org] = await tx
+          .insert(organizations)
+          .values({
+            name: input.organizationName,
+            slug,
+            contactEmail: request.email,
+            contactPhone: request.phone,
+            isActive: true,
+          })
+          .returning();
+
+        if (!org) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al crear organización",
+          });
+        }
+
+        // 2. Create facility shell (inactive, needs setup)
+        await tx.insert(facilities).values({
+          organizationId: org.id,
+          name: input.facilityName,
+          address: "Por configurar",
+          district: request.district ?? "Lima",
+          city: "Lima",
+          phone: request.phone ?? "",
+          email: request.email,
+          isActive: false,
+        });
+
+        // 3. Create invite (org_admin, 7 days)
+        await tx.insert(organizationInvites).values({
+          organizationId: org.id,
+          email: request.email,
+          role: "org_admin",
+          facilityIds: [],
+          status: "pending",
+          invitedBy: ctx.session.user.id,
+          token,
+          expiresAt,
+        });
+
+        return { orgSlug: slug, email: request.email };
       });
 
-      // 4. Mark access request as approved + persist contact info
-      await ctx.db
-        .update(accessRequests)
-        .set({
-          status: "approved",
-          name: input.contactName,
-          phone: input.phone,
-          reviewedAt: new Date(),
-          reviewedBy: ctx.session.user.id,
-        })
-        .where(eq(accessRequests.id, input.id));
+      // Send email outside transaction to avoid long-running TX
+      const emailResult = await sendAccessRequestApproval({
+        email: result.email,
+        organizationName: input.organizationName,
+        inviteToken: token,
+      });
 
-      return { orgSlug: slug, inviteToken: token };
+      if (!emailResult.success) {
+        console.error(
+          `[admin] Failed to send approval email to ${result.email}: ${emailResult.error}`,
+        );
+      }
+
+      return { orgSlug: result.orgSlug, inviteToken: token };
     }),
 
   /**
@@ -262,7 +289,7 @@ export const adminRouter = createTRPCRouter({
   listOrganizations: adminProcedure
     .input(
       z.object({
-        search: z.string().optional(),
+        search: z.string().max(100).optional(),
         limit: z.number().int().min(1).max(100).default(50),
         offset: z.number().int().min(0).default(0),
       }),
