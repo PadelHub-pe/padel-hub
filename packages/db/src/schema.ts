@@ -704,6 +704,29 @@ export const accessRequestsRelations = relations(
   }),
 );
 
+// =============================================================================
+// Platform Admins Schema
+// =============================================================================
+
+/**
+ * Platform Admins - internal PadelHub team members with admin panel access
+ */
+export const platformAdmins = pgTable("platform_admins", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const platformAdminsRelations = relations(platformAdmins, ({ one }) => ({
+  user: one(user, {
+    fields: [platformAdmins.userId],
+    references: [user.id],
+  }),
+}));
+
 export const CreateAccessRequestSchema = createInsertSchema(accessRequests, {
   email: z.string().email("Email inválido"),
   name: z.string().max(200).optional(),

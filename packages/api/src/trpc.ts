@@ -9,6 +9,8 @@
 import type { Auth } from "@wifo/auth";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { db } from "@wifo/db/client";
+import { platformAdmins } from "@wifo/db/schema";
+import { eq } from "drizzle-orm";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
@@ -133,6 +135,26 @@ export const protectedProcedure = t.procedure
  * Requires organizationId in the input and validates the user has access.
  */
 export const orgProcedure = protectedProcedure;
+
+/**
+ * Admin procedure
+ *
+ * Extends protected procedure with platform admin verification.
+ * Queries `platformAdmins` table to confirm the user is a PadelHub admin.
+ */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const admin = await ctx.db.query.platformAdmins.findFirst({
+    where: eq(platformAdmins.userId, ctx.session.user.id),
+  });
+
+  if (!admin) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not a platform admin" });
+  }
+
+  return next({
+    ctx: { admin },
+  });
+});
 
 /**
  * Create a server-side caller for direct calls in layouts and server components

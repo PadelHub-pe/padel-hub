@@ -15,6 +15,8 @@ import {
   organizationInvites,
   bookingPlayers,
   bookingActivity,
+  platformAdmins,
+  accessRequests,
 } from "./schema";
 
 async function seed() {
@@ -103,6 +105,17 @@ async function seed() {
       await db.delete(organizationMembers).where(eq(organizationMembers.organizationId, existingOrg[0].id));
       await db.delete(organizationInvites).where(eq(organizationInvites.organizationId, existingOrg[0].id));
       await db.delete(organizations).where(eq(organizations.id, existingOrg[0].id));
+    }
+
+    // Clean up platform admins and access requests
+    await db.delete(platformAdmins);
+    const testAccessEmails = [
+      "contacto@padelmania.pe",
+      "info@acepadel.pe",
+      "admin@matchpoint.pe",
+    ];
+    for (const email of testAccessEmails) {
+      await db.delete(accessRequests).where(eq(accessRequests.email, email));
     }
 
     // ==========================================================================
@@ -279,6 +292,40 @@ async function seed() {
     });
 
     console.log("✅ Created pending invite: invited@padelhub.pe (facility_manager)\n");
+
+    // ==========================================================================
+    // CREATE PLATFORM ADMIN
+    // ==========================================================================
+
+    await db.insert(platformAdmins).values({
+      userId: userId,
+    });
+
+    console.log("✅ Created platform admin: owner@padelhub.pe\n");
+
+    // ==========================================================================
+    // CREATE ACCESS REQUESTS (for admin panel testing)
+    // ==========================================================================
+
+    await db.insert(accessRequests).values({
+      email: "contacto@padelmania.pe",
+      status: "pending",
+    });
+
+    await db.insert(accessRequests).values({
+      email: "info@acepadel.pe",
+      status: "pending",
+    });
+
+    await db.insert(accessRequests).values({
+      email: "admin@matchpoint.pe",
+      status: "rejected",
+      reviewedAt: new Date(),
+      reviewedBy: userId,
+      notes: "No se pudo verificar información",
+    });
+
+    console.log("✅ Created 3 access requests (2 pending, 1 rejected)\n");
 
     // ==========================================================================
     // CREATE FACILITIES
@@ -965,6 +1012,8 @@ async function seed() {
     console.log(`   • ${totalCourts} Courts total`);
     console.log(`   • ${totalBookings} Bookings with players and activity`);
     console.log("   • 1 Open Match booking (2/4 players)");
+    console.log("   • 1 Platform Admin (owner@padelhub.pe)");
+    console.log("   • 3 Access Requests (2 pending, 1 rejected)");
     console.log("");
 
     console.log("🔗 URLs to test:");

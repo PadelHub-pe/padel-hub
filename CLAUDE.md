@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Applications
 - **Mobile App** (Expo): Player-facing app for court discovery, booking, and open match coordination
 - **Web Dashboard** (Next.js): Court owner dashboard for facility management, reservations, and analytics
+- **Admin Panel** (Next.js): Internal PadelHub admin panel for managing access requests and organizations
 - **Landing Page** (Astro): B2B marketing page for facility owner lead generation ("Solicitar Acceso")
 
 ### Product Requirements
@@ -46,7 +47,8 @@ Organization ─┬─► OrganizationMember (role: org_admin | facility_manager
 ### Development
 ```bash
 pnpm dev              # Run all apps in watch mode
-pnpm dev:next         # Run only Next.js app
+pnpm dev:next         # Run only Next.js app (http://localhost:3000)
+pnpm dev:admin        # Run only Admin panel (http://localhost:3001)
 pnpm dev:landing      # Run only Astro landing page (http://localhost:4321)
 ```
 
@@ -77,7 +79,8 @@ pnpm turbo gen init   # Scaffold new package from templates
 
 ```
 /apps
-  ├─ nextjs           # Court Owner Dashboard (web)
+  ├─ nextjs           # Court Owner Dashboard (web, port 3000)
+  ├─ admin            # PadelHub Admin Panel (web, port 3001)
   ├─ landing          # B2B Landing Page (Astro)
   └─ expo             # Player App (iOS + Android)
 /assets               # Brand assets (logos, favicons, OG images)
@@ -111,6 +114,54 @@ Astro app with zero-JS-by-default static sections and one React island for the e
 - Env var: `POSTGRES_URL` required for the API endpoint
 
 **Scoped `<style>` in Astro pages** need `@reference "../styles/global.css"` to access Tailwind theme tokens (e.g., `font-display`, color vars). Use relative paths, not `~/` alias.
+
+### Admin Panel (`apps/admin`)
+
+Internal Next.js app for PadelHub platform administrators to manage access requests and organizations.
+
+- **Stack**: Next.js 16, tRPC, TanStack Table, Better Auth, Tailwind CSS v4
+- **Port**: 3001 (`pnpm dev:admin`)
+- **Auth**: Cookie-based session with `platformAdmins` table check via `adminProcedure`
+- **Middleware**: Redirects unauthenticated users to `/login`, authenticated `/` to `/access-requests`
+
+**Route structure:**
+```
+apps/admin/src/app/
+├─ _components/admin-layout.tsx   # Sidebar + main content wrapper
+├─ login/page.tsx                 # Login form
+├─ access-requests/               # Manage access requests from landing page
+│   ├─ page.tsx
+│   └─ _components/
+│       ├─ access-requests-columns.tsx
+│       ├─ access-requests-view.tsx
+│       ├─ approve-dialog.tsx      # Creates org + facility + invite on approve
+│       └─ reject-dialog.tsx
+├─ organizations/                  # View all organizations
+│   ├─ page.tsx
+│   └─ _components/
+│       ├─ organizations-columns.tsx
+│       └─ organizations-view.tsx
+└─ api/
+    ├─ auth/[...all]/route.ts     # Better Auth handler
+    └─ trpc/[trpc]/route.ts       # tRPC handler
+```
+
+**Key flows:**
+- **Approve access request** → Creates organization + facility shell (inactive) + org_admin invite (7-day token) + marks request as approved
+- **Reject access request** → Marks request as rejected with optional notes
+
+**tRPC procedures** (all use `adminProcedure`):
+- `admin.getStats` - Platform overview (org/facility/user/pending counts)
+- `admin.listAccessRequests` - Paginated list with status filter + search
+- `admin.approveAccessRequest` - Full approval flow (org + facility + invite)
+- `admin.rejectAccessRequest` - Reject with optional notes
+- `admin.listOrganizations` - Paginated list with member/facility counts
+
+**Database tables:**
+- `platform_admins` - userId reference to `user` table, grants admin panel access
+- `organization_invites` - Token-based invites (role, facilityIds, expiresAt, status)
+
+**Seed data:** `owner@padelhub.pe` is seeded as a platform admin.
 
 ### Web Dashboard Route Structure
 
@@ -350,6 +401,7 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 ### tRPC Procedures
 - Use `publicProcedure` for unauthenticated endpoints
 - Use `protectedProcedure` for authenticated endpoints (defined in `packages/api/src/trpc.ts`)
+- Use `adminProcedure` for admin-only endpoints (checks `platformAdmins` table)
 
 ### Workspace Packages
 - All internal packages use `workspace:*` specifier
@@ -363,6 +415,7 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 Required in `.env` (copy from `.env.example`):
 - `POSTGRES_URL` - Supabase/Vercel Postgres connection string
 - `AUTH_SECRET` - Generate via `openssl rand -base64 32`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth credentials
 - OAuth credentials for player auth (Google, Apple per PRD requirements)
 
 ## Initial Setup
