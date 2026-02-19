@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
+
 import { cn } from "@wifo/ui";
 import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
 import { Toaster } from "@wifo/ui/toast";

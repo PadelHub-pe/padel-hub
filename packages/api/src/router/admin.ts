@@ -1,15 +1,15 @@
+import { randomBytes } from "crypto";
 import { TRPCError } from "@trpc/server";
+import { and, count, eq, ilike, or, sql } from "drizzle-orm";
+import { z } from "zod/v4";
+
 import {
   accessRequests,
   facilities,
-  organizations,
   organizationInvites,
-  organizationMembers,
+  organizations,
   user,
 } from "@wifo/db/schema";
-import { and, count, eq, ilike, or, sql } from "drizzle-orm";
-import { randomBytes } from "crypto";
-import { z } from "zod/v4";
 
 import { adminProcedure, createTRPCRouter } from "../trpc";
 
@@ -33,9 +33,7 @@ export const adminRouter = createTRPCRouter({
     const [facilitiesResult] = await ctx.db
       .select({ count: count() })
       .from(facilities);
-    const [usersResult] = await ctx.db
-      .select({ count: count() })
-      .from(user);
+    const [usersResult] = await ctx.db.select({ count: count() }).from(user);
     const [pendingResult] = await ctx.db
       .select({ count: count() })
       .from(accessRequests)
@@ -126,7 +124,10 @@ export const adminRouter = createTRPCRouter({
       });
 
       if (!request) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Solicitud no encontrada" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Solicitud no encontrada",
+        });
       }
 
       if (request.status !== "pending") {
@@ -164,7 +165,10 @@ export const adminRouter = createTRPCRouter({
         .returning();
 
       if (!org) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Error al crear organización" });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error al crear organización",
+        });
       }
 
       // 2. Create facility shell (inactive, needs setup)
@@ -226,7 +230,10 @@ export const adminRouter = createTRPCRouter({
       });
 
       if (!request) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Solicitud no encontrada" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Solicitud no encontrada",
+        });
       }
 
       if (request.status !== "pending") {

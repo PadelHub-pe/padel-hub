@@ -8,7 +8,9 @@ interface RegisterPageProps {
   searchParams: Promise<{ token?: string }>;
 }
 
-export default async function RegisterPage({ searchParams }: RegisterPageProps) {
+export default async function RegisterPage({
+  searchParams,
+}: RegisterPageProps) {
   const { token } = await searchParams;
 
   if (!token) {

@@ -90,7 +90,8 @@ export function DangerZoneSection({
             <div>
               <p className="font-medium text-gray-900">Eliminar esta cancha</p>
               <p className="text-sm text-gray-500">
-                Una vez eliminada, todos los datos asociados serán removidos permanentemente.
+                Una vez eliminada, todos los datos asociados serán removidos
+                permanentemente.
               </p>
             </div>
             <Button variant="destructive" onClick={handleDeleteClick}>

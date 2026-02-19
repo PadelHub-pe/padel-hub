@@ -60,7 +60,20 @@ pnpm lint:fix         # Fix ESLint issues
 pnpm format           # Check Prettier formatting
 pnpm format:fix       # Fix formatting
 pnpm typecheck        # TypeScript type checking
+pnpm lint:ws          # Workspace dependency lint (sherif)
 ```
+
+**IMPORTANT: Code quality checks are mandatory.** After writing or modifying code, always run `pnpm lint`, `pnpm format`, and `pnpm lint:ws` to verify compliance. Do NOT bypass lint rules with eslint-disable comments unless there is a genuine technical reason (e.g., library API constraints). Instead, fix the underlying issue:
+- `no-non-null-assertion` → Add proper null checks or use `?? defaultValue`
+- `no-unnecessary-condition` → Remove redundant optional chains or nullish coalescing
+- `no-unused-vars` → Remove the unused import/variable
+- `prefer-nullish-coalescing` → Use `??` instead of `||` (use ternary when empty-string-to-undefined conversion is needed)
+- `require-await` → Remove `async` if no `await` is needed, or add `await` if it should be async
+- `array-type` → Use `T[]` instead of `Array<T>`
+- `consistent-type-imports` → Use `import type` for type-only imports
+- `react-hooks/error-boundaries` → Move JSX rendering out of try/catch blocks
+
+When `eslint-disable` is truly necessary, prefer block-scoped `/* eslint-disable */` / `/* eslint-enable */` over `eslint-disable-next-line` for multi-line expressions that Prettier may reformat.
 
 ### Database
 ```bash

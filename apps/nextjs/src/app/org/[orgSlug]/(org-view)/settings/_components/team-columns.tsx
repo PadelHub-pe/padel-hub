@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@wifo/ui/avatar";
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
@@ -44,7 +45,9 @@ interface TeamColumnsOptions {
   onCancel: (member: TeamMemberRow) => void;
 }
 
-export function getTeamColumns(options: TeamColumnsOptions): ColumnDef<TeamMemberRow>[] {
+export function getTeamColumns(
+  options: TeamColumnsOptions,
+): ColumnDef<TeamMemberRow>[] {
   return [
     {
       accessorKey: "name",
@@ -112,14 +115,16 @@ export function getTeamColumns(options: TeamColumnsOptions): ColumnDef<TeamMembe
           );
         }
         if (m.facilityNames.length === 0) {
-          return (
-            <span className="text-sm text-gray-400">Sin asignar</span>
-          );
+          return <span className="text-sm text-gray-400">Sin asignar</span>;
         }
         return (
           <div className="flex flex-wrap gap-1">
             {m.facilityNames.map((name) => (
-              <Badge key={name} variant="outline" className="text-xs font-normal">
+              <Badge
+                key={name}
+                variant="outline"
+                className="text-xs font-normal"
+              >
                 {name}
               </Badge>
             ))}

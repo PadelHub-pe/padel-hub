@@ -36,7 +36,9 @@ export function CalendarLegend({ stats }: CalendarLegendProps) {
       {/* Quick stats */}
       <div className="flex gap-6 text-sm">
         <div className="flex items-center gap-1.5">
-          <span className="font-medium text-gray-900">{stats.totalBookings}</span>
+          <span className="font-medium text-gray-900">
+            {stats.totalBookings}
+          </span>
           <span className="text-gray-500">reservas</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -45,7 +47,9 @@ export function CalendarLegend({ stats }: CalendarLegendProps) {
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="font-medium text-gray-900">{stats.utilizationPercent}%</span>
+          <span className="font-medium text-gray-900">
+            {stats.utilizationPercent}%
+          </span>
           <span className="text-gray-500">ocupación</span>
         </div>
       </div>

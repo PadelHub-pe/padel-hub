@@ -30,7 +30,10 @@ export const CalendarBookingBlock = forwardRef<
 ) {
   const colors = getStatusColors(booking.status);
   const displayName =
-    booking.user?.name ?? booking.customerName ?? booking.user?.email ?? "Sin nombre";
+    booking.user?.name ??
+    booking.customerName ??
+    booking.user?.email ??
+    "Sin nombre";
 
   // Determine if we have enough height to show full content
   const isCompact = heightPercent < 8;
@@ -61,7 +64,9 @@ export const CalendarBookingBlock = forwardRef<
         ) : (
           <>
             <div className="flex items-center gap-1">
-              <span className="truncate text-xs font-medium">{displayName}</span>
+              <span className="truncate text-xs font-medium">
+                {displayName}
+              </span>
               <span className="shrink-0 rounded bg-white/60 px-1 text-[10px] font-medium">
                 {booking.playerCount}/4
               </span>

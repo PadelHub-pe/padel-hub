@@ -1,22 +1,22 @@
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import {
-  user,
-  account,
-  facilities,
-  courts,
-  bookings,
-  organizations,
-  organizationMembers,
-  organizationInvites,
-  bookingPlayers,
-  bookingActivity,
-  platformAdmins,
   accessRequests,
+  account,
+  bookingActivity,
+  bookingPlayers,
+  bookings,
+  courts,
+  facilities,
+  organizationInvites,
+  organizationMembers,
+  organizations,
+  platformAdmins,
+  user,
 } from "./schema";
 
 async function seed() {
@@ -70,20 +70,41 @@ async function seed() {
     console.log("🗑️  Cleaning up existing test data...\n");
 
     // Delete by emails
-    const allEmails = [testEmail, managerEmail, staffEmail, "player1@padelhub.pe", "player2@padelhub.pe", "player3@padelhub.pe"];
+    const allEmails = [
+      testEmail,
+      managerEmail,
+      staffEmail,
+      "player1@padelhub.pe",
+      "player2@padelhub.pe",
+      "player3@padelhub.pe",
+    ];
     for (const email of allEmails) {
-      const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1);
+      const existingUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.email, email))
+        .limit(1);
       const existingUserRecord = existingUser[0];
       if (existingUserRecord) {
-        await db.delete(organizationMembers).where(eq(organizationMembers.userId, existingUserRecord.id));
-        await db.delete(bookingPlayers).where(eq(bookingPlayers.userId, existingUserRecord.id));
-        await db.delete(account).where(eq(account.userId, existingUserRecord.id));
+        await db
+          .delete(organizationMembers)
+          .where(eq(organizationMembers.userId, existingUserRecord.id));
+        await db
+          .delete(bookingPlayers)
+          .where(eq(bookingPlayers.userId, existingUserRecord.id));
+        await db
+          .delete(account)
+          .where(eq(account.userId, existingUserRecord.id));
         await db.delete(user).where(eq(user.id, existingUserRecord.id));
       }
     }
 
     // Delete test organization (cascade will delete facilities, courts, bookings)
-    const existingOrg = await db.select().from(organizations).where(eq(organizations.slug, orgSlug)).limit(1);
+    const existingOrg = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.slug, orgSlug))
+      .limit(1);
     if (existingOrg[0]) {
       const existingFacilities = await db
         .select()
@@ -92,19 +113,32 @@ async function seed() {
 
       for (const facility of existingFacilities) {
         // Delete booking-related data first
-        const facilityBookings = await db.select().from(bookings).where(eq(bookings.facilityId, facility.id));
+        const facilityBookings = await db
+          .select()
+          .from(bookings)
+          .where(eq(bookings.facilityId, facility.id));
         for (const booking of facilityBookings) {
-          await db.delete(bookingPlayers).where(eq(bookingPlayers.bookingId, booking.id));
-          await db.delete(bookingActivity).where(eq(bookingActivity.bookingId, booking.id));
+          await db
+            .delete(bookingPlayers)
+            .where(eq(bookingPlayers.bookingId, booking.id));
+          await db
+            .delete(bookingActivity)
+            .where(eq(bookingActivity.bookingId, booking.id));
         }
         await db.delete(bookings).where(eq(bookings.facilityId, facility.id));
         await db.delete(courts).where(eq(courts.facilityId, facility.id));
         await db.delete(facilities).where(eq(facilities.id, facility.id));
       }
 
-      await db.delete(organizationMembers).where(eq(organizationMembers.organizationId, existingOrg[0].id));
-      await db.delete(organizationInvites).where(eq(organizationInvites.organizationId, existingOrg[0].id));
-      await db.delete(organizations).where(eq(organizations.id, existingOrg[0].id));
+      await db
+        .delete(organizationMembers)
+        .where(eq(organizationMembers.organizationId, existingOrg[0].id));
+      await db
+        .delete(organizationInvites)
+        .where(eq(organizationInvites.organizationId, existingOrg[0].id));
+      await db
+        .delete(organizations)
+        .where(eq(organizations.id, existingOrg[0].id));
     }
 
     // Clean up platform admins and access requests
@@ -291,7 +325,9 @@ async function seed() {
       expiresAt: addDays(new Date(), 7),
     });
 
-    console.log("✅ Created pending invite: invited@padelhub.pe (facility_manager)\n");
+    console.log(
+      "✅ Created pending invite: invited@padelhub.pe (facility_manager)\n",
+    );
 
     // ==========================================================================
     // CREATE PLATFORM ADMIN
@@ -335,14 +371,21 @@ async function seed() {
       id: facility1Id,
       organizationId: orgId,
       name: "Padel Club San Isidro",
-      description: "Nuestro club principal con canchas de primer nivel en el corazón de San Isidro",
+      description:
+        "Nuestro club principal con canchas de primer nivel en el corazón de San Isidro",
       address: "Av. Javier Prado Este 1234",
       district: "San Isidro",
       city: "Lima",
       phone: "+51999888777",
       email: "sanisidro@padelgrouplima.pe",
       website: "https://padelgrouplima.pe/sanisidro",
-      amenities: ["estacionamiento", "vestuarios", "cafeteria", "tienda", "wifi"],
+      amenities: [
+        "estacionamiento",
+        "vestuarios",
+        "cafeteria",
+        "tienda",
+        "wifi",
+      ],
       photos: [
         "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=400&fit=crop",
       ],
@@ -393,10 +436,31 @@ async function seed() {
     // ==========================================================================
 
     const facility1Courts = [
-      { name: "Cancha 1", type: "indoor" as const, priceInCents: 8000, peakPriceInCents: 10000 },
-      { name: "Cancha 2", type: "indoor" as const, priceInCents: 8000, peakPriceInCents: 10000 },
-      { name: "Cancha 3", type: "outdoor" as const, priceInCents: 6000, peakPriceInCents: 8000 },
-      { name: "Cancha 4", type: "outdoor" as const, priceInCents: 6000, peakPriceInCents: 8000, status: "maintenance" as const },
+      {
+        name: "Cancha 1",
+        type: "indoor" as const,
+        priceInCents: 8000,
+        peakPriceInCents: 10000,
+      },
+      {
+        name: "Cancha 2",
+        type: "indoor" as const,
+        priceInCents: 8000,
+        peakPriceInCents: 10000,
+      },
+      {
+        name: "Cancha 3",
+        type: "outdoor" as const,
+        priceInCents: 6000,
+        peakPriceInCents: 8000,
+      },
+      {
+        name: "Cancha 4",
+        type: "outdoor" as const,
+        priceInCents: 6000,
+        peakPriceInCents: 8000,
+        status: "maintenance" as const,
+      },
     ];
 
     const facility1CourtIds: string[] = [];
@@ -415,9 +479,24 @@ async function seed() {
     }
 
     const facility2Courts = [
-      { name: "Cancha Premium 1", type: "indoor" as const, priceInCents: 10000, peakPriceInCents: 12000 },
-      { name: "Cancha Premium 2", type: "indoor" as const, priceInCents: 10000, peakPriceInCents: 12000 },
-      { name: "Cancha Vista Mar", type: "outdoor" as const, priceInCents: 9000, peakPriceInCents: 11000 },
+      {
+        name: "Cancha Premium 1",
+        type: "indoor" as const,
+        priceInCents: 10000,
+        peakPriceInCents: 12000,
+      },
+      {
+        name: "Cancha Premium 2",
+        type: "indoor" as const,
+        priceInCents: 10000,
+        peakPriceInCents: 12000,
+      },
+      {
+        name: "Cancha Vista Mar",
+        type: "outdoor" as const,
+        priceInCents: 9000,
+        peakPriceInCents: 11000,
+      },
     ];
 
     const facility2CourtIds: string[] = [];
@@ -436,8 +515,18 @@ async function seed() {
     }
 
     const facility3Courts = [
-      { name: "Cancha A", type: "indoor" as const, priceInCents: 7000, peakPriceInCents: 9000 },
-      { name: "Cancha B", type: "indoor" as const, priceInCents: 7000, peakPriceInCents: 9000 },
+      {
+        name: "Cancha A",
+        type: "indoor" as const,
+        priceInCents: 7000,
+        peakPriceInCents: 9000,
+      },
+      {
+        name: "Cancha B",
+        type: "indoor" as const,
+        priceInCents: 7000,
+        peakPriceInCents: 9000,
+      },
     ];
 
     for (const court of facility3Courts) {
@@ -453,7 +542,8 @@ async function seed() {
       });
     }
 
-    const totalCourts = facility1Courts.length + facility2Courts.length + facility3Courts.length;
+    const totalCourts =
+      facility1Courts.length + facility2Courts.length + facility3Courts.length;
     console.log(`✅ Created ${totalCourts} courts across all facilities\n`);
 
     // ==========================================================================
@@ -472,7 +562,13 @@ async function seed() {
         date: Date;
         startTime: string;
         endTime: string;
-        status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "open_match";
+        status:
+          | "pending"
+          | "confirmed"
+          | "in_progress"
+          | "completed"
+          | "cancelled"
+          | "open_match";
         customerName: string;
         customerEmail?: string;
         customerPhone?: string;
@@ -483,7 +579,14 @@ async function seed() {
         cancelledBy?: "user" | "owner" | "system";
         cancellationReason?: string;
       },
-      players: { userId?: string; role: "owner" | "player"; position: number; guestName?: string; guestEmail?: string; guestPhone?: string }[],
+      players: {
+        userId?: string;
+        role: "owner" | "player";
+        position: number;
+        guestName?: string;
+        guestEmail?: string;
+        guestPhone?: string;
+      }[],
     ) {
       const bookingId = randomUUID();
 
@@ -506,7 +609,9 @@ async function seed() {
         cancelledBy: bookingData.cancelledBy ?? null,
         cancellationReason: bookingData.cancellationReason ?? null,
         cancelledAt: bookingData.status === "cancelled" ? new Date() : null,
-        confirmedAt: ["confirmed", "in_progress", "completed"].includes(bookingData.status)
+        confirmedAt: ["confirmed", "in_progress", "completed"].includes(
+          bookingData.status,
+        )
           ? new Date()
           : null,
       });
@@ -614,7 +719,12 @@ async function seed() {
         { userId: player1Id, role: "owner", position: 1 },
         { userId: player2Id, role: "player", position: 2 },
         { userId: player3Id, role: "player", position: 3 },
-        { guestName: "Roberto Silva", guestEmail: "roberto.s@email.com", role: "player", position: 4 },
+        {
+          guestName: "Roberto Silva",
+          guestEmail: "roberto.s@email.com",
+          role: "player",
+          position: 4,
+        },
       ],
     );
 
@@ -636,7 +746,12 @@ async function seed() {
       [
         { userId: managerUserId, role: "owner", position: 1 },
         { userId: player1Id, role: "player", position: 2 },
-        { guestName: "María Torres", guestEmail: "maria.t@email.com", role: "player", position: 3 },
+        {
+          guestName: "María Torres",
+          guestEmail: "maria.t@email.com",
+          role: "player",
+          position: 3,
+        },
       ],
     );
 
@@ -658,8 +773,18 @@ async function seed() {
       [
         { userId: userId, role: "owner", position: 1 },
         { userId: player2Id, role: "player", position: 2 },
-        { guestName: "Pedro Sánchez", guestPhone: "+51999888777", role: "player", position: 3 },
-        { guestName: "Carmen López", guestEmail: "carmen.l@email.com", role: "player", position: 4 },
+        {
+          guestName: "Pedro Sánchez",
+          guestPhone: "+51999888777",
+          role: "player",
+          position: 3,
+        },
+        {
+          guestName: "Carmen López",
+          guestEmail: "carmen.l@email.com",
+          role: "player",
+          position: 4,
+        },
       ],
     );
 
@@ -679,7 +804,12 @@ async function seed() {
         isPeakRate: true,
       },
       [
-        { guestName: "Sofia Reyes", guestEmail: "sofia.r@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Sofia Reyes",
+          guestEmail: "sofia.r@email.com",
+          role: "owner",
+          position: 1,
+        },
       ],
     );
 
@@ -720,7 +850,12 @@ async function seed() {
         isPeakRate: false,
       },
       [
-        { guestName: "Diego Ramírez", guestEmail: "diego.r@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Diego Ramírez",
+          guestEmail: "diego.r@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player2Id, role: "player", position: 2 },
       ],
     );
@@ -741,7 +876,12 @@ async function seed() {
         isPeakRate: true,
       },
       [
-        { guestName: "Elena Flores", guestEmail: "elena.f@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Elena Flores",
+          guestEmail: "elena.f@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
         { userId: player2Id, role: "player", position: 3 },
         { userId: player3Id, role: "player", position: 4 },
@@ -764,7 +904,12 @@ async function seed() {
         isPeakRate: false,
       },
       [
-        { guestName: "Carmen López", guestEmail: "carmen.l@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Carmen López",
+          guestEmail: "carmen.l@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
         { userId: player2Id, role: "player", position: 3 },
         { userId: player3Id, role: "player", position: 4 },
@@ -786,7 +931,12 @@ async function seed() {
         isPeakRate: true,
       },
       [
-        { guestName: "Jorge Medina", guestEmail: "jorge.m@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Jorge Medina",
+          guestEmail: "jorge.m@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
       ],
     );
@@ -808,7 +958,12 @@ async function seed() {
         paymentMethod: "cash",
       },
       [
-        { guestName: "Paula Castro", guestPhone: "+51987654321", role: "owner", position: 1 },
+        {
+          guestName: "Paula Castro",
+          guestPhone: "+51987654321",
+          role: "owner",
+          position: 1,
+        },
       ],
     );
 
@@ -827,10 +982,20 @@ async function seed() {
         isPeakRate: true,
       },
       [
-        { guestName: "Andrés Vega", guestEmail: "andres.v@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Andrés Vega",
+          guestEmail: "andres.v@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
         { userId: player2Id, role: "player", position: 3 },
-        { guestName: "Laura Ríos", guestEmail: "laura.r@email.com", role: "player", position: 4 },
+        {
+          guestName: "Laura Ríos",
+          guestEmail: "laura.r@email.com",
+          role: "player",
+          position: 4,
+        },
       ],
     );
 
@@ -852,7 +1017,12 @@ async function seed() {
         cancellationReason: "No puedo asistir por motivos personales",
       },
       [
-        { guestName: "Laura Ríos", guestEmail: "laura.r@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Laura Ríos",
+          guestEmail: "laura.r@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player2Id, role: "player", position: 2 },
       ],
     );
@@ -874,10 +1044,20 @@ async function seed() {
         isPeakRate: false,
       },
       [
-        { guestName: "Ricardo Paz", guestEmail: "ricardo.p@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Ricardo Paz",
+          guestEmail: "ricardo.p@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
         { userId: player3Id, role: "player", position: 3 },
-        { guestName: "Ana María", guestEmail: "anamaria@email.com", role: "player", position: 4 },
+        {
+          guestName: "Ana María",
+          guestEmail: "anamaria@email.com",
+          role: "player",
+          position: 4,
+        },
       ],
     );
 
@@ -896,7 +1076,12 @@ async function seed() {
         isPeakRate: false,
       },
       [
-        { guestName: "Natalia Cruz", guestEmail: "natalia.c@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Natalia Cruz",
+          guestEmail: "natalia.c@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player2Id, role: "player", position: 2 },
       ],
     );
@@ -916,7 +1101,12 @@ async function seed() {
         isPeakRate: true,
       },
       [
-        { guestName: "Fernando Gil", guestEmail: "fernando.g@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Fernando Gil",
+          guestEmail: "fernando.g@email.com",
+          role: "owner",
+          position: 1,
+        },
       ],
     );
 
@@ -935,7 +1125,12 @@ async function seed() {
         isPeakRate: false,
       },
       [
-        { guestName: "Gabriela Luna", guestEmail: "gabriela.l@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Gabriela Luna",
+          guestEmail: "gabriela.l@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
         { userId: player2Id, role: "player", position: 3 },
         { userId: player3Id, role: "player", position: 4 },
@@ -957,7 +1152,12 @@ async function seed() {
         isPeakRate: true,
       },
       [
-        { guestName: "Martín Rojas", guestEmail: "martin.r@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Martín Rojas",
+          guestEmail: "martin.r@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player3Id, role: "player", position: 2 },
       ],
     );
@@ -977,14 +1177,21 @@ async function seed() {
         isPeakRate: false,
       },
       [
-        { guestName: "Valeria Soto", guestEmail: "valeria.s@email.com", role: "owner", position: 1 },
+        {
+          guestName: "Valeria Soto",
+          guestEmail: "valeria.s@email.com",
+          role: "owner",
+          position: 1,
+        },
         { userId: player1Id, role: "player", position: 2 },
         { userId: player2Id, role: "player", position: 3 },
       ],
     );
 
     const totalBookings = 12 + 6; // facility1 + facility2
-    console.log(`✅ Created ${totalBookings} sample bookings with players and activity\n`);
+    console.log(
+      `✅ Created ${totalBookings} sample bookings with players and activity\n`,
+    );
 
     // ==========================================================================
     // SUMMARY
@@ -1000,7 +1207,9 @@ async function seed() {
     console.log("   👤 Player 1:         player1@padelhub.pe");
     console.log("   👤 Player 2:         player2@padelhub.pe");
     console.log("   👤 Player 3:         player3@padelhub.pe");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    console.log(
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+    );
 
     console.log("📊 Seeded Data Summary:");
     console.log("   • 6 Users (org_admin, facility_manager, staff, 3 players)");
@@ -1018,7 +1227,9 @@ async function seed() {
 
     console.log("🔗 URLs to test:");
     console.log(`   • Org facilities overview: /org/${orgSlug}/facilities`);
-    console.log(`   • Facility dashboard:      /org/${orgSlug}/facilities/{facilityId}`);
+    console.log(
+      `   • Facility dashboard:      /org/${orgSlug}/facilities/{facilityId}`,
+    );
     console.log("");
 
     console.log("🎉 Seeding complete!");

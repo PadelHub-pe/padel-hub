@@ -19,7 +19,7 @@ export function RateCards({ stats }: RateCardsProps) {
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {/* Regular Rate Card */}
       <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-200 bg-white p-6">
-        <div className="absolute -mr-16 -mt-16 right-0 top-0 h-32 w-32 rounded-full bg-emerald-50" />
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-emerald-50" />
         <div className="relative">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
@@ -68,8 +68,8 @@ export function RateCards({ stats }: RateCardsProps) {
 
       {/* Peak Rate Card */}
       <div className="relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-6">
-        <div className="absolute -mr-16 -mt-16 right-0 top-0 h-32 w-32 rounded-full bg-amber-100/50" />
-        <div className="absolute right-3 top-3">
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-amber-100/50" />
+        <div className="absolute top-3 right-3">
           <span className="rounded-full bg-amber-500 px-2 py-1 text-xs font-bold text-white">
             PICO
           </span>

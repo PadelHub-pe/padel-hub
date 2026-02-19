@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import {
   Dialog,
@@ -42,16 +43,25 @@ export function ApproveDialog({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [result, setResult] = useState<{ orgSlug: string; inviteToken: string } | null>(null);
+  const [result, setResult] = useState<{
+    orgSlug: string;
+    inviteToken: string;
+  } | null>(null);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormState, string>>
+  >({});
 
   const approveMutation = useMutation(
     trpc.admin.approveAccessRequest.mutationOptions({
       onSuccess: (data) => {
         setResult(data);
-        void queryClient.invalidateQueries({ queryKey: trpc.admin.listAccessRequests.queryKey() });
-        void queryClient.invalidateQueries({ queryKey: trpc.admin.getStats.queryKey() });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.admin.listAccessRequests.queryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.admin.getStats.queryKey(),
+        });
       },
     }),
   );
@@ -66,10 +76,13 @@ export function ApproveDialog({
 
   function validate(): boolean {
     const newErrors: Partial<Record<keyof FormState, string>> = {};
-    if (form.contactName.trim().length < 2) newErrors.contactName = "Mínimo 2 caracteres";
+    if (form.contactName.trim().length < 2)
+      newErrors.contactName = "Mínimo 2 caracteres";
     if (form.phone.trim().length < 6) newErrors.phone = "Mínimo 6 caracteres";
-    if (form.organizationName.trim().length < 2) newErrors.organizationName = "Mínimo 2 caracteres";
-    if (form.facilityName.trim().length < 2) newErrors.facilityName = "Mínimo 2 caracteres";
+    if (form.organizationName.trim().length < 2)
+      newErrors.organizationName = "Mínimo 2 caracteres";
+    if (form.facilityName.trim().length < 2)
+      newErrors.facilityName = "Mínimo 2 caracteres";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -87,9 +100,10 @@ export function ApproveDialog({
 
   if (!request) return null;
 
-  const dashboardUrl = typeof window !== "undefined"
-    ? `${window.location.origin.replace(":3001", ":3000")}/register?token=${result?.inviteToken}`
-    : "";
+  const dashboardUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin.replace(":3001", ":3000")}/register?token=${result?.inviteToken}`
+      : "";
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -104,11 +118,15 @@ export function ApproveDialog({
             </DialogHeader>
             <div className="space-y-3 py-2">
               <div>
-                <p className="text-sm font-medium text-gray-500">Organización</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Organización
+                </p>
                 <p className="text-sm">{result.orgSlug}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Link de registro</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Link de registro
+                </p>
                 <div className="mt-1 flex gap-2">
                   <code className="flex-1 rounded bg-gray-100 p-2 text-xs break-all">
                     {dashboardUrl}
@@ -116,7 +134,9 @@ export function ApproveDialog({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => void navigator.clipboard.writeText(dashboardUrl)}
+                    onClick={() =>
+                      void navigator.clipboard.writeText(dashboardUrl)
+                    }
                   >
                     Copiar
                   </Button>
@@ -132,8 +152,8 @@ export function ApproveDialog({
             <DialogHeader>
               <DialogTitle>Aprobar solicitud</DialogTitle>
               <DialogDescription>
-                Completa los datos del cliente para crear la organización, sede e invitación
-                para <strong>{request.email}</strong>.
+                Completa los datos del cliente para crear la organización, sede
+                e invitación para <strong>{request.email}</strong>.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
@@ -174,12 +194,17 @@ export function ApproveDialog({
                   placeholder="Padel Club Lima"
                   value={form.organizationName}
                   onChange={(e) => {
-                    setForm((f) => ({ ...f, organizationName: e.target.value }));
+                    setForm((f) => ({
+                      ...f,
+                      organizationName: e.target.value,
+                    }));
                     setErrors((e) => ({ ...e, organizationName: undefined }));
                   }}
                 />
                 {errors.organizationName && (
-                  <p className="text-sm text-red-500">{errors.organizationName}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.organizationName}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">

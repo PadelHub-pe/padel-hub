@@ -232,7 +232,10 @@ export const scheduleRouter = {
 
       // Get the peak period to verify it exists and belongs to this facility
       const period = await ctx.db.query.peakPeriods.findFirst({
-        where: and(eq(peakPeriods.id, id), eq(peakPeriods.facilityId, facilityId)),
+        where: and(
+          eq(peakPeriods.id, id),
+          eq(peakPeriods.facilityId, facilityId),
+        ),
       });
 
       if (!period) {

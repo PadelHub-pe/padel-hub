@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 
@@ -59,22 +60,22 @@ export function CourtPricingTable({
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Cancha
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                 Tipo
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-emerald-600">
+              <th className="px-4 py-3 text-center text-xs font-medium text-emerald-600 uppercase">
                 Tarifa Regular
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-amber-600">
+              <th className="px-4 py-3 text-center text-xs font-medium text-amber-600 uppercase">
                 Tarifa Pico
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                 Estado
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                 Accion
               </th>
             </tr>
@@ -87,7 +88,7 @@ export function CourtPricingTable({
               const computedPeakCents =
                 hasPrice && avgMarkupPercent > 0
                   ? Math.round(
-                      court.priceInCents! * (1 + avgMarkupPercent / 100),
+                      (court.priceInCents ?? 0) * (1 + avgMarkupPercent / 100),
                     )
                   : null;
               const peakPrice = formatPrice(computedPeakCents);

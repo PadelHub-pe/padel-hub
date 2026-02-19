@@ -1,6 +1,8 @@
 "use client";
 
 import type { Control } from "react-hook-form";
+import { useWatch } from "react-hook-form";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import {
   FormControl,
@@ -19,7 +21,6 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 import { Textarea } from "@wifo/ui/textarea";
-import { useWatch } from "react-hook-form";
 
 import type { CourtEditFormValues } from "../edit/_components/court-edit-form";
 
@@ -111,7 +112,9 @@ export function BasicInfoSection({ control }: BasicInfoSectionProps) {
                 />
               </FormControl>
               <FormMessage />
-              <FormDescription>{description.length}/500 caracteres</FormDescription>
+              <FormDescription>
+                {description.length}/500 caracteres
+              </FormDescription>
             </FormItem>
           )}
         />

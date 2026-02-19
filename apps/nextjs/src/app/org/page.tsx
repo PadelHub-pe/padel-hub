@@ -19,6 +19,9 @@ export default async function OrgIndexPage() {
   }
 
   // Redirect to first organization's facilities page
-  const firstOrg = organizations[0]!;
+  const firstOrg = organizations[0];
+  if (!firstOrg) {
+    redirect("/no-organization");
+  }
   redirect(`/org/${firstOrg.slug}/facilities`);
 }

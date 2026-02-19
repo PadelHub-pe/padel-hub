@@ -4,22 +4,23 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation } from "@tanstack/react-query";
-import { Button } from "@wifo/ui/button";
-import { Card, CardContent } from "@wifo/ui/card";
-import { Form } from "@wifo/ui/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Button } from "@wifo/ui/button";
+import { Card, CardContent } from "@wifo/ui/card";
+import { Form } from "@wifo/ui/form";
+
+import type {
+  CourtsFormValues,
+  ScheduleFormValues,
+  SetupStep,
+} from "~/components/facility-setup";
 import {
   createDefaultOperatingHours,
   StepCourts,
   StepIndicator,
   StepSchedule,
-} from "~/components/facility-setup";
-import type {
-  CourtsFormValues,
-  ScheduleFormValues,
-  SetupStep,
 } from "~/components/facility-setup";
 import { useTRPC } from "~/trpc/react";
 
@@ -69,7 +70,11 @@ interface SetupWizardProps {
   orgSlug: string;
 }
 
-export function SetupWizard({ facilityId, facilityName, orgSlug }: SetupWizardProps) {
+export function SetupWizard({
+  facilityId,
+  facilityName,
+  orgSlug,
+}: SetupWizardProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const [currentStep, setCurrentStep] = useState(1);
@@ -92,7 +97,9 @@ export function SetupWizard({ facilityId, facilityName, orgSlug }: SetupWizardPr
 
   // tRPC mutations
   const saveCourts = useMutation(trpc.facility.saveCourts.mutationOptions());
-  const saveSchedule = useMutation(trpc.facility.saveSchedule.mutationOptions());
+  const saveSchedule = useMutation(
+    trpc.facility.saveSchedule.mutationOptions(),
+  );
   const completeSetup = useMutation(
     trpc.facility.completeSetup.mutationOptions({
       onSuccess: () => {
@@ -117,7 +124,9 @@ export function SetupWizard({ facilityId, facilityName, orgSlug }: SetupWizardPr
       setCurrentStep(2);
     } catch (error) {
       setGeneralError(
-        error instanceof Error ? error.message : "Ocurrió un error. Intenta nuevamente.",
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error. Intenta nuevamente.",
       );
     }
   }
@@ -134,12 +143,16 @@ export function SetupWizard({ facilityId, facilityName, orgSlug }: SetupWizardPr
           isClosed: oh.isClosed,
         })),
         defaultDurationMinutes: values.defaultDurationMinutes,
-        defaultPriceInCents: Math.round(parseFloat(values.defaultPriceInSoles) * 100),
+        defaultPriceInCents: Math.round(
+          parseFloat(values.defaultPriceInSoles) * 100,
+        ),
       });
       await completeSetup.mutateAsync({ facilityId });
     } catch (error) {
       setGeneralError(
-        error instanceof Error ? error.message : "Ocurrió un error. Intenta nuevamente.",
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error. Intenta nuevamente.",
       );
     }
   }
@@ -167,7 +180,9 @@ export function SetupWizard({ facilityId, facilityName, orgSlug }: SetupWizardPr
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Configurar {facilityName}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Configurar {facilityName}
+        </h1>
         <p className="mt-1 text-gray-500">
           Completa la configuración para activar tu local
         </p>
@@ -206,7 +221,12 @@ export function SetupWizard({ facilityId, facilityName, orgSlug }: SetupWizardPr
       <div className="flex justify-between">
         <div className="flex gap-2">
           {currentStep === 1 ? (
-            <Button type="button" variant="outline" onClick={handleSkip} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSkip}
+              disabled={isLoading}
+            >
               Configurar más tarde
             </Button>
           ) : (

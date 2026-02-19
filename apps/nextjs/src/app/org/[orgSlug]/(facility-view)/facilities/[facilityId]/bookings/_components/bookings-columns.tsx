@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { format, isToday, isTomorrow, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
+
 import { cn } from "@wifo/ui";
 
 import { BookingActionsMenu } from "./booking-actions-menu";
@@ -79,8 +80,7 @@ export function getBookingsColumns({
       header: "CLIENTE",
       cell: ({ row }) => {
         const booking = row.original;
-        const customerName =
-          booking.user?.name ?? booking.customerName ?? "-";
+        const customerName = booking.user?.name ?? booking.customerName ?? "-";
         const customerContact =
           booking.user?.email ??
           booking.customerEmail ??

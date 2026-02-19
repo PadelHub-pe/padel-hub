@@ -1,11 +1,14 @@
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { expo } from "@better-auth/expo";
-import { db } from "@wifo/db/client";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy } from "better-auth/plugins";
 
-export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options: {
+import { db } from "@wifo/db/client";
+
+export function initAuth<
+  TExtraPlugins extends BetterAuthPlugin[] = [],
+>(options: {
   baseUrl: string;
   productionUrl: string;
   secret: string | undefined;
@@ -28,16 +31,29 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
     emailAndPassword: {
       enabled: true,
       autoSignIn: true,
-      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+      sendResetPassword: async ({
+        user: resetUser,
+        url,
+      }: {
+        user: { email: string };
+        url: string;
+      }) => {
         // TODO: Replace with Resend email service
-        console.log(`[AUTH] Password reset requested for ${user.email}: ${url}`);
+        await Promise.resolve();
+        console.log(
+          `[AUTH] Password reset requested for ${resetUser.email}: ${url}`,
+        );
       },
     },
     socialProviders: {
+      // eslint-disable-next-line no-restricted-properties
       ...(process.env.GOOGLE_CLIENT_ID &&
+        // eslint-disable-next-line no-restricted-properties
         process.env.GOOGLE_CLIENT_SECRET && {
           google: {
+            // eslint-disable-next-line no-restricted-properties
             clientId: process.env.GOOGLE_CLIENT_ID,
+            // eslint-disable-next-line no-restricted-properties
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           },
         }),

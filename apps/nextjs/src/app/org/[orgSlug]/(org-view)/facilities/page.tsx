@@ -60,7 +60,7 @@ function FacilitiesPageSkeleton() {
       </div>
 
       {/* Filters skeleton */}
-      <div className="mb-6 mt-8 flex gap-4">
+      <div className="mt-8 mb-6 flex gap-4">
         <div className="h-10 w-64 animate-pulse rounded-md bg-gray-200" />
         <div className="h-10 w-40 animate-pulse rounded-md bg-gray-200" />
         <div className="h-10 w-40 animate-pulse rounded-md bg-gray-200" />

@@ -95,7 +95,9 @@ export function CalendarDayGrid({
             key={court.id}
             className="flex min-w-[150px] flex-1 items-center gap-2 border-r px-3 py-3 last:border-r-0"
           >
-            <span className="text-sm font-medium text-gray-900">{court.name}</span>
+            <span className="text-sm font-medium text-gray-900">
+              {court.name}
+            </span>
             <span
               className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
                 court.type === "indoor"
@@ -126,7 +128,9 @@ export function CalendarDayGrid({
             <div key={time} className="flex border-b last:border-b-0">
               {/* Time label */}
               <div className="w-20 shrink-0 border-r px-2 py-2">
-                <span className="text-xs font-medium text-gray-500">{time}</span>
+                <span className="text-xs font-medium text-gray-500">
+                  {time}
+                </span>
               </div>
 
               {/* Court columns */}
@@ -146,7 +150,10 @@ export function CalendarDayGrid({
         })}
 
         {/* Overlay bookings positioned absolutely */}
-        <div className="pointer-events-none absolute inset-0" style={{ left: "80px" }}>
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ left: "80px" }}
+        >
           <div className="relative h-full">
             {courts.map((court, courtIndex) => (
               <div
@@ -158,12 +165,13 @@ export function CalendarDayGrid({
                 }}
               >
                 {bookingsByCourtId[court.id]?.map((booking) => {
-                  const { topPercent, heightPercent } = calculateBookingPosition(
-                    booking.startTime,
-                    booking.endTime,
-                    operatingHours.openTime,
-                    operatingHours.closeTime,
-                  );
+                  const { topPercent, heightPercent } =
+                    calculateBookingPosition(
+                      booking.startTime,
+                      booking.endTime,
+                      operatingHours.openTime,
+                      operatingHours.closeTime,
+                    );
 
                   return (
                     <BookingTooltip

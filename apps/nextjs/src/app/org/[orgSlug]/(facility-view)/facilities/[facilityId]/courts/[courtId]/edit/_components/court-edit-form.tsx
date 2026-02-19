@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Button } from "@wifo/ui/button";
 import { Form } from "@wifo/ui/form";
 import { toast } from "@wifo/ui/toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 import { BasicInfoSection } from "../../_components/basic-info-section";
@@ -27,7 +28,10 @@ const courtEditSchema = z.object({
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(50, "El nombre no puede exceder 50 caracteres"),
   status: z.enum(["active", "maintenance", "inactive"]),
-  description: z.string().max(500, "La descripción no puede exceder 500 caracteres").optional(),
+  description: z
+    .string()
+    .max(500, "La descripción no puede exceder 500 caracteres")
+    .optional(),
   type: z.enum(["indoor", "outdoor"]),
   priceInSoles: z.string().optional(),
   peakPriceInSoles: z.string().optional(),
@@ -56,8 +60,12 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
       status: court.status,
       description: court.description ?? "",
       type: court.type,
-      priceInSoles: court.priceInCents !== null ? String(court.priceInCents / 100) : "",
-      peakPriceInSoles: court.peakPriceInCents !== null ? String(court.peakPriceInCents / 100) : "",
+      priceInSoles:
+        court.priceInCents !== null ? String(court.priceInCents / 100) : "",
+      peakPriceInSoles:
+        court.peakPriceInCents !== null
+          ? String(court.peakPriceInCents / 100)
+          : "",
       imageUrl: court.imageUrl ?? "",
     },
   });

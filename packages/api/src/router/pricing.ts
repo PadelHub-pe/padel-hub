@@ -50,7 +50,12 @@ function isPeakHour(
 function getPeakMarkup(
   hour: number,
   dayOfWeek: number,
-  periods: { daysOfWeek: number[]; startTime: string; endTime: string; markupPercent: number }[],
+  periods: {
+    daysOfWeek: number[];
+    startTime: string;
+    endTime: string;
+    markupPercent: number;
+  }[],
 ): number {
   let maxMarkup = 0;
   for (const p of periods) {
@@ -72,9 +77,11 @@ function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   return sorted.length % 2 !== 0
     ? sorted[mid]!
     : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 }
 
 // =============================================================================
@@ -176,9 +183,7 @@ export const pricingRouter = {
       const regularPercent =
         totalHours > 0 ? Math.round((regularHours / totalHours) * 100) : 100;
       const peakPercent =
-        totalHours > 0
-          ? Math.round((peakHoursTotal / totalHours) * 100)
-          : 0;
+        totalHours > 0 ? Math.round((peakHoursTotal / totalHours) * 100) : 0;
 
       return {
         courts: courtsList.map((c) => ({

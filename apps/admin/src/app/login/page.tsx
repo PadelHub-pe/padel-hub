@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { signIn, useSession } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@wifo/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@wifo/ui/card";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
-import { useEffect } from "react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -51,7 +57,9 @@ export default function AdminLoginPage() {
             P
           </div>
           <CardTitle className="text-xl">PadelHub Admin</CardTitle>
-          <CardDescription>Ingresa con tu cuenta de administrador</CardDescription>
+          <CardDescription>
+            Ingresa con tu cuenta de administrador
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

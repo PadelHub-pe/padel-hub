@@ -1,10 +1,11 @@
 "use client";
 
 import type { Control } from "react-hook-form";
+import { useWatch } from "react-hook-form";
+
 import { cn } from "@wifo/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import { FormField, FormItem, FormMessage } from "@wifo/ui/form";
-import { useWatch } from "react-hook-form";
 
 import type { CourtEditFormValues } from "../edit/_components/court-edit-form";
 
@@ -60,7 +61,9 @@ export function CourtTypeSection({ control }: CourtTypeSectionProps) {
                     <span
                       className={cn(
                         "mt-2 font-medium",
-                        type === courtType.value ? "text-primary" : "text-gray-900",
+                        type === courtType.value
+                          ? "text-primary"
+                          : "text-gray-900",
                       )}
                     >
                       {courtType.label}

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
@@ -26,8 +29,6 @@ import {
 } from "@wifo/ui/select";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -145,7 +146,9 @@ export function CourtCreateForm() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           {/* Header */}
           <header className="mt-4 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-gray-900">Nueva Cancha</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Nueva Cancha
+            </h1>
             <div className="flex gap-3">
               <Button variant="outline" asChild>
                 <Link href={`${basePath}/courts`}>Cancelar</Link>
@@ -179,10 +182,15 @@ export function CourtCreateForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Nombre de la cancha <span className="text-red-500">*</span>
+                          Nombre de la cancha{" "}
+                          <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input type="text" placeholder="Cancha 1" {...field} />
+                          <Input
+                            type="text"
+                            placeholder="Cancha 1"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -319,10 +327,11 @@ export function CourtCreateForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Tarifa Estándar <span className="text-red-500">*</span>
+                          Tarifa Estándar{" "}
+                          <span className="text-red-500">*</span>
                         </FormLabel>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                          <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                             S/
                           </span>
                           <FormControl>
@@ -351,7 +360,7 @@ export function CourtCreateForm() {
                       <FormItem>
                         <FormLabel>Tarifa Horario Pico</FormLabel>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                          <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                             S/
                           </span>
                           <FormControl>
@@ -387,7 +396,9 @@ export function CourtCreateForm() {
                 <div
                   className={cn(
                     "relative h-48 overflow-hidden rounded-lg border-2 border-dashed",
-                    imageUrl ? "border-transparent" : "border-gray-300 bg-gray-50",
+                    imageUrl
+                      ? "border-transparent"
+                      : "border-gray-300 bg-gray-50",
                   )}
                 >
                   {imageUrl ? (

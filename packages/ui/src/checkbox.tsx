@@ -1,8 +1,9 @@
 "use client";
 
-import { cn } from "@wifo/ui";
-import { Checkbox as CheckboxPrimitive } from "radix-ui";
 import { CheckIcon } from "@radix-ui/react-icons";
+import { Checkbox as CheckboxPrimitive } from "radix-ui";
+
+import { cn } from "@wifo/ui";
 
 export function Checkbox({
   className,

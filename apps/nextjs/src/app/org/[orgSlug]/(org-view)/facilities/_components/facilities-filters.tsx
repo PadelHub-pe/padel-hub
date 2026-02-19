@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { Button } from "@wifo/ui/button";
 import { Input } from "@wifo/ui/input";
 import {
@@ -54,7 +55,10 @@ export function FacilitiesFilters({
   const [searchInput, setSearchInput] = useState(search);
 
   const hasActiveFilters =
-    Boolean(search) || status !== "all" || Boolean(district) || sortBy !== "name";
+    Boolean(search) ||
+    status !== "all" ||
+    Boolean(district) ||
+    sortBy !== "name";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -84,7 +88,7 @@ export function FacilitiesFilters({
     <div className="flex flex-wrap items-center gap-4">
       {/* Search */}
       <div className="relative w-64">
-        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <SearchIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <Input
           type="text"
           placeholder="Buscar locales..."

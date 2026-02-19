@@ -1,7 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Button } from "@wifo/ui/button";
 import { Checkbox } from "@wifo/ui/checkbox";
 import {
@@ -28,11 +31,9 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 import { toast } from "@wifo/ui/toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-import { useTRPC } from "~/trpc/react";
 import type { TeamMemberRow } from "./team-columns";
+import { useTRPC } from "~/trpc/react";
 
 const editMemberSchema = z.object({
   role: z.enum(["org_admin", "facility_manager", "staff"]),
@@ -46,7 +47,7 @@ interface EditMemberDialogProps {
   onOpenChange: (open: boolean) => void;
   organizationId: string;
   member: TeamMemberRow;
-  facilities: Array<{ id: string; name: string }>;
+  facilities: { id: string; name: string }[];
 }
 
 export function EditMemberDialog({
@@ -121,9 +122,7 @@ export function EditMemberDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="org_admin">
-                        Administrador
-                      </SelectItem>
+                      <SelectItem value="org_admin">Administrador</SelectItem>
                       <SelectItem value="facility_manager">
                         Gerente de Local
                       </SelectItem>
@@ -152,9 +151,9 @@ export function EditMemberDialog({
                             <FormItem className="flex items-center gap-2 space-y-0">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value?.includes(facility.id)}
+                                  checked={field.value.includes(facility.id)}
                                   onCheckedChange={(checked) => {
-                                    const current = field.value ?? [];
+                                    const current = field.value;
                                     field.onChange(
                                       checked
                                         ? [...current, facility.id]

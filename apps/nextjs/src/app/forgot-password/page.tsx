@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { forgetPassword } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
 import {
@@ -21,8 +24,6 @@ import {
   FormMessage,
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Ingresa un email válido"),

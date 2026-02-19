@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import {
   Dialog,
@@ -12,8 +13,8 @@ import {
 } from "@wifo/ui/dialog";
 import { toast } from "@wifo/ui/toast";
 
-import { useTRPC } from "~/trpc/react";
 import type { TeamMemberRow } from "./team-columns";
+import { useTRPC } from "~/trpc/react";
 
 interface RemoveMemberDialogProps {
   open: boolean;

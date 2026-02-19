@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { cn } from "@wifo/ui";
 
 import { AddPlayerDialog } from "./add-player-dialog";
@@ -130,7 +131,7 @@ export function PlayerGrid({
                   {player.role !== "owner" && (
                     <button
                       onClick={() => handleRemoveClick(player)}
-                      className="absolute right-2 top-2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                      className="absolute top-2 right-2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                       aria-label={`Eliminar jugador de posicion ${position}`}
                     >
                       <svg
@@ -173,7 +174,7 @@ export function PlayerGrid({
                           {displayName}
                         </p>
                         {player.role === "owner" && (
-                          <span className="inline-flex shrink-0 items-center rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                          <span className="inline-flex shrink-0 items-center rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-blue-700 uppercase">
                             Dueno
                           </span>
                         )}

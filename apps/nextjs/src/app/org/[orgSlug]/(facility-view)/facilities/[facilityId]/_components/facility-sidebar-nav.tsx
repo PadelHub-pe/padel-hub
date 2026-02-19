@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+
 import { cn } from "@wifo/ui";
 
 interface NavItem {
@@ -82,7 +83,7 @@ export function FacilitySidebarNav() {
       {navSections.map((section, sectionIndex) => (
         <div key={sectionIndex}>
           {section.title && (
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <h3 className="mb-2 px-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
               {section.title}
             </h3>
           )}

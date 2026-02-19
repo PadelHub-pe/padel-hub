@@ -1,7 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Button } from "@wifo/ui/button";
 import { Checkbox } from "@wifo/ui/checkbox";
 import {
@@ -29,8 +32,6 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 import { toast } from "@wifo/ui/toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -46,7 +47,7 @@ interface InviteMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
-  facilities: Array<{ id: string; name: string }>;
+  facilities: { id: string; name: string }[];
 }
 
 export function InviteMemberDialog({
@@ -140,9 +141,7 @@ export function InviteMemberDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="org_admin">
-                        Administrador
-                      </SelectItem>
+                      <SelectItem value="org_admin">Administrador</SelectItem>
                       <SelectItem value="facility_manager">
                         Gerente de Local
                       </SelectItem>
@@ -171,9 +170,9 @@ export function InviteMemberDialog({
                             <FormItem className="flex items-center gap-2 space-y-0">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value?.includes(facility.id)}
+                                  checked={field.value.includes(facility.id)}
                                   onCheckedChange={(checked) => {
-                                    const current = field.value ?? [];
+                                    const current = field.value;
                                     field.onChange(
                                       checked
                                         ? [...current, facility.id]

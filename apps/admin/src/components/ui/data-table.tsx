@@ -6,6 +6,7 @@ import type {
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
+import { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -14,7 +15,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
 
 import {
   Table,

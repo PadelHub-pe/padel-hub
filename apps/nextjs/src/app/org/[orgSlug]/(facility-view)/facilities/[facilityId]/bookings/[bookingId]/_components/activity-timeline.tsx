@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+
 import { cn } from "@wifo/ui";
 
 type ActivityType =
@@ -41,7 +42,7 @@ const dotColorByType: Record<ActivityType, string> = {
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   return (
     <section>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <TimelineIcon className="h-5 w-5 text-gray-500" />
         <h3 className="text-sm font-semibold text-gray-900">Actividad</h3>
       </div>
@@ -51,7 +52,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
       ) : (
         <div className="relative ml-1.5">
           {/* Vertical timeline line */}
-          <div className="absolute left-[5px] top-1.5 bottom-1.5 w-px bg-gray-200" />
+          <div className="absolute top-1.5 bottom-1.5 left-[5px] w-px bg-gray-200" />
 
           <ul className="space-y-4">
             {activities.map((activity) => (
@@ -66,7 +67,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
 
                 {/* Content */}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-gray-900">{activity.description}</p>
+                  <p className="text-sm text-gray-900">
+                    {activity.description}
+                  </p>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
                     {activity.performer && (
                       <span>{activity.performer.name}</span>

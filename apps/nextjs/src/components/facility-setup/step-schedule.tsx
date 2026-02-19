@@ -1,6 +1,8 @@
 "use client";
 
 import type { Control } from "react-hook-form";
+import { useWatch } from "react-hook-form";
+
 import { Checkbox } from "@wifo/ui/checkbox";
 import {
   FormControl,
@@ -20,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wifo/ui/select";
-import { useWatch } from "react-hook-form";
 
 const DAYS_OF_WEEK = [
   { value: 1, label: "Lunes" },
@@ -76,9 +77,12 @@ export function StepSchedule({ control }: StepScheduleProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">Horarios y Precios</h2>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Horarios y Precios
+        </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Configura los horarios de operación y precio por defecto de tus canchas.
+          Configura los horarios de operación y precio por defecto de tus
+          canchas.
         </p>
       </div>
 
@@ -91,7 +95,9 @@ export function StepSchedule({ control }: StepScheduleProps) {
             <FormLabel>Horarios de operación</FormLabel>
             <div className="mt-2 space-y-2">
               {DAYS_OF_WEEK.map((day) => {
-                const hourIndex = operatingHours.findIndex((h) => h.dayOfWeek === day.value);
+                const hourIndex = operatingHours.findIndex(
+                  (h) => h.dayOfWeek === day.value,
+                );
                 const hour = operatingHours[hourIndex];
                 if (!hour) return null;
 
@@ -99,8 +105,9 @@ export function StepSchedule({ control }: StepScheduleProps) {
                   fieldKey: keyof OperatingHour,
                   value: string | boolean,
                 ) {
-                  const newHours: OperatingHour[] = operatingHours.map((h, i) =>
-                    i === hourIndex ? { ...h, [fieldKey]: value } : h,
+                  const newHours: OperatingHour[] = operatingHours.map(
+                    (h, i) =>
+                      i === hourIndex ? { ...h, [fieldKey]: value } : h,
                   );
                   field.onChange(newHours);
                 }
@@ -111,7 +118,9 @@ export function StepSchedule({ control }: StepScheduleProps) {
                     className="flex flex-col gap-3 rounded-lg border bg-white p-3 sm:flex-row sm:items-center"
                   >
                     {/* Day name */}
-                    <div className="w-24 font-medium text-gray-700">{day.label}</div>
+                    <div className="w-24 font-medium text-gray-700">
+                      {day.label}
+                    </div>
 
                     {/* Closed checkbox */}
                     <div className="flex items-center gap-2">
@@ -135,7 +144,9 @@ export function StepSchedule({ control }: StepScheduleProps) {
                       <div className="flex flex-1 items-center gap-2">
                         <Select
                           value={hour.openTime}
-                          onValueChange={(value) => handleHourChange("openTime", value)}
+                          onValueChange={(value) =>
+                            handleHourChange("openTime", value)
+                          }
                         >
                           <SelectTrigger className="w-full sm:w-28">
                             <SelectValue />
@@ -151,7 +162,9 @@ export function StepSchedule({ control }: StepScheduleProps) {
                         <span className="text-gray-500">a</span>
                         <Select
                           value={hour.closeTime}
-                          onValueChange={(value) => handleHourChange("closeTime", value)}
+                          onValueChange={(value) =>
+                            handleHourChange("closeTime", value)
+                          }
                         >
                           <SelectTrigger className="w-full sm:w-28">
                             <SelectValue />
@@ -190,19 +203,28 @@ export function StepSchedule({ control }: StepScheduleProps) {
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="60" id="duration-60" />
-                  <Label htmlFor="duration-60" className="cursor-pointer font-normal">
+                  <Label
+                    htmlFor="duration-60"
+                    className="cursor-pointer font-normal"
+                  >
                     60 minutos
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="90" id="duration-90" />
-                  <Label htmlFor="duration-90" className="cursor-pointer font-normal">
+                  <Label
+                    htmlFor="duration-90"
+                    className="cursor-pointer font-normal"
+                  >
                     90 minutos (recomendado)
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="120" id="duration-120" />
-                  <Label htmlFor="duration-120" className="cursor-pointer font-normal">
+                  <Label
+                    htmlFor="duration-120"
+                    className="cursor-pointer font-normal"
+                  >
                     120 minutos
                   </Label>
                 </div>
@@ -220,10 +242,11 @@ export function StepSchedule({ control }: StepScheduleProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>
-              Precio por turno (en Soles) <span className="text-red-500">*</span>
+              Precio por turno (en Soles){" "}
+              <span className="text-red-500">*</span>
             </FormLabel>
             <div className="relative max-w-xs">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+              <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                 S/
               </span>
               <FormControl>
@@ -239,7 +262,8 @@ export function StepSchedule({ control }: StepScheduleProps) {
             </div>
             <FormMessage />
             <FormDescription>
-              Podrás configurar precios por horario más tarde desde tu panel de control.
+              Podrás configurar precios por horario más tarde desde tu panel de
+              control.
             </FormDescription>
           </FormItem>
         )}

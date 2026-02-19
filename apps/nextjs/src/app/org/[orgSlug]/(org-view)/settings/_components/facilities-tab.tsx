@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
+
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 

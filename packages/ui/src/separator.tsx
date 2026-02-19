@@ -1,7 +1,8 @@
 "use client";
 
-import { cn } from "@wifo/ui";
 import { Separator as SeparatorPrimitive } from "radix-ui";
+
+import { cn } from "@wifo/ui";
 
 export function Separator({
   className,

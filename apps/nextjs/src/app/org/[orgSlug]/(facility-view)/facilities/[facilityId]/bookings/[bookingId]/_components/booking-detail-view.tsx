@@ -8,6 +8,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
@@ -37,7 +38,10 @@ export function BookingDetailView() {
       onSuccess: () => {
         toast.success("Reserva confirmada");
         void queryClient.invalidateQueries({
-          queryKey: trpc.booking.getById.queryKey({ facilityId, id: bookingId }),
+          queryKey: trpc.booking.getById.queryKey({
+            facilityId,
+            id: bookingId,
+          }),
         });
       },
       onError: (error) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import {
@@ -73,7 +74,7 @@ export function OrgSelector({ organizations }: OrgSelectorProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-64 bg-gray-900 border-gray-800"
+        className="w-64 border-gray-800 bg-gray-900"
         align="start"
         sideOffset={4}
       >

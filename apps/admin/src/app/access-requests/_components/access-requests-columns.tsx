@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+
 import { Badge } from "@wifo/ui/badge";
 
 export interface AccessRequestRow {
@@ -19,7 +20,10 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "Rechazada",
 };
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   pending: "outline",
   approved: "default",
   rejected: "destructive",

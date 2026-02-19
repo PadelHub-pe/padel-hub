@@ -1,12 +1,13 @@
 "use client";
 
-import type { RouterOutputs } from "@wifo/api";
 import { useForm } from "@tanstack/react-form";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+
+import type { RouterOutputs } from "@wifo/api";
 import { CreatePostSchema } from "@wifo/db/schema";
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";

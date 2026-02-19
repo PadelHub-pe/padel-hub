@@ -39,8 +39,7 @@ export function RemovePlayerDialog({
   const trpc = useTRPC();
   const { facilityId } = useFacilityContext();
 
-  const playerName =
-    player?.user?.name ?? player?.guestName ?? "Jugador";
+  const playerName = player?.user?.name ?? player?.guestName ?? "Jugador";
 
   const removeMutation = useMutation(
     trpc.booking.removePlayer.mutationOptions({

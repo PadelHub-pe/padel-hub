@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
+
 import { cn } from "@wifo/ui";
 import { Badge } from "@wifo/ui/badge";
 import { Card, CardContent, CardFooter } from "@wifo/ui/card";
@@ -43,7 +44,7 @@ export function FacilityCard({ facility }: FacilityCardProps) {
           className="h-full w-full object-cover"
         />
         {/* Status Badges */}
-        <div className="absolute right-3 top-3 flex flex-col gap-1">
+        <div className="absolute top-3 right-3 flex flex-col gap-1">
           {!facility.isSetupComplete && (
             <Badge
               variant="secondary"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import {
   Dialog,
@@ -33,8 +34,12 @@ export function RejectDialog({
   const rejectMutation = useMutation(
     trpc.admin.rejectAccessRequest.mutationOptions({
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: trpc.admin.listAccessRequests.queryKey() });
-        void queryClient.invalidateQueries({ queryKey: trpc.admin.getStats.queryKey() });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.admin.listAccessRequests.queryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.admin.getStats.queryKey(),
+        });
         handleClose();
       },
     }),
@@ -54,7 +59,8 @@ export function RejectDialog({
         <DialogHeader>
           <DialogTitle>Rechazar solicitud</DialogTitle>
           <DialogDescription>
-            La solicitud de <strong>{request.email}</strong> será marcada como rechazada.
+            La solicitud de <strong>{request.email}</strong> será marcada como
+            rechazada.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-2">

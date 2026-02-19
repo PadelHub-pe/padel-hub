@@ -6,13 +6,14 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
-import type { Auth } from "@wifo/auth";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { db } from "@wifo/db/client";
-import { platformAdmins } from "@wifo/db/schema";
 import { eq } from "drizzle-orm";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
+
+import type { Auth } from "@wifo/auth";
+import { db } from "@wifo/db/client";
+import { platformAdmins } from "@wifo/db/schema";
 
 /**
  * 1. CONTEXT

@@ -1,7 +1,19 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { addDays, startOfDay } from "date-fns";
-import { and, asc, count, desc, eq, gt, gte, ilike, lt, ne, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  lt,
+  ne,
+  or,
+} from "drizzle-orm";
 import { z } from "zod/v4";
 
 import {
@@ -126,636 +138,707 @@ export const bookingRouter = {
   /**
    * List all bookings for a facility with pagination and filters
    */
-  list: protectedProcedure.input(listBookingsSchema).query(async ({ ctx, input }) => {
-    const { facilityId, search, courtId, status, date, page, limit } = input;
-    const offset = (page - 1) * limit;
+  list: protectedProcedure
+    .input(listBookingsSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, search, courtId, status, date, page, limit } = input;
+      const offset = (page - 1) * limit;
 
-    // Verify access with booking:read permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+      // Verify access with booking:read permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-    // Build where conditions
-    const conditions = [eq(bookings.facilityId, facilityId)];
+      // Build where conditions
+      const conditions = [eq(bookings.facilityId, facilityId)];
 
-    if (courtId) {
-      conditions.push(eq(bookings.courtId, courtId));
-    }
-
-    if (status) {
-      conditions.push(eq(bookings.status, status));
-    }
-
-    if (date) {
-      const dayStart = startOfDay(date);
-      const dayEnd = startOfDay(addDays(date, 1));
-      conditions.push(gte(bookings.date, dayStart));
-      conditions.push(lt(bookings.date, dayEnd));
-    }
-
-    if (search) {
-      const searchPattern = `%${search}%`;
-      const searchCondition = or(
-        ilike(bookings.code, searchPattern),
-        ilike(bookings.customerName, searchPattern),
-        ilike(bookings.customerEmail, searchPattern),
-        ilike(bookings.customerPhone, searchPattern),
-      );
-      if (searchCondition) {
-        conditions.push(searchCondition);
+      if (courtId) {
+        conditions.push(eq(bookings.courtId, courtId));
       }
-    }
 
-    const whereClause = and(...conditions);
+      if (status) {
+        conditions.push(eq(bookings.status, status));
+      }
 
-    // Get total count
-    const [totalResult] = await ctx.db
-      .select({ count: count() })
-      .from(bookings)
-      .where(whereClause);
-    const total = totalResult?.count ?? 0;
+      if (date) {
+        const dayStart = startOfDay(date);
+        const dayEnd = startOfDay(addDays(date, 1));
+        conditions.push(gte(bookings.date, dayStart));
+        conditions.push(lt(bookings.date, dayEnd));
+      }
 
-    // Get bookings with court info and players
-    const bookingsList = await ctx.db.query.bookings.findMany({
-      where: whereClause,
-      with: {
-        court: true,
-        user: true,
-        players: true,
-      },
-      orderBy: [desc(bookings.date), desc(bookings.createdAt)],
-      limit,
-      offset,
-    });
+      if (search) {
+        const searchPattern = `%${search}%`;
+        const searchCondition = or(
+          ilike(bookings.code, searchPattern),
+          ilike(bookings.customerName, searchPattern),
+          ilike(bookings.customerEmail, searchPattern),
+          ilike(bookings.customerPhone, searchPattern),
+        );
+        if (searchCondition) {
+          conditions.push(searchCondition);
+        }
+      }
 
-    return {
-      bookings: bookingsList.map((b) => ({
-        ...b,
-        playerCount: b.players.length,
-      })),
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    };
-  }),
+      const whereClause = and(...conditions);
+
+      // Get total count
+      const [totalResult] = await ctx.db
+        .select({ count: count() })
+        .from(bookings)
+        .where(whereClause);
+      const total = totalResult?.count ?? 0;
+
+      // Get bookings with court info and players
+      const bookingsList = await ctx.db.query.bookings.findMany({
+        where: whereClause,
+        with: {
+          court: true,
+          user: true,
+          players: true,
+        },
+        orderBy: [desc(bookings.date), desc(bookings.createdAt)],
+        limit,
+        offset,
+      });
+
+      return {
+        bookings: bookingsList.map((b) => ({
+          ...b,
+          playerCount: b.players.length,
+        })),
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
+    }),
 
   /**
    * Get a single booking by ID with players and activity
    */
-  getById: protectedProcedure.input(getByIdSchema).query(async ({ ctx, input }) => {
-    const { facilityId, id } = input;
+  getById: protectedProcedure
+    .input(getByIdSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, id } = input;
 
-    // Verify access with booking:read permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+      // Verify access with booking:read permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-    const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
-      with: {
-        court: true,
-        user: true,
-        players: {
-          with: {
-            user: true,
+      const booking = await ctx.db.query.bookings.findFirst({
+        where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
+        with: {
+          court: true,
+          user: true,
+          players: {
+            with: {
+              user: true,
+            },
+          },
+          activity: {
+            with: {
+              performer: true,
+            },
+            orderBy: [desc(bookingActivity.createdAt)],
           },
         },
-        activity: {
-          with: {
-            performer: true,
-          },
-          orderBy: [desc(bookingActivity.createdAt)],
-        },
-      },
-    });
-
-    if (!booking) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Reserva no encontrada",
       });
-    }
 
-    return {
-      ...booking,
-      playerCount: booking.players.length,
-    };
-  }),
+      if (!booking) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reserva no encontrada",
+        });
+      }
+
+      return {
+        ...booking,
+        playerCount: booking.players.length,
+      };
+    }),
 
   /**
    * Confirm a pending booking
    */
-  confirm: protectedProcedure.input(confirmSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId, id } = input;
+  confirm: protectedProcedure
+    .input(confirmSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, id } = input;
 
-    // Verify access with booking:manage permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+      // Verify access with booking:manage permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:manage");
 
-    const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
-    });
-
-    if (!booking) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Reserva no encontrada",
+      const booking = await ctx.db.query.bookings.findFirst({
+        where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
       });
-    }
 
-    if (booking.status !== "pending" && booking.status !== "open_match") {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Solo se pueden confirmar reservas pendientes o partidos abiertos",
+      if (!booking) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reserva no encontrada",
+        });
+      }
+
+      if (booking.status !== "pending" && booking.status !== "open_match") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Solo se pueden confirmar reservas pendientes o partidos abiertos",
+        });
+      }
+
+      const [updatedBooking] = await ctx.db
+        .update(bookings)
+        .set({
+          status: "confirmed",
+          confirmedAt: new Date(),
+        })
+        .where(eq(bookings.id, id))
+        .returning();
+
+      await logBookingActivity({
+        db: ctx.db,
+        bookingId: id,
+        type: "confirmed",
+        description: "Reserva confirmada",
+        performedBy: ctx.session.user.id,
       });
-    }
 
-    const [updatedBooking] = await ctx.db
-      .update(bookings)
-      .set({
-        status: "confirmed",
-        confirmedAt: new Date(),
-      })
-      .where(eq(bookings.id, id))
-      .returning();
-
-    await logBookingActivity({
-      db: ctx.db,
-      bookingId: id,
-      type: "confirmed",
-      description: "Reserva confirmada",
-      performedBy: ctx.session.user.id,
-    });
-
-    return updatedBooking;
-  }),
+      return updatedBooking;
+    }),
 
   /**
    * Cancel a booking
    */
-  cancel: protectedProcedure.input(cancelBookingSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId, id, reason } = input;
+  cancel: protectedProcedure
+    .input(cancelBookingSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, id, reason } = input;
 
-    // Verify access with booking:manage permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+      // Verify access with booking:manage permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:manage");
 
-    const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
-    });
-
-    if (!booking) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Reserva no encontrada",
+      const booking = await ctx.db.query.bookings.findFirst({
+        where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
       });
-    }
 
-    if (booking.status === "cancelled") {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "La reserva ya está cancelada",
+      if (!booking) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reserva no encontrada",
+        });
+      }
+
+      if (booking.status === "cancelled") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "La reserva ya está cancelada",
+        });
+      }
+
+      if (booking.status === "completed") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No se puede cancelar una reserva completada",
+        });
+      }
+
+      const [updatedBooking] = await ctx.db
+        .update(bookings)
+        .set({
+          status: "cancelled",
+          cancelledBy: "owner",
+          cancellationReason: reason ?? null,
+          cancelledAt: new Date(),
+        })
+        .where(eq(bookings.id, id))
+        .returning();
+
+      await logBookingActivity({
+        db: ctx.db,
+        bookingId: id,
+        type: "cancelled",
+        description: reason
+          ? `Reserva cancelada: ${reason}`
+          : "Reserva cancelada",
+        performedBy: ctx.session.user.id,
       });
-    }
 
-    if (booking.status === "completed") {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No se puede cancelar una reserva completada",
-      });
-    }
-
-    const [updatedBooking] = await ctx.db
-      .update(bookings)
-      .set({
-        status: "cancelled",
-        cancelledBy: "owner",
-        cancellationReason: reason ?? null,
-        cancelledAt: new Date(),
-      })
-      .where(eq(bookings.id, id))
-      .returning();
-
-    await logBookingActivity({
-      db: ctx.db,
-      bookingId: id,
-      type: "cancelled",
-      description: reason
-        ? `Reserva cancelada: ${reason}`
-        : "Reserva cancelada",
-      performedBy: ctx.session.user.id,
-    });
-
-    return updatedBooking;
-  }),
+      return updatedBooking;
+    }),
 
   /**
    * Update booking status
    */
-  updateStatus: protectedProcedure.input(updateStatusSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId, id, status } = input;
+  updateStatus: protectedProcedure
+    .input(updateStatusSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, id, status } = input;
 
-    // Verify access with booking:manage permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+      // Verify access with booking:manage permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:manage");
 
-    const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
-    });
-
-    if (!booking) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Reserva no encontrada",
+      const booking = await ctx.db.query.bookings.findFirst({
+        where: and(eq(bookings.id, id), eq(bookings.facilityId, facilityId)),
       });
-    }
 
-    const updateData: Record<string, unknown> = { status };
+      if (!booking) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reserva no encontrada",
+        });
+      }
 
-    if (status === "confirmed" && !booking.confirmedAt) {
-      updateData.confirmedAt = new Date();
-    }
+      const updateData: Record<string, unknown> = { status };
 
-    if (status === "cancelled") {
-      updateData.cancelledBy = "owner";
-      updateData.cancelledAt = new Date();
-    }
+      if (status === "confirmed" && !booking.confirmedAt) {
+        updateData.confirmedAt = new Date();
+      }
 
-    const [updatedBooking] = await ctx.db
-      .update(bookings)
-      .set(updateData)
-      .where(eq(bookings.id, id))
-      .returning();
+      if (status === "cancelled") {
+        updateData.cancelledBy = "owner";
+        updateData.cancelledAt = new Date();
+      }
 
-    await logBookingActivity({
-      db: ctx.db,
-      bookingId: id,
-      type: "status_changed",
-      description: `Estado cambiado a ${status}`,
-      metadata: { oldStatus: booking.status, newStatus: status },
-      performedBy: ctx.session.user.id,
-    });
+      const [updatedBooking] = await ctx.db
+        .update(bookings)
+        .set(updateData)
+        .where(eq(bookings.id, id))
+        .returning();
 
-    return updatedBooking;
-  }),
+      await logBookingActivity({
+        db: ctx.db,
+        bookingId: id,
+        type: "status_changed",
+        description: `Estado cambiado a ${status}`,
+        metadata: { oldStatus: booking.status, newStatus: status },
+        performedBy: ctx.session.user.id,
+      });
+
+      return updatedBooking;
+    }),
 
   /**
    * Create a manual booking (walk-in)
    */
-  createManual: protectedProcedure.input(createManualSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId } = input;
+  createManual: protectedProcedure
+    .input(createManualSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId } = input;
 
-    // Verify access with booking:write permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:write");
+      // Verify access with booking:write permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:write");
 
-    // Verify court belongs to facility
-    const court = await ctx.db.query.courts.findFirst({
-      where: and(eq(courts.id, input.courtId), eq(courts.facilityId, facilityId)),
-    });
-
-    if (!court) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Cancha no encontrada",
-      });
-    }
-
-    // Check for overlapping active bookings on same court + date + time range
-    const dayStart = startOfDay(input.date);
-    const dayEnd = startOfDay(addDays(input.date, 1));
-    const overlapping = await ctx.db.query.bookings.findFirst({
-      where: and(
-        eq(bookings.courtId, input.courtId),
-        gte(bookings.date, dayStart),
-        lt(bookings.date, dayEnd),
-        ne(bookings.status, "cancelled"),
-        lt(bookings.startTime, input.endTime),
-        gt(bookings.endTime, input.startTime),
-      ),
-    });
-
-    if (overlapping) {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: `La cancha ya tiene una reserva de ${overlapping.startTime.slice(0, 5)} a ${overlapping.endTime.slice(0, 5)}`,
-      });
-    }
-
-    // Generate unique booking code
-    let code = generateBookingCode();
-    let attempts = 0;
-    while (attempts < 10) {
-      const existing = await ctx.db.query.bookings.findFirst({
-        where: eq(bookings.code, code),
-      });
-      if (!existing) break;
-      code = generateBookingCode();
-      attempts++;
-    }
-
-    const [booking] = await ctx.db
-      .insert(bookings)
-      .values({
-        code,
-        courtId: input.courtId,
-        facilityId,
-        date: input.date,
-        startTime: input.startTime,
-        endTime: input.endTime,
-        priceInCents: input.priceInCents,
-        isPeakRate: input.isPeakRate,
-        paymentMethod: input.paymentMethod ?? null,
-        customerName: input.customerName,
-        customerPhone: input.customerPhone ?? null,
-        customerEmail: input.customerEmail ?? null,
-        notes: input.notes ?? null,
-        isManualBooking: true,
-        status: "confirmed",
-        confirmedAt: new Date(),
-      })
-      .returning();
-
-    if (booking) {
-      // Add customer as owner player at position 1 (guest, since manual bookings are walk-ins)
-      await ctx.db.insert(bookingPlayers).values({
-        bookingId: booking.id,
-        role: "owner",
-        position: 1,
-        guestName: input.customerName,
-        guestEmail: input.customerEmail ?? null,
-        guestPhone: input.customerPhone ?? null,
+      // Verify court belongs to facility
+      const court = await ctx.db.query.courts.findFirst({
+        where: and(
+          eq(courts.id, input.courtId),
+          eq(courts.facilityId, facilityId),
+        ),
       });
 
-      // Add additional players if provided (positions 2-4)
-      if (input.players?.length) {
-        await ctx.db.insert(bookingPlayers).values(
-          input.players.map((p) => ({
-            bookingId: booking.id,
-            role: "player" as const,
-            position: p.position,
-            guestName: p.guestName,
-          })),
-        );
+      if (!court) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Cancha no encontrada",
+        });
       }
 
-      await logBookingActivity({
-        db: ctx.db,
-        bookingId: booking.id,
-        type: "created",
-        description: `Reserva manual creada para ${input.customerName}`,
-        performedBy: ctx.session.user.id,
+      // Check for overlapping active bookings on same court + date + time range
+      const dayStart = startOfDay(input.date);
+      const dayEnd = startOfDay(addDays(input.date, 1));
+      const overlapping = await ctx.db.query.bookings.findFirst({
+        where: and(
+          eq(bookings.courtId, input.courtId),
+          gte(bookings.date, dayStart),
+          lt(bookings.date, dayEnd),
+          ne(bookings.status, "cancelled"),
+          lt(bookings.startTime, input.endTime),
+          gt(bookings.endTime, input.startTime),
+        ),
       });
-    }
 
-    return booking;
-  }),
+      if (overlapping) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `La cancha ya tiene una reserva de ${overlapping.startTime.slice(0, 5)} a ${overlapping.endTime.slice(0, 5)}`,
+        });
+      }
+
+      // Generate unique booking code
+      let code = generateBookingCode();
+      let attempts = 0;
+      while (attempts < 10) {
+        const existing = await ctx.db.query.bookings.findFirst({
+          where: eq(bookings.code, code),
+        });
+        if (!existing) break;
+        code = generateBookingCode();
+        attempts++;
+      }
+
+      const [booking] = await ctx.db
+        .insert(bookings)
+        .values({
+          code,
+          courtId: input.courtId,
+          facilityId,
+          date: input.date,
+          startTime: input.startTime,
+          endTime: input.endTime,
+          priceInCents: input.priceInCents,
+          isPeakRate: input.isPeakRate,
+          paymentMethod: input.paymentMethod ?? null,
+          customerName: input.customerName,
+          customerPhone: input.customerPhone ?? null,
+          customerEmail: input.customerEmail ?? null,
+          notes: input.notes ?? null,
+          isManualBooking: true,
+          status: "confirmed",
+          confirmedAt: new Date(),
+        })
+        .returning();
+
+      if (booking) {
+        // Add customer as owner player at position 1 (guest, since manual bookings are walk-ins)
+        await ctx.db.insert(bookingPlayers).values({
+          bookingId: booking.id,
+          role: "owner",
+          position: 1,
+          guestName: input.customerName,
+          guestEmail: input.customerEmail ?? null,
+          guestPhone: input.customerPhone ?? null,
+        });
+
+        // Add additional players if provided (positions 2-4)
+        if (input.players?.length) {
+          await ctx.db.insert(bookingPlayers).values(
+            input.players.map((p) => ({
+              bookingId: booking.id,
+              role: "player" as const,
+              position: p.position,
+              guestName: p.guestName,
+            })),
+          );
+        }
+
+        await logBookingActivity({
+          db: ctx.db,
+          bookingId: booking.id,
+          type: "created",
+          description: `Reserva manual creada para ${input.customerName}`,
+          performedBy: ctx.session.user.id,
+        });
+      }
+
+      return booking;
+    }),
 
   /**
    * Get booking stats for dashboard
    */
-  getStats: protectedProcedure.input(getStatsSchema).query(async ({ ctx, input }) => {
-    const { facilityId } = input;
+  getStats: protectedProcedure
+    .input(getStatsSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId } = input;
 
-    // Verify access with booking:read permission
-    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+      // Verify access with booking:read permission
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-    // Get today's date range
-    const today = startOfDay(new Date());
-    const tomorrow = addDays(today, 1);
+      // Get today's date range
+      const today = startOfDay(new Date());
+      const tomorrow = addDays(today, 1);
 
-    // Today's bookings count
-    const [todayResult] = await ctx.db
-      .select({ count: count() })
-      .from(bookings)
-      .where(
-        and(
-          eq(bookings.facilityId, facilityId),
-          gte(bookings.date, today),
-          lt(bookings.date, tomorrow),
-        ),
-      );
+      // Today's bookings count
+      const [todayResult] = await ctx.db
+        .select({ count: count() })
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.facilityId, facilityId),
+            gte(bookings.date, today),
+            lt(bookings.date, tomorrow),
+          ),
+        );
 
-    // Pending bookings count
-    const [pendingResult] = await ctx.db
-      .select({ count: count() })
-      .from(bookings)
-      .where(and(eq(bookings.facilityId, facilityId), eq(bookings.status, "pending")));
+      // Pending bookings count
+      const [pendingResult] = await ctx.db
+        .select({ count: count() })
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.facilityId, facilityId),
+            eq(bookings.status, "pending"),
+          ),
+        );
 
-    // Total bookings
-    const [totalResult] = await ctx.db
-      .select({ count: count() })
-      .from(bookings)
-      .where(eq(bookings.facilityId, facilityId));
+      // Total bookings
+      const [totalResult] = await ctx.db
+        .select({ count: count() })
+        .from(bookings)
+        .where(eq(bookings.facilityId, facilityId));
 
-    return {
-      todayBookings: todayResult?.count ?? 0,
-      pendingBookings: pendingResult?.count ?? 0,
-      totalBookings: totalResult?.count ?? 0,
-    };
-  }),
+      return {
+        todayBookings: todayResult?.count ?? 0,
+        pendingBookings: pendingResult?.count ?? 0,
+        totalBookings: totalResult?.count ?? 0,
+      };
+    }),
 
   /**
    * Add a player to a booking
    */
-  addPlayer: protectedProcedure.input(addPlayerSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId, bookingId, position, userId, guestName, guestEmail, guestPhone } = input;
-
-    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
-
-    const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, bookingId), eq(bookings.facilityId, facilityId)),
-      with: { players: true },
-    });
-
-    if (!booking) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Reserva no encontrada" });
-    }
-
-    // Check max 4 players
-    if (booking.players.length >= 4) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "La reserva ya tiene 4 jugadores" });
-    }
-
-    // Check position available
-    if (booking.players.some((p) => p.position === position)) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "La posición ya está ocupada" });
-    }
-
-    // Check user not duplicate
-    if (userId && booking.players.some((p) => p.userId === userId)) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "El jugador ya está en la reserva" });
-    }
-
-    const [player] = await ctx.db
-      .insert(bookingPlayers)
-      .values({
+  addPlayer: protectedProcedure
+    .input(addPlayerSchema)
+    .mutation(async ({ ctx, input }) => {
+      const {
+        facilityId,
         bookingId,
-        userId: userId ?? null,
-        role: "player",
         position,
-        guestName: guestName ?? null,
-        guestEmail: guestEmail ?? null,
-        guestPhone: guestPhone ?? null,
-      })
-      .returning();
+        userId,
+        guestName,
+        guestEmail,
+        guestPhone,
+      } = input;
 
-    // Determine player name for activity log
-    let playerName = guestName ?? "Jugador";
-    if (userId) {
-      const playerUser = await ctx.db.query.user.findFirst({
-        where: eq(user.id, userId),
+      await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+
+      const booking = await ctx.db.query.bookings.findFirst({
+        where: and(
+          eq(bookings.id, bookingId),
+          eq(bookings.facilityId, facilityId),
+        ),
+        with: { players: true },
       });
-      if (playerUser?.name) playerName = playerUser.name;
-    }
 
-    await logBookingActivity({
-      db: ctx.db,
-      bookingId,
-      type: "player_joined",
-      description: `${playerName} se unió en posición ${position}`,
-      metadata: { position, userId, guestName },
-      performedBy: ctx.session.user.id,
-    });
+      if (!booking) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reserva no encontrada",
+        });
+      }
 
-    // Auto-confirm if full (4/4) and was open_match
-    const newPlayerCount = booking.players.length + 1;
-    if (newPlayerCount >= 4 && booking.status === "open_match") {
-      await ctx.db
-        .update(bookings)
-        .set({ status: "confirmed", confirmedAt: new Date() })
-        .where(eq(bookings.id, bookingId));
+      // Check max 4 players
+      if (booking.players.length >= 4) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "La reserva ya tiene 4 jugadores",
+        });
+      }
+
+      // Check position available
+      if (booking.players.some((p) => p.position === position)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "La posición ya está ocupada",
+        });
+      }
+
+      // Check user not duplicate
+      if (userId && booking.players.some((p) => p.userId === userId)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "El jugador ya está en la reserva",
+        });
+      }
+
+      const [player] = await ctx.db
+        .insert(bookingPlayers)
+        .values({
+          bookingId,
+          userId: userId ?? null,
+          role: "player",
+          position,
+          guestName: guestName ?? null,
+          guestEmail: guestEmail ?? null,
+          guestPhone: guestPhone ?? null,
+        })
+        .returning();
+
+      // Determine player name for activity log
+      let playerName = guestName ?? "Jugador";
+      if (userId) {
+        const playerUser = await ctx.db.query.user.findFirst({
+          where: eq(user.id, userId),
+        });
+        if (playerUser?.name) playerName = playerUser.name;
+      }
 
       await logBookingActivity({
         db: ctx.db,
         bookingId,
-        type: "confirmed",
-        description: "Partido completo (4/4) - confirmado automáticamente",
+        type: "player_joined",
+        description: `${playerName} se unió en posición ${position}`,
+        metadata: { position, userId, guestName },
         performedBy: ctx.session.user.id,
       });
-    }
 
-    return player;
-  }),
+      // Auto-confirm if full (4/4) and was open_match
+      const newPlayerCount = booking.players.length + 1;
+      if (newPlayerCount >= 4 && booking.status === "open_match") {
+        await ctx.db
+          .update(bookings)
+          .set({ status: "confirmed", confirmedAt: new Date() })
+          .where(eq(bookings.id, bookingId));
+
+        await logBookingActivity({
+          db: ctx.db,
+          bookingId,
+          type: "confirmed",
+          description: "Partido completo (4/4) - confirmado automáticamente",
+          performedBy: ctx.session.user.id,
+        });
+      }
+
+      return player;
+    }),
 
   /**
    * Remove a non-owner player from a booking
    */
-  removePlayer: protectedProcedure.input(removePlayerSchema).mutation(async ({ ctx, input }) => {
-    const { facilityId, bookingId, playerId } = input;
+  removePlayer: protectedProcedure
+    .input(removePlayerSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, bookingId, playerId } = input;
 
-    await verifyFacilityAccess(ctx, facilityId, "booking:manage");
+      await verifyFacilityAccess(ctx, facilityId, "booking:manage");
 
-    const booking = await ctx.db.query.bookings.findFirst({
-      where: and(eq(bookings.id, bookingId), eq(bookings.facilityId, facilityId)),
-    });
-
-    if (!booking) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Reserva no encontrada" });
-    }
-
-    const player = await ctx.db.query.bookingPlayers.findFirst({
-      where: and(
-        eq(bookingPlayers.id, playerId),
-        eq(bookingPlayers.bookingId, bookingId),
-      ),
-      with: { user: true },
-    });
-
-    if (!player) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Jugador no encontrado" });
-    }
-
-    if (player.role === "owner") {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No se puede remover al creador de la reserva",
+      const booking = await ctx.db.query.bookings.findFirst({
+        where: and(
+          eq(bookings.id, bookingId),
+          eq(bookings.facilityId, facilityId),
+        ),
       });
-    }
 
-    await ctx.db.delete(bookingPlayers).where(eq(bookingPlayers.id, playerId));
+      if (!booking) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reserva no encontrada",
+        });
+      }
 
-    const playerName = player.user?.name ?? player.guestName ?? "Jugador";
+      const player = await ctx.db.query.bookingPlayers.findFirst({
+        where: and(
+          eq(bookingPlayers.id, playerId),
+          eq(bookingPlayers.bookingId, bookingId),
+        ),
+        with: { user: true },
+      });
 
-    await logBookingActivity({
-      db: ctx.db,
-      bookingId,
-      type: "player_left",
-      description: `${playerName} fue removido de la posición ${player.position}`,
-      metadata: { position: player.position, playerName },
-      performedBy: ctx.session.user.id,
-    });
+      if (!player) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Jugador no encontrado",
+        });
+      }
 
-    return { success: true };
-  }),
+      if (player.role === "owner") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No se puede remover al creador de la reserva",
+        });
+      }
+
+      await ctx.db
+        .delete(bookingPlayers)
+        .where(eq(bookingPlayers.id, playerId));
+
+      const playerName = player.user?.name ?? player.guestName ?? "Jugador";
+
+      await logBookingActivity({
+        db: ctx.db,
+        bookingId,
+        type: "player_left",
+        description: `${playerName} fue removido de la posición ${player.position}`,
+        metadata: { position: player.position, playerName },
+        performedBy: ctx.session.user.id,
+      });
+
+      return { success: true };
+    }),
 
   /**
    * Get activity log for a booking
    */
-  getActivity: protectedProcedure.input(getActivitySchema).query(async ({ ctx, input }) => {
-    const { facilityId, bookingId } = input;
+  getActivity: protectedProcedure
+    .input(getActivitySchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, bookingId } = input;
 
-    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-    const activities = await ctx.db.query.bookingActivity.findMany({
-      where: eq(bookingActivity.bookingId, bookingId),
-      with: { performer: true },
-      orderBy: [desc(bookingActivity.createdAt)],
-    });
+      const activities = await ctx.db.query.bookingActivity.findMany({
+        where: eq(bookingActivity.bookingId, bookingId),
+        with: { performer: true },
+        orderBy: [desc(bookingActivity.createdAt)],
+      });
 
-    return activities;
-  }),
+      return activities;
+    }),
 
   /**
    * Search users for add-player modal
    */
-  searchUsers: protectedProcedure.input(searchUsersSchema).query(async ({ ctx, input }) => {
-    const { facilityId, bookingId, query } = input;
+  searchUsers: protectedProcedure
+    .input(searchUsersSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, bookingId, query } = input;
 
-    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-    // Get current players to exclude
-    const currentPlayers = await ctx.db.query.bookingPlayers.findMany({
-      where: eq(bookingPlayers.bookingId, bookingId),
-      columns: { userId: true },
-    });
+      // Get current players to exclude
+      const currentPlayers = await ctx.db.query.bookingPlayers.findMany({
+        where: eq(bookingPlayers.bookingId, bookingId),
+        columns: { userId: true },
+      });
 
-    const excludeIds = currentPlayers
-      .map((p) => p.userId)
-      .filter((id): id is string => id !== null);
+      const excludeIds = currentPlayers
+        .map((p) => p.userId)
+        .filter((id): id is string => id !== null);
 
-    const searchPattern = `%${query}%`;
-    const searchCondition = or(
-      ilike(user.name, searchPattern),
-      ilike(user.email, searchPattern),
-    );
+      const searchPattern = `%${query}%`;
+      const searchCondition = or(
+        ilike(user.name, searchPattern),
+        ilike(user.email, searchPattern),
+      );
 
-    let whereClause = searchCondition;
-    if (excludeIds.length > 0) {
-      const excludeConditions = excludeIds.map((id) => ne(user.id, id));
-      whereClause = and(searchCondition, ...excludeConditions);
-    }
+      let whereClause = searchCondition;
+      if (excludeIds.length > 0) {
+        const excludeConditions = excludeIds.map((id) => ne(user.id, id));
+        whereClause = and(searchCondition, ...excludeConditions);
+      }
 
-    const users = await ctx.db.query.user.findMany({
-      where: whereClause,
-      columns: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-      },
-      limit: 10,
-    });
+      const users = await ctx.db.query.user.findMany({
+        where: whereClause,
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+        limit: 10,
+      });
 
-    return users;
-  }),
+      return users;
+    }),
 
   /**
    * Get slot info for create booking dialog (operating hours, peak periods, existing bookings, blocked slots)
    */
-  getSlotInfo: protectedProcedure.input(getSlotInfoSchema).query(async ({ ctx, input }) => {
-    const { facilityId, date } = input;
+  getSlotInfo: protectedProcedure
+    .input(getSlotInfoSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, date } = input;
 
-    await verifyFacilityAccess(ctx, facilityId, "booking:read");
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-    const dayStart = startOfDay(date);
-    const dayEnd = startOfDay(addDays(date, 1));
-    const dayOfWeek = date.getDay(); // 0 = Sunday
+      const dayStart = startOfDay(date);
+      const dayEnd = startOfDay(addDays(date, 1));
+      const dayOfWeek = date.getDay(); // 0 = Sunday
 
-    const [operatingHoursList, peakPeriodsList, bookingsList, blockedSlotsList] =
-      await Promise.all([
+      const [
+        operatingHoursList,
+        peakPeriodsList,
+        bookingsList,
+        blockedSlotsList,
+      ] = await Promise.all([
         ctx.db.query.operatingHours.findMany({
           where: eq(operatingHours.facilityId, facilityId),
         }),
@@ -797,38 +880,44 @@ export const bookingRouter = {
         }),
       ]);
 
-    // Find operating hours for this day of week
-    const dayHours = operatingHoursList.find((h) => h.dayOfWeek === dayOfWeek);
-    const opHours = dayHours
-      ? { openTime: dayHours.openTime, closeTime: dayHours.closeTime, isClosed: dayHours.isClosed }
-      : { openTime: "08:00:00", closeTime: "22:00:00", isClosed: false };
+      // Find operating hours for this day of week
+      const dayHours = operatingHoursList.find(
+        (h) => h.dayOfWeek === dayOfWeek,
+      );
+      const opHours = dayHours
+        ? {
+            openTime: dayHours.openTime,
+            closeTime: dayHours.closeTime,
+            isClosed: dayHours.isClosed,
+          }
+        : { openTime: "08:00:00", closeTime: "22:00:00", isClosed: false };
 
-    // Filter peak periods that apply to this day of week
-    const dayPeakPeriods = peakPeriodsList
-      .filter((p) => p.daysOfWeek.includes(dayOfWeek))
-      .map((p) => ({
-        startTime: p.startTime,
-        endTime: p.endTime,
-        markupPercent: p.markupPercent,
-      }));
+      // Filter peak periods that apply to this day of week
+      const dayPeakPeriods = peakPeriodsList
+        .filter((p) => p.daysOfWeek.includes(dayOfWeek))
+        .map((p) => ({
+          startTime: p.startTime,
+          endTime: p.endTime,
+          markupPercent: p.markupPercent,
+        }));
 
-    return {
-      operatingHours: opHours,
-      peakPeriods: dayPeakPeriods,
-      existingBookings: bookingsList.map((b) => ({
-        id: b.id,
-        courtId: b.courtId,
-        startTime: b.startTime,
-        endTime: b.endTime,
-        status: b.status,
-        customerName: b.customerName,
-      })),
-      blockedSlots: blockedSlotsList.map((b) => ({
-        courtId: b.courtId,
-        startTime: b.startTime,
-        endTime: b.endTime,
-        reason: b.reason,
-      })),
-    };
-  }),
+      return {
+        operatingHours: opHours,
+        peakPeriods: dayPeakPeriods,
+        existingBookings: bookingsList.map((b) => ({
+          id: b.id,
+          courtId: b.courtId,
+          startTime: b.startTime,
+          endTime: b.endTime,
+          status: b.status,
+          customerName: b.customerName,
+        })),
+        blockedSlots: blockedSlotsList.map((b) => ({
+          courtId: b.courtId,
+          startTime: b.startTime,
+          endTime: b.endTime,
+          reason: b.reason,
+        })),
+      };
+    }),
 } satisfies TRPCRouterRecord;

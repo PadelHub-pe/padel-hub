@@ -12,7 +12,9 @@ interface FacilitySettingsViewProps {
   facilityId: string;
 }
 
-export function FacilitySettingsView({ facilityId }: FacilitySettingsViewProps) {
+export function FacilitySettingsView({
+  facilityId,
+}: FacilitySettingsViewProps) {
   return (
     <div className="p-8">
       <div className="mb-8">

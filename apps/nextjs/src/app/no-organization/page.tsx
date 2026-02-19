@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { getSession } from "~/auth/server";
 import { api } from "~/trpc/server";
-
 import { NoOrganizationView } from "./_components/no-organization-view";
 
 export default async function NoOrganizationPage() {

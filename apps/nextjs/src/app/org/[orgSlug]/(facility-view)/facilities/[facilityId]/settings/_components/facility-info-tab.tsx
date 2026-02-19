@@ -1,11 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 import {
@@ -19,9 +23,6 @@ import {
 import { Input } from "@wifo/ui/input";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
@@ -90,9 +91,9 @@ export function FacilityInfoTab({ facilityId }: FacilityInfoTabProps) {
       facilityId,
       name: values.name,
       phone: values.phone,
-      email: values.email || undefined,
+      email: values.email ?? undefined,
       address: values.address,
-      description: values.description || undefined,
+      description: values.description ?? undefined,
       amenities: facility.amenities,
     });
   }
@@ -108,7 +109,7 @@ export function FacilityInfoTab({ facilityId }: FacilityInfoTabProps) {
     <div className="max-w-2xl space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-secondary-400 to-secondary-600 text-lg font-bold text-white">
+        <div className="from-secondary-400 to-secondary-600 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br text-lg font-bold text-white">
           {initials}
         </div>
         <div>

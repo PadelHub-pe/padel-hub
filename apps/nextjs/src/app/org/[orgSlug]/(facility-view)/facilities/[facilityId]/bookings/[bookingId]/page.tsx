@@ -7,7 +7,9 @@ interface BookingDetailPageProps {
   params: Promise<{ orgSlug: string; facilityId: string; bookingId: string }>;
 }
 
-export default async function BookingDetailPage({ params }: BookingDetailPageProps) {
+export default async function BookingDetailPage({
+  params,
+}: BookingDetailPageProps) {
   const { facilityId, bookingId } = await params;
 
   prefetch(trpc.booking.getById.queryOptions({ facilityId, id: bookingId }));

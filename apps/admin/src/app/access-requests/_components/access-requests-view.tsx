@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
+
+import { cn } from "@wifo/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import { Input } from "@wifo/ui/input";
-import { cn } from "@wifo/ui";
 
+import type { AccessRequestRow } from "./access-requests-columns";
 import { DataTable } from "~/components/ui/data-table";
 import { useTRPC } from "~/trpc/react";
-import type { AccessRequestRow } from "./access-requests-columns";
 import { getAccessRequestColumns } from "./access-requests-columns";
 import { ApproveDialog } from "./approve-dialog";
 import { RejectDialog } from "./reject-dialog";
@@ -22,10 +23,16 @@ const STATUS_TABS = [
 
 export function AccessRequestsView() {
   const trpc = useTRPC();
-  const [statusFilter, setStatusFilter] = useState<"pending" | "approved" | "rejected" | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<
+    "pending" | "approved" | "rejected" | undefined
+  >(undefined);
   const [search, setSearch] = useState("");
-  const [approveTarget, setApproveTarget] = useState<AccessRequestRow | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<AccessRequestRow | null>(null);
+  const [approveTarget, setApproveTarget] = useState<AccessRequestRow | null>(
+    null,
+  );
+  const [rejectTarget, setRejectTarget] = useState<AccessRequestRow | null>(
+    null,
+  );
 
   const { data: stats } = useSuspenseQuery(trpc.admin.getStats.queryOptions());
   const { data: requestsData } = useSuspenseQuery(
@@ -86,7 +93,10 @@ export function AccessRequestsView() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={requestsData.items as AccessRequestRow[]} />
+      <DataTable
+        columns={columns}
+        data={requestsData.items as AccessRequestRow[]}
+      />
 
       {/* Dialogs */}
       <ApproveDialog
@@ -121,10 +131,7 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div
-          className={cn(
-            "text-2xl font-bold",
-            highlight && "text-orange-600",
-          )}
+          className={cn("text-2xl font-bold", highlight && "text-orange-600")}
         >
           {value}
         </div>

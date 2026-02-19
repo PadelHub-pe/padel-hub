@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import {
@@ -43,6 +44,7 @@ const gradients = [
 ];
 
 function getGradient(index: number) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return gradients[index % gradients.length]!;
 }
 
@@ -57,9 +59,7 @@ export function FacilitySwitcher({
 
   if (!currentFacility) return null;
 
-  const currentIndex = facilities.findIndex(
-    (f) => f.id === currentFacilityId,
-  );
+  const currentIndex = facilities.findIndex((f) => f.id === currentFacilityId);
   const basePath = `/org/${organization.slug}/facilities`;
 
   return (

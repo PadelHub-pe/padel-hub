@@ -1,9 +1,9 @@
 "use client";
 
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -40,7 +40,11 @@ import { formatTime } from "./calendar-utils";
 const quickBookingSchema = z.object({
   customerName: z.string().min(1, "El nombre es requerido").max(100),
   customerPhone: z.string().max(20).optional(),
-  customerEmail: z.string().email("Email inválido").optional().or(z.literal("")),
+  customerEmail: z
+    .string()
+    .email("Email inválido")
+    .optional()
+    .or(z.literal("")),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato inválido (HH:mm)"),
   priceInCents: z.number().int().min(0, "El precio debe ser positivo"),
   isPeakRate: z.boolean(),
@@ -137,8 +141,8 @@ export function QuickBookingForm({
         <DialogHeader>
           <DialogTitle>Nueva reserva</DialogTitle>
           <DialogDescription>
-            {courtName} - {format(date, "EEEE d 'de' MMMM", { locale: es })} a las{" "}
-            {formatTime(startTime)}
+            {courtName} - {format(date, "EEEE d 'de' MMMM", { locale: es })} a
+            las {formatTime(startTime)}
           </DialogDescription>
         </DialogHeader>
 
@@ -228,7 +232,9 @@ export function QuickBookingForm({
                         {...field}
                         value={field.value / 100}
                         onChange={(e) =>
-                          field.onChange(Math.round(parseFloat(e.target.value) * 100))
+                          field.onChange(
+                            Math.round(parseFloat(e.target.value) * 100),
+                          )
                         }
                       />
                     </FormControl>
@@ -243,7 +249,10 @@ export function QuickBookingForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Método de pago</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />

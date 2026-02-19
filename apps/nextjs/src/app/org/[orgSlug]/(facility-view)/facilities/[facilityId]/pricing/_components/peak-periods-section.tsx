@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
@@ -72,9 +73,7 @@ export function PeakPeriodsSection({ peakPeriods }: PeakPeriodsSectionProps) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">
-          Periodos Pico
-        </h3>
+        <h3 className="font-semibold text-gray-900">Periodos Pico</h3>
         <Button
           variant="outline"
           size="sm"

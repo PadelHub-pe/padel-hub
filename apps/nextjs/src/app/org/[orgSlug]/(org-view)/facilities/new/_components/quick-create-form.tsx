@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Button } from "@wifo/ui/button";
 import {
   Dialog,
@@ -22,8 +25,6 @@ import {
   FormMessage,
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -42,7 +43,10 @@ interface QuickCreateFormProps {
   orgSlug: string;
 }
 
-export function QuickCreateForm({ organizationId, orgSlug }: QuickCreateFormProps) {
+export function QuickCreateForm({
+  organizationId,
+  orgSlug,
+}: QuickCreateFormProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -74,14 +78,14 @@ export function QuickCreateForm({ organizationId, orgSlug }: QuickCreateFormProp
     }),
   );
 
-  async function onSubmit(values: QuickCreateFormValues) {
+  function onSubmit(values: QuickCreateFormValues) {
     createFacility.mutate({
       organizationId,
       name: values.name,
       address: values.address,
       district: values.district,
       phone: values.phone,
-      email: values.email || undefined,
+      email: values.email ? values.email : undefined,
     });
   }
 
@@ -111,7 +115,11 @@ export function QuickCreateForm({ organizationId, orgSlug }: QuickCreateFormProp
                   Nombre del local <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="Padel Club Miraflores" {...field} />
+                  <Input
+                    type="text"
+                    placeholder="Padel Club Miraflores"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -128,7 +136,11 @@ export function QuickCreateForm({ organizationId, orgSlug }: QuickCreateFormProp
                   Dirección <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="Av. Javier Prado Este 1234" {...field} />
+                  <Input
+                    type="text"
+                    placeholder="Av. Javier Prado Este 1234"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -177,7 +189,11 @@ export function QuickCreateForm({ organizationId, orgSlug }: QuickCreateFormProp
               <FormItem>
                 <FormLabel>Email (opcional)</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="contacto@miclub.pe" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="contacto@miclub.pe"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -218,15 +234,19 @@ export function QuickCreateForm({ organizationId, orgSlug }: QuickCreateFormProp
           <DialogHeader>
             <DialogTitle>Local creado exitosamente</DialogTitle>
             <DialogDescription>
-              <span className="font-medium">{createdFacility?.name}</span> ha sido creado. Puedes
-              configurar las canchas y horarios ahora o hacerlo más tarde.
+              <span className="font-medium">{createdFacility?.name}</span> ha
+              sido creado. Puedes configurar las canchas y horarios ahora o
+              hacerlo más tarde.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-start">
             <Button variant="outline" onClick={handleSkipSetup}>
               Configurar más tarde
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleGoToSetup}>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleGoToSetup}
+            >
               Configurar ahora
             </Button>
           </DialogFooter>

@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 
-import { DataTable } from "~/components/ui/data-table";
 import type { BookingRow } from "./bookings-columns";
+import { DataTable } from "~/components/ui/data-table";
 import { getBookingsColumns } from "./bookings-columns";
 
 interface BookingsTableProps {

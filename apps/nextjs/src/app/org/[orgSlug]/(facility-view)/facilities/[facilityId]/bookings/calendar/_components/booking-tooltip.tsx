@@ -2,11 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@wifo/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@wifo/ui/popover";
 
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
@@ -39,11 +35,7 @@ export function BookingTooltip({
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent
-        className="w-72 p-0"
-        align="start"
-        sideOffset={8}
-      >
+      <PopoverContent className="w-72 p-0" align="start" sideOffset={8}>
         {isLoading ? (
           <div className="space-y-3 p-4">
             <div className="h-5 w-24 animate-pulse rounded bg-gray-200" />
@@ -56,9 +48,7 @@ export function BookingTooltip({
             onViewDetails={onViewDetails}
           />
         ) : (
-          <div className="p-4 text-sm text-gray-500">
-            Reserva no encontrada
-          </div>
+          <div className="p-4 text-sm text-gray-500">Reserva no encontrada</div>
         )}
       </PopoverContent>
     </Popover>
@@ -101,8 +91,7 @@ function BookingTooltipContent({
   onViewDetails: () => void;
 }) {
   const colors = getStatusColors(booking.status);
-  const customerName =
-    booking.user?.name ?? booking.customerName ?? "Cliente";
+  const customerName = booking.user?.name ?? booking.customerName ?? "Cliente";
   const initials = getInitials(customerName);
 
   return (
@@ -151,7 +140,9 @@ function BookingTooltipContent({
         {"playerCount" in booking && (
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <UsersIcon className="h-4 w-4 text-gray-400" />
-            <span>Jugadores: {(booking as { playerCount: number }).playerCount}/4</span>
+            <span>
+              Jugadores: {(booking as { playerCount: number }).playerCount}/4
+            </span>
           </div>
         )}
 
@@ -252,11 +243,7 @@ function ChevronRightIcon({ className }: { className?: string }) {
       stroke="currentColor"
       strokeWidth={2}
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M9 5l7 7-7 7"
-      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
   );
 }

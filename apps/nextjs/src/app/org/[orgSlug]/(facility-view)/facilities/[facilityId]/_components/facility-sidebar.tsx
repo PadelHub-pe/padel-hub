@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+
 import { signOut } from "@wifo/auth/client";
 import { Avatar, AvatarFallback } from "@wifo/ui/avatar";
 import { Button } from "@wifo/ui/button";
@@ -10,13 +11,13 @@ import { FacilitySwitcher } from "./facility-switcher";
 
 interface FacilitySidebarProps {
   facilityId: string;
-  facilities: Array<{
+  facilities: {
     id: string;
     name: string;
     district: string;
     isActive: boolean;
     isSetupComplete: boolean;
-  }>;
+  }[];
   organization: {
     name: string;
     slug: string;

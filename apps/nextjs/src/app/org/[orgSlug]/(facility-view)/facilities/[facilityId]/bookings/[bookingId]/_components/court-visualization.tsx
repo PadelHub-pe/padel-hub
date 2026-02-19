@@ -55,17 +55,17 @@ const typeConfig = {
 // Positions map to grid placement:
 // Top half: 1 (left), 2 (right)
 // Bottom half: 3 (left), 4 (right)
-const positionStyles: Record<
-  number,
-  { top: string; left: string }
-> = {
+const positionStyles: Record<number, { top: string; left: string }> = {
   1: { top: "20%", left: "25%" },
   2: { top: "20%", left: "75%" },
   3: { top: "72%", left: "25%" },
   4: { top: "72%", left: "75%" },
 };
 
-export function CourtVisualization({ players, court }: CourtVisualizationProps) {
+export function CourtVisualization({
+  players,
+  court,
+}: CourtVisualizationProps) {
   const config = typeConfig[court.type];
   const playersByPosition = new Map(players.map((p) => [p.position, p]));
 
@@ -94,31 +94,34 @@ export function CourtVisualization({ players, court }: CourtVisualizationProps) 
           style={{ aspectRatio: "2 / 3" }}
         >
           {/* Net - horizontal dashed line at 50% */}
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-px border-t-2 border-dashed border-white/80" />
+          <div className="absolute top-1/2 right-0 left-0 -translate-y-px border-t-2 border-dashed border-white/80" />
 
           {/* Service line - top (~25%) */}
-          <div className="absolute left-[10%] right-[10%] top-[37%] border-t border-white/50" />
+          <div className="absolute top-[37%] right-[10%] left-[10%] border-t border-white/50" />
 
           {/* Service line - bottom (~75%) */}
-          <div className="absolute left-[10%] right-[10%] top-[63%] border-t border-white/50" />
+          <div className="absolute top-[63%] right-[10%] left-[10%] border-t border-white/50" />
 
           {/* Center service line - vertical in top half */}
-          <div className="absolute left-1/2 top-[37%] h-[26%] -translate-x-px border-l border-white/50" />
+          <div className="absolute top-[37%] left-1/2 h-[26%] -translate-x-px border-l border-white/50" />
 
           {/* Side lines */}
-          <div className="absolute bottom-[8%] left-[10%] top-[8%] border-l border-white/40" />
-          <div className="absolute bottom-[8%] right-[10%] top-[8%] border-r border-white/40" />
+          <div className="absolute top-[8%] bottom-[8%] left-[10%] border-l border-white/40" />
+          <div className="absolute top-[8%] right-[10%] bottom-[8%] border-r border-white/40" />
 
           {/* Top baseline */}
-          <div className="absolute left-[10%] right-[10%] top-[8%] border-t border-white/40" />
+          <div className="absolute top-[8%] right-[10%] left-[10%] border-t border-white/40" />
 
           {/* Bottom baseline */}
-          <div className="absolute bottom-[8%] left-[10%] right-[10%] border-b border-white/40" />
+          <div className="absolute right-[10%] bottom-[8%] left-[10%] border-b border-white/40" />
 
           {/* Player positions */}
           {[1, 2, 3, 4].map((position) => {
             const player = playersByPosition.get(position);
-            const style = positionStyles[position] ?? { top: "50%", left: "50%" };
+            const style = positionStyles[position] ?? {
+              top: "50%",
+              left: "50%",
+            };
 
             return (
               <div
@@ -131,7 +134,7 @@ export function CourtVisualization({ players, court }: CourtVisualizationProps) 
                     <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-sm font-bold text-blue-800 shadow-sm">
                       {getInitials(getPlayerName(player))}
                       {player.role === "owner" && (
-                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 shadow-sm">
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 shadow-sm">
                           <StarIcon className="h-2.5 w-2.5 text-amber-800" />
                         </span>
                       )}
@@ -159,11 +162,7 @@ export function CourtVisualization({ players, court }: CourtVisualizationProps) 
 
 function StarIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="currentColor"
-      viewBox="0 0 20 20"
-    >
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
     </svg>
   );

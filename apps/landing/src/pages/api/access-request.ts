@@ -11,14 +11,14 @@ const emailSchema = z.object({
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as unknown;
     const parsed = emailSchema.safeParse(body);
 
     if (!parsed.success) {
-      return new Response(
-        JSON.stringify({ error: "Email invalido" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Email invalido" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const { email } = parsed.data;
@@ -32,17 +32,19 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (existing.length > 0) {
       return new Response(
-        JSON.stringify({ error: "Ya recibimos tu solicitud. Te contactaremos pronto." }),
+        JSON.stringify({
+          error: "Ya recibimos tu solicitud. Te contactaremos pronto.",
+        }),
         { status: 409, headers: { "Content-Type": "application/json" } },
       );
     }
 
     await db.insert(accessRequests).values({ email });
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 201, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ success: true }), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch {
     return new Response(
       JSON.stringify({ error: "Error interno del servidor" }),

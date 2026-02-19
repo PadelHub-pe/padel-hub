@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
+
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import {
@@ -39,11 +40,7 @@ interface AddPlayerDialogProps {
 
 const guestPlayerSchema = z.object({
   guestName: z.string().min(1, "El nombre es requerido").max(100),
-  guestEmail: z
-    .string()
-    .email("Email invalido")
-    .optional()
-    .or(z.literal("")),
+  guestEmail: z.string().email("Email invalido").optional().or(z.literal("")),
   guestPhone: z.string().max(20).optional(),
 });
 

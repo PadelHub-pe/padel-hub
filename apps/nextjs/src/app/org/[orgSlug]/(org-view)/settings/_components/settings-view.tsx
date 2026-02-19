@@ -1,6 +1,7 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
+
 import { Badge } from "@wifo/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wifo/ui/tabs";
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +58,8 @@ export function BookingActionsMenu({
   };
 
   const canConfirm = status === "pending" || status === "open_match";
-  const canCancel = status === "pending" || status === "confirmed" || status === "open_match";
+  const canCancel =
+    status === "pending" || status === "confirmed" || status === "open_match";
   const canEdit = status === "confirmed";
 
   return (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
@@ -58,15 +59,13 @@ export function BookingDetailDrawer({
   };
 
   const canConfirm = booking?.status === "pending";
-  const canCancel = booking?.status === "pending" || booking?.status === "confirmed";
+  const canCancel =
+    booking?.status === "pending" || booking?.status === "confirmed";
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
 
       {/* Drawer */}
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white shadow-xl">
@@ -104,9 +103,13 @@ export function BookingDetailDrawer({
               {/* Player count */}
               {"playerCount" in booking && (
                 <section>
-                  <h3 className="text-sm font-medium text-gray-500">Jugadores</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Jugadores
+                  </h3>
                   <div className="mt-2">
-                    <PlayerCountBadge count={(booking as { playerCount: number }).playerCount} />
+                    <PlayerCountBadge
+                      count={(booking as { playerCount: number }).playerCount}
+                    />
                   </div>
                 </section>
               )}
@@ -117,8 +120,18 @@ export function BookingDetailDrawer({
                 className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 Ver detalle completo
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </Link>
 
@@ -160,7 +173,8 @@ export function BookingDetailDrawer({
                     {formatDate(booking.date)}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+                    {formatTime(booking.startTime)} -{" "}
+                    {formatTime(booking.endTime)}
                   </p>
                 </div>
               </section>
@@ -223,9 +237,7 @@ export function BookingDetailDrawer({
               {/* Meta info */}
               <section className="border-t pt-4">
                 <div className="space-y-1 text-xs text-gray-400">
-                  {booking.isManualBooking && (
-                    <p>Reserva manual (walk-in)</p>
-                  )}
+                  {booking.isManualBooking && <p>Reserva manual (walk-in)</p>}
                   <p>Creado: {formatDateTime(booking.createdAt)}</p>
                   {booking.confirmedAt && (
                     <p>Confirmado: {formatDateTime(booking.confirmedAt)}</p>

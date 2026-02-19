@@ -50,13 +50,15 @@ interface Segment {
   widthPercent: number;
 }
 
-function buildSegments(
-  day: OperatingDay,
-  periods: PeakPeriod[],
-): Segment[] {
+function buildSegments(day: OperatingDay, periods: PeakPeriod[]): Segment[] {
   if (day.isClosed) {
     return [
-      { type: "closed", startHour: GRID_START, endHour: GRID_END, widthPercent: 100 },
+      {
+        type: "closed",
+        startHour: GRID_START,
+        endHour: GRID_END,
+        widthPercent: 100,
+      },
     ];
   }
 
@@ -64,7 +66,9 @@ function buildSegments(
   const close = Math.min(parseTime(day.closeTime), GRID_END);
 
   // Build hour-by-hour classification
-  const hours: SegmentType[] = Array(TOTAL_SLOTS).fill("closed");
+  const hours: SegmentType[] = Array(TOTAL_SLOTS).fill(
+    "closed",
+  ) as SegmentType[];
   for (let h = 0; h < TOTAL_SLOTS; h++) {
     const hour = GRID_START + h;
     if (hour >= open && hour < close) {
@@ -87,11 +91,12 @@ function buildSegments(
 
   // Merge consecutive same-type segments
   const segments: Segment[] = [];
-  let currentType = hours[0]!;
+  let currentType = hours[0] ?? "closed";
   let start = GRID_START;
 
   for (let h = 1; h <= TOTAL_SLOTS; h++) {
-    const type = h < TOTAL_SLOTS ? hours[h]! : "end" as SegmentType;
+    const type =
+      h < TOTAL_SLOTS ? (hours[h] ?? "closed") : ("end" as SegmentType);
     if (type !== currentType || h === TOTAL_SLOTS) {
       const end = GRID_START + h;
       segments.push({

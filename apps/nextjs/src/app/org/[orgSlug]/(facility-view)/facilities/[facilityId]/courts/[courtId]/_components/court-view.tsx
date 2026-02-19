@@ -16,9 +16,21 @@ interface CourtViewProps {
 }
 
 const statusConfig = {
-  active: { label: "Activa", variant: "success" as const, gradient: "from-green-400 to-green-500" },
-  maintenance: { label: "Mantenimiento", variant: "warning" as const, gradient: "from-amber-400 to-amber-500" },
-  inactive: { label: "Inactiva", variant: "destructive" as const, gradient: "from-gray-400 to-gray-500" },
+  active: {
+    label: "Activa",
+    variant: "success" as const,
+    gradient: "from-green-400 to-green-500",
+  },
+  maintenance: {
+    label: "Mantenimiento",
+    variant: "warning" as const,
+    gradient: "from-amber-400 to-amber-500",
+  },
+  inactive: {
+    label: "Inactiva",
+    variant: "destructive" as const,
+    gradient: "from-gray-400 to-gray-500",
+  },
 };
 
 const typeConfig = {
@@ -97,12 +109,12 @@ export function CourtView({ id }: CourtViewProps) {
                   : undefined
               }
             >
-              <Badge variant={status.variant} className="absolute left-3 top-3">
+              <Badge variant={status.variant} className="absolute top-3 left-3">
                 {status.label}
               </Badge>
               <Badge
                 variant="secondary"
-                className="absolute right-3 top-3 bg-white/90 text-gray-700"
+                className="absolute top-3 right-3 bg-white/90 text-gray-700"
               >
                 {type.icon} {type.label}
               </Badge>
@@ -142,7 +154,11 @@ export function CourtView({ id }: CourtViewProps) {
               />
               <InfoField
                 label="Tarifa Horario Pico"
-                value={formattedPeakPrice ? `${formattedPeakPrice}/hr` : "No definido"}
+                value={
+                  formattedPeakPrice
+                    ? `${formattedPeakPrice}/hr`
+                    : "No definido"
+                }
               />
             </div>
 

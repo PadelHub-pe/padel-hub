@@ -66,7 +66,7 @@ export function CourtCard({ court }: CourtCardProps) {
       href={`/org/${orgSlug}/facilities/${facilityId}/courts/${court.id}`}
       className="group block"
     >
-      <Card className="overflow-hidden transition-all duration-200 group-hover:shadow-md group-hover:ring-2 group-hover:ring-primary/20">
+      <Card className="group-hover:ring-primary/20 overflow-hidden transition-all duration-200 group-hover:shadow-md group-hover:ring-2">
         {/* Image area with gradient fallback */}
         <div
           className={cn(
@@ -84,14 +84,14 @@ export function CourtCard({ court }: CourtCardProps) {
           }
         >
           {/* Status badge - top left */}
-          <Badge variant={status.variant} className="absolute left-3 top-3">
+          <Badge variant={status.variant} className="absolute top-3 left-3">
             {status.label}
           </Badge>
 
           {/* Type badge - top right */}
           <Badge
             variant="secondary"
-            className="absolute right-3 top-3 bg-white/90 text-gray-700"
+            className="absolute top-3 right-3 bg-white/90 text-gray-700"
           >
             {type.icon} {type.label}
           </Badge>
@@ -100,7 +100,7 @@ export function CourtCard({ court }: CourtCardProps) {
         {/* Content */}
         <div className="p-4">
           <div className="flex items-start justify-between">
-            <h3 className="font-semibold text-gray-900 group-hover:text-primary">
+            <h3 className="group-hover:text-primary font-semibold text-gray-900">
               {court.name}
             </h3>
             {formattedPrice && (

@@ -2,7 +2,7 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { facilities, organizationMembers, organizations, user } from "@wifo/db/schema";
+import { facilities, organizationMembers, user } from "@wifo/db/schema";
 
 import { protectedProcedure } from "../trpc";
 
@@ -11,7 +11,10 @@ import { protectedProcedure } from "../trpc";
 // =============================================================================
 
 const updateMyProfileSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
+  name: z
+    .string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(100),
 });
 
 // =============================================================================
@@ -83,7 +86,10 @@ export const accountRouter = {
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      await ctx.db.update(user).set({ name: input.name }).where(eq(user.id, userId));
+      await ctx.db
+        .update(user)
+        .set({ name: input.name })
+        .where(eq(user.id, userId));
 
       return { success: true };
     }),

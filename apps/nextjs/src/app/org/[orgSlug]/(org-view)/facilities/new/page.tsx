@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@wifo/ui/card";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@wifo/ui/card";
 
 import { api } from "~/trpc/server";
 import { QuickCreateForm } from "./_components/quick-create-form";
@@ -9,7 +16,9 @@ interface NewFacilityPageProps {
   params: Promise<{ orgSlug: string }>;
 }
 
-export default async function NewFacilityPage({ params }: NewFacilityPageProps) {
+export default async function NewFacilityPage({
+  params,
+}: NewFacilityPageProps) {
   const { orgSlug } = await params;
   const caller = await api();
 
@@ -30,7 +39,10 @@ export default async function NewFacilityPage({ params }: NewFacilityPageProps) 
     <div className="p-8">
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-gray-500">
-        <Link href={`/org/${orgSlug}/facilities`} className="hover:text-gray-700">
+        <Link
+          href={`/org/${orgSlug}/facilities`}
+          className="hover:text-gray-700"
+        >
           Locales
         </Link>
         <span className="mx-2">/</span>
@@ -42,8 +54,8 @@ export default async function NewFacilityPage({ params }: NewFacilityPageProps) 
           <CardHeader>
             <CardTitle>Crear nuevo local</CardTitle>
             <CardDescription>
-              Ingresa la información básica de tu local. Podrás configurar las canchas y horarios
-              después.
+              Ingresa la información básica de tu local. Podrás configurar las
+              canchas y horarios después.
             </CardDescription>
           </CardHeader>
           <CardContent>

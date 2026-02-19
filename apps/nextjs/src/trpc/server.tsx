@@ -1,9 +1,10 @@
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "@wifo/api";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+
+import type { AppRouter } from "@wifo/api";
 import { appRouter, createCallerFactory, createTRPCContext } from "@wifo/api";
 
 import { auth } from "~/auth/server";

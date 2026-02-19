@@ -7,7 +7,9 @@ interface CourtDetailPageProps {
   params: Promise<{ orgSlug: string; facilityId: string; courtId: string }>;
 }
 
-export default async function CourtDetailPage({ params }: CourtDetailPageProps) {
+export default async function CourtDetailPage({
+  params,
+}: CourtDetailPageProps) {
   const { facilityId, courtId } = await params;
 
   prefetch(trpc.court.getById.queryOptions({ facilityId, id: courtId }));

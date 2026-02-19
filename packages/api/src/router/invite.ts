@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
+import { z } from "zod/v4";
+
 import {
   organizationInvites,
   organizationMembers,
   user,
 } from "@wifo/db/schema";
-import { and, eq } from "drizzle-orm";
-import { z } from "zod/v4";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
@@ -185,13 +186,12 @@ export const inviteRouter = createTRPCRouter({
       }
 
       // Check if already a member
-      const existingMember =
-        await ctx.db.query.organizationMembers.findFirst({
-          where: and(
-            eq(organizationMembers.organizationId, invite.organizationId),
-            eq(organizationMembers.userId, ctx.session.user.id),
-          ),
-        });
+      const existingMember = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.organizationId, invite.organizationId),
+          eq(organizationMembers.userId, ctx.session.user.id),
+        ),
+      });
 
       if (existingMember) {
         // Already a member — just mark invite as accepted

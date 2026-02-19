@@ -3,9 +3,18 @@
 import { Badge } from "@wifo/ui/badge";
 
 const NOTIFICATION_ROWS = [
-  { label: "Nuevas Reservas", description: "Cuando un cliente reserva una cancha" },
-  { label: "Cancelaciones", description: "Cuando un cliente cancela su reserva" },
-  { label: "Resumen Diario", description: "Resumen de actividad del día anterior" },
+  {
+    label: "Nuevas Reservas",
+    description: "Cuando un cliente reserva una cancha",
+  },
+  {
+    label: "Cancelaciones",
+    description: "Cuando un cliente cancela su reserva",
+  },
+  {
+    label: "Resumen Diario",
+    description: "Resumen de actividad del día anterior",
+  },
   {
     label: "Alertas de Baja Ocupación",
     description: "Cuando la ocupación cae debajo del 30%",
@@ -51,7 +60,7 @@ export function NotificationsTab() {
                 type="checkbox"
                 disabled
                 defaultChecked
-                className="h-4 w-4 rounded border-gray-300 text-primary-500 disabled:opacity-50"
+                className="text-primary-500 h-4 w-4 rounded border-gray-300 disabled:opacity-50"
               />
             </div>
             <div className="flex w-16 justify-center">
@@ -59,7 +68,7 @@ export function NotificationsTab() {
                 type="checkbox"
                 disabled
                 defaultChecked
-                className="h-4 w-4 rounded border-gray-300 text-primary-500 disabled:opacity-50"
+                className="text-primary-500 h-4 w-4 rounded border-gray-300 disabled:opacity-50"
               />
             </div>
           </div>

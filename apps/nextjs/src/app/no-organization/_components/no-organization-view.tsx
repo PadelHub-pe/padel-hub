@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+
 import { signOut } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
 import {
@@ -51,11 +52,7 @@ export function NoOrganizationView({ userEmail }: { userEmail: string }) {
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleSignOut}
-          >
+          <Button variant="outline" className="w-full" onClick={handleSignOut}>
             Cerrar sesión
           </Button>
         </CardContent>

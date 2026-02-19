@@ -12,8 +12,12 @@ export function CourtsView() {
   const trpc = useTRPC();
   const { facilityId } = useFacilityContext();
 
-  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions({ facilityId }));
-  const { data: stats } = useSuspenseQuery(trpc.court.getStats.queryOptions({ facilityId }));
+  const { data: courts } = useSuspenseQuery(
+    trpc.court.list.queryOptions({ facilityId }),
+  );
+  const { data: stats } = useSuspenseQuery(
+    trpc.court.getStats.queryOptions({ facilityId }),
+  );
 
   return (
     <div className="p-8">

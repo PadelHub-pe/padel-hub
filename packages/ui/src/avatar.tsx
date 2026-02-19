@@ -1,7 +1,8 @@
 "use client";
 
-import { cn } from "@wifo/ui";
 import { Avatar as AvatarPrimitive } from "radix-ui";
+
+import { cn } from "@wifo/ui";
 
 export function Avatar({
   className,

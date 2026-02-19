@@ -1,6 +1,8 @@
 "use client";
 
 import type { Control } from "react-hook-form";
+import { useWatch } from "react-hook-form";
+
 import { cn } from "@wifo/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import {
@@ -12,7 +14,6 @@ import {
   FormMessage,
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { useWatch } from "react-hook-form";
 
 import type { CourtEditFormValues } from "../edit/_components/court-edit-form";
 
@@ -67,7 +68,9 @@ export function PhotoSection({ control }: PhotoSectionProps) {
                 />
               </FormControl>
               <FormMessage />
-              <FormDescription>Formatos soportados: JPG, PNG, WebP</FormDescription>
+              <FormDescription>
+                Formatos soportados: JPG, PNG, WebP
+              </FormDescription>
             </FormItem>
           )}
         />

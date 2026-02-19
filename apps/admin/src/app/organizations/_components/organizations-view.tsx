@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
+
 import { Input } from "@wifo/ui/input";
 
+import type { OrganizationRow } from "./organizations-columns";
 import { DataTable } from "~/components/ui/data-table";
 import { useTRPC } from "~/trpc/react";
-import type { OrganizationRow } from "./organizations-columns";
 import { getOrganizationColumns } from "./organizations-columns";
 
 export function OrganizationsView() {

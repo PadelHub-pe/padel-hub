@@ -1,7 +1,14 @@
 "use client";
 
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Button } from "@wifo/ui/button";
 import {
   Form,
@@ -14,14 +21,19 @@ import {
 import { Input } from "@wifo/ui/input";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 
 const orgProfileSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(200),
-  description: z.string().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
+  name: z
+    .string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(200),
+  description: z
+    .string()
+    .max(500, "Máximo 500 caracteres")
+    .optional()
+    .or(z.literal("")),
   contactEmail: z.string().email("Email inválido").optional().or(z.literal("")),
   contactPhone: z.string().max(20).optional().or(z.literal("")),
 });
@@ -68,9 +80,9 @@ export function OrgProfileTab({ organizationId }: OrgProfileTabProps) {
     updateProfile.mutate({
       organizationId,
       name: values.name,
-      description: values.description || undefined,
-      contactEmail: values.contactEmail || undefined,
-      contactPhone: values.contactPhone || undefined,
+      description: values.description ?? undefined,
+      contactEmail: values.contactEmail ?? undefined,
+      contactPhone: values.contactPhone ?? undefined,
     });
   }
 

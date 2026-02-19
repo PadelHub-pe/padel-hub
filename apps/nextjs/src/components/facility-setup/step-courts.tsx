@@ -2,12 +2,13 @@
 
 import type { Control } from "react-hook-form";
 import { useState } from "react";
+import { useWatch } from "react-hook-form";
+
 import { Button } from "@wifo/ui/button";
 import { FormField, FormItem, FormMessage } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 import { RadioGroup, RadioGroupItem } from "@wifo/ui/radio-group";
-import { useWatch } from "react-hook-form";
 
 export interface Court {
   id: string;
@@ -107,19 +108,28 @@ export function StepCourts({ control }: StepCourtsProps) {
                     <RadioGroup
                       value={newCourt.type}
                       onValueChange={(value) =>
-                        setNewCourt({ ...newCourt, type: value as "indoor" | "outdoor" })
+                        setNewCourt({
+                          ...newCourt,
+                          type: value as "indoor" | "outdoor",
+                        })
                       }
                       className="flex gap-6"
                     >
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="indoor" id="type-indoor" />
-                        <Label htmlFor="type-indoor" className="cursor-pointer font-normal">
+                        <Label
+                          htmlFor="type-indoor"
+                          className="cursor-pointer font-normal"
+                        >
                           Indoor (techada)
                         </Label>
                       </div>
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="outdoor" id="type-outdoor" />
-                        <Label htmlFor="type-outdoor" className="cursor-pointer font-normal">
+                        <Label
+                          htmlFor="type-outdoor"
+                          className="cursor-pointer font-normal"
+                        >
                           Outdoor (al aire libre)
                         </Label>
                       </div>
@@ -146,9 +156,13 @@ export function StepCourts({ control }: StepCourtsProps) {
                             {index + 1}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{court.name}</p>
+                            <p className="font-medium text-gray-900">
+                              {court.name}
+                            </p>
                             <p className="text-sm text-gray-500">
-                              {court.type === "indoor" ? "Techada" : "Al aire libre"}
+                              {court.type === "indoor"
+                                ? "Techada"
+                                : "Al aire libre"}
                             </p>
                           </div>
                         </div>

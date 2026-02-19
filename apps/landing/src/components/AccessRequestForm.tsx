@@ -39,10 +39,10 @@ export default function AccessRequestForm() {
   if (state === "success") {
     return (
       <div className="mx-auto max-w-[480px] text-center">
-        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/20 text-3xl">
+        <div className="bg-secondary/20 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl text-3xl">
           ✅
         </div>
-        <h3 className="mb-2 font-display text-xl font-semibold text-white">
+        <h3 className="font-display mb-2 text-xl font-semibold text-white">
           ¡Solicitud enviada!
         </h3>
         <p className="text-sm text-gray-400">
@@ -65,12 +65,12 @@ export default function AccessRequestForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="tu@correo.com"
           required
-          className="flex-1 rounded-[14px] border-[1.5px] border-white/12 bg-white/6 px-5 py-4 text-[15px] text-white outline-none transition-all placeholder:text-gray-500 focus:border-primary focus:bg-primary/6"
+          className="focus:border-primary focus:bg-primary/6 flex-1 rounded-[14px] border-[1.5px] border-white/12 bg-white/6 px-5 py-4 text-[15px] text-white transition-all outline-none placeholder:text-gray-500"
         />
         <button
           type="submit"
           disabled={state === "loading"}
-          className="cursor-pointer whitespace-nowrap rounded-[14px] border-none bg-primary px-7 py-4 text-[15px] font-semibold text-white transition-all hover:-translate-y-px hover:bg-primary-600 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] disabled:cursor-not-allowed disabled:opacity-70"
+          className="bg-primary hover:bg-primary-600 cursor-pointer rounded-[14px] border-none px-7 py-4 text-[15px] font-semibold whitespace-nowrap text-white transition-all hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {state === "loading" ? "Enviando..." : "Solicitar Acceso"}
         </button>

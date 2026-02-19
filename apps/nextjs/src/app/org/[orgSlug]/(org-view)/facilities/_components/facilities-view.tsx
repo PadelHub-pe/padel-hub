@@ -68,7 +68,7 @@ export function FacilitiesView({
       <FacilitiesStats stats={stats} isLoading={false} />
 
       {/* Filters */}
-      <div className="mb-6 mt-8">
+      <div className="mt-8 mb-6">
         <FacilitiesFilters
           search={search}
           onSearchChange={setSearch}
@@ -85,7 +85,7 @@ export function FacilitiesView({
 
       {/* Facilities Grid */}
       <FacilitiesGrid
-        facilities={facilities ?? []}
+        facilities={facilities}
         isLoading={false}
         addFacilityCard={<AddFacilityCard />}
       />

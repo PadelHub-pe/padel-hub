@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
@@ -58,10 +59,7 @@ export function CancelBookingDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50"
-        onClick={handleClose}
-      />
+      <div className="fixed inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Dialog */}
       <div className="relative z-50 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">

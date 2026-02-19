@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+
 import { Badge } from "@wifo/ui/badge";
 
 export interface OrganizationRow {

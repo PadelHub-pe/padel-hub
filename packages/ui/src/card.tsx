@@ -33,7 +33,7 @@ export function CardTitle({
   return (
     <div
       data-slot="card-title"
-      className={cn("text-xl font-semibold leading-none", className)}
+      className={cn("text-xl leading-none font-semibold", className)}
       {...props}
     />
   );

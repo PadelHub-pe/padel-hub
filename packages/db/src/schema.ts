@@ -224,12 +224,20 @@ export const bookingStatusEnum = pgEnum("booking_status", [
 /**
  * Cancelled by enum
  */
-export const cancelledByEnum = pgEnum("cancelled_by", ["user", "owner", "system"]);
+export const cancelledByEnum = pgEnum("cancelled_by", [
+  "user",
+  "owner",
+  "system",
+]);
 
 /**
  * Payment method enum
  */
-export const paymentMethodEnum = pgEnum("payment_method", ["cash", "card", "app"]);
+export const paymentMethodEnum = pgEnum("payment_method", [
+  "cash",
+  "card",
+  "app",
+]);
 
 /**
  * Blocked slot reason enum
@@ -343,13 +351,17 @@ export const blockedSlots = pgTable("blocked_slots", {
   facilityId: uuid("facility_id")
     .notNull()
     .references(() => facilities.id, { onDelete: "cascade" }),
-  courtId: uuid("court_id").references(() => courts.id, { onDelete: "cascade" }), // null = all courts
+  courtId: uuid("court_id").references(() => courts.id, {
+    onDelete: "cascade",
+  }), // null = all courts
   date: timestamp("date", { mode: "date" }).notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
   reason: blockedReasonEnum("reason").notNull(),
   notes: text("notes"),
-  createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+  createdBy: text("created_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -377,7 +389,9 @@ export const timeSlotTemplates = pgTable("time_slot_templates", {
   facilityId: uuid("facility_id")
     .notNull()
     .references(() => facilities.id, { onDelete: "cascade" }),
-  courtId: uuid("court_id").references(() => courts.id, { onDelete: "cascade" }),
+  courtId: uuid("court_id").references(() => courts.id, {
+    onDelete: "cascade",
+  }),
   dayOfWeek: integer("day_of_week").notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
@@ -386,16 +400,19 @@ export const timeSlotTemplates = pgTable("time_slot_templates", {
   isActive: boolean("is_active").default(true).notNull(),
 });
 
-export const timeSlotTemplatesRelations = relations(timeSlotTemplates, ({ one }) => ({
-  facility: one(facilities, {
-    fields: [timeSlotTemplates.facilityId],
-    references: [facilities.id],
+export const timeSlotTemplatesRelations = relations(
+  timeSlotTemplates,
+  ({ one }) => ({
+    facility: one(facilities, {
+      fields: [timeSlotTemplates.facilityId],
+      references: [facilities.id],
+    }),
+    court: one(courts, {
+      fields: [timeSlotTemplates.courtId],
+      references: [courts.id],
+    }),
   }),
-  court: one(courts, {
-    fields: [timeSlotTemplates.courtId],
-    references: [courts.id],
-  }),
-}));
+);
 
 /**
  * Bookings table - reservations for court time slots
@@ -620,7 +637,11 @@ export const CreateManualBookingSchema = z.object({
 
 export const CreateOrganizationSchema = createInsertSchema(organizations, {
   name: z.string().min(2).max(200),
-  slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/),
+  slug: z
+    .string()
+    .min(2)
+    .max(100)
+    .regex(/^[a-z0-9-]+$/),
   contactEmail: z.string().email().optional(),
   contactPhone: z.string().max(20).optional(),
 }).omit({
@@ -694,15 +715,12 @@ export const accessRequests = pgTable("access_requests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const accessRequestsRelations = relations(
-  accessRequests,
-  ({ one }) => ({
-    reviewer: one(user, {
-      fields: [accessRequests.reviewedBy],
-      references: [user.id],
-    }),
+export const accessRequestsRelations = relations(accessRequests, ({ one }) => ({
+  reviewer: one(user, {
+    fields: [accessRequests.reviewedBy],
+    references: [user.id],
   }),
-);
+}));
 
 // =============================================================================
 // Platform Admins Schema

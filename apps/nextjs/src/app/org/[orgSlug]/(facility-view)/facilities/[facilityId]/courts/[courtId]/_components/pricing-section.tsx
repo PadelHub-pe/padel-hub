@@ -1,6 +1,7 @@
 "use client";
 
 import type { Control } from "react-hook-form";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import {
   FormControl,
@@ -38,7 +39,7 @@ export function PricingSection({ control }: PricingSectionProps) {
                   Tarifa Estándar <span className="text-red-500">*</span>
                 </FormLabel>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                     S/
                   </span>
                   <FormControl>
@@ -53,7 +54,9 @@ export function PricingSection({ control }: PricingSectionProps) {
                   </FormControl>
                 </div>
                 <FormMessage />
-                <FormDescription>Precio por hora (horario regular)</FormDescription>
+                <FormDescription>
+                  Precio por hora (horario regular)
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -66,7 +69,7 @@ export function PricingSection({ control }: PricingSectionProps) {
               <FormItem>
                 <FormLabel>Tarifa Horario Pico</FormLabel>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                     S/
                   </span>
                   <FormControl>
@@ -81,7 +84,9 @@ export function PricingSection({ control }: PricingSectionProps) {
                   </FormControl>
                 </div>
                 <FormMessage />
-                <FormDescription>Precio por hora (horario pico)</FormDescription>
+                <FormDescription>
+                  Precio por hora (horario pico)
+                </FormDescription>
               </FormItem>
             )}
           />

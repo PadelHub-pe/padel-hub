@@ -17,8 +17,8 @@ export default async function OrgViewLayout({ children }: OrgViewLayoutProps) {
     <div className="flex h-screen bg-gray-50">
       <OrgSidebar
         organizations={organizations}
-        userEmail={session?.user?.email ?? ""}
-        userName={session?.user?.name ?? ""}
+        userEmail={session?.user.email ?? ""}
+        userName={session?.user.name ?? ""}
       />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>

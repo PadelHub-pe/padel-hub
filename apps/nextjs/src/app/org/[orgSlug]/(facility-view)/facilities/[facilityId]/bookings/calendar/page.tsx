@@ -7,11 +7,15 @@ interface FacilityCalendarPageProps {
   params: Promise<{ orgSlug: string; facilityId: string }>;
 }
 
-export default async function FacilityCalendarPage({ params }: FacilityCalendarPageProps) {
+export default async function FacilityCalendarPage({
+  params,
+}: FacilityCalendarPageProps) {
   const { facilityId } = await params;
 
   // Prefetch today's data for client components
-  prefetch(trpc.calendar.getDayView.queryOptions({ facilityId, date: new Date() }));
+  prefetch(
+    trpc.calendar.getDayView.queryOptions({ facilityId, date: new Date() }),
+  );
   prefetch(trpc.court.list.queryOptions({ facilityId }));
 
   return (
@@ -31,7 +35,10 @@ function CalendarPageSkeleton() {
         <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
         <div className="mt-4 grid grid-cols-7 gap-1">
           {Array.from({ length: 35 }).map((_, i) => (
-            <div key={i} className="h-8 w-8 animate-pulse rounded bg-gray-200" />
+            <div
+              key={i}
+              className="h-8 w-8 animate-pulse rounded bg-gray-200"
+            />
           ))}
         </div>
       </div>

@@ -1,14 +1,20 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import {
+  DashboardHeader,
+  ScheduleTable,
+  StatsGrid,
+} from "~/components/dashboard";
 import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
-import { DashboardHeader, ScheduleTable, StatsGrid } from "~/components/dashboard";
 
 interface FacilityDashboardPageProps {
   params: Promise<{ orgSlug: string; facilityId: string }>;
 }
 
-export default async function FacilityDashboardPage({ params }: FacilityDashboardPageProps) {
+export default async function FacilityDashboardPage({
+  params,
+}: FacilityDashboardPageProps) {
   const { orgSlug, facilityId } = await params;
   const caller = await api();
 
@@ -39,8 +45,8 @@ export default async function FacilityDashboardPage({ params }: FacilityDashboar
                   Configuración pendiente
                 </h3>
                 <p className="mt-1 text-sm text-amber-700">
-                  Tu local está inactivo. Completa la configuración de canchas y horarios para
-                  activarlo y empezar a recibir reservas.
+                  Tu local está inactivo. Completa la configuración de canchas y
+                  horarios para activarlo y empezar a recibir reservas.
                 </p>
                 <Link
                   href={`/org/${orgSlug}/facilities/${facilityId}/setup`}
@@ -76,7 +82,10 @@ function StatsGridSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="h-32 animate-pulse rounded-xl border bg-white" />
+        <div
+          key={i}
+          className="h-32 animate-pulse rounded-xl border bg-white"
+        />
       ))}
     </div>
   );

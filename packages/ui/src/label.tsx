@@ -1,7 +1,8 @@
 "use client";
 
-import { cn } from "@wifo/ui";
 import { Label as LabelPrimitive } from "radix-ui";
+
+import { cn } from "@wifo/ui";
 
 export function Label({
   className,

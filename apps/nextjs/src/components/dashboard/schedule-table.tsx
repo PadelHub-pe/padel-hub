@@ -1,6 +1,7 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
+
 import { Avatar, AvatarFallback } from "@wifo/ui/avatar";
 import { Badge } from "@wifo/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";

@@ -20,7 +20,13 @@ import { isSameDay, isToday } from "./calendar-utils";
 
 function ChevronLeftIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
   );
@@ -28,7 +34,13 @@ function ChevronLeftIcon({ className }: { className?: string }) {
 
 function ChevronRightIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
   );
@@ -39,7 +51,10 @@ interface MiniCalendarProps {
   onDateSelect: (date: Date) => void;
 }
 
-export function MiniCalendar({ selectedDate, onDateSelect }: MiniCalendarProps) {
+export function MiniCalendar({
+  selectedDate,
+  onDateSelect,
+}: MiniCalendarProps) {
   const [viewMonth, setViewMonth] = useState(startOfMonth(selectedDate));
 
   const handlePrevMonth = () => {
@@ -56,7 +71,10 @@ export function MiniCalendar({ selectedDate, onDateSelect }: MiniCalendarProps) 
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  const calendarDays = eachDayOfInterval({
+    start: calendarStart,
+    end: calendarEnd,
+  });
 
   const dayNames = ["L", "M", "X", "J", "V", "S", "D"];
 
@@ -72,7 +90,7 @@ export function MiniCalendar({ selectedDate, onDateSelect }: MiniCalendarProps) 
         >
           <ChevronLeftIcon className="h-4 w-4" />
         </Button>
-        <h3 className="text-sm font-medium capitalize text-gray-900">
+        <h3 className="text-sm font-medium text-gray-900 capitalize">
           {format(viewMonth, "MMMM yyyy", { locale: es })}
         </h3>
         <Button

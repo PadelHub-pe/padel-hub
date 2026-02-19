@@ -7,7 +7,9 @@ interface FacilityBookingsPageProps {
   params: Promise<{ orgSlug: string; facilityId: string }>;
 }
 
-export default async function FacilityBookingsPage({ params }: FacilityBookingsPageProps) {
+export default async function FacilityBookingsPage({
+  params,
+}: FacilityBookingsPageProps) {
   const { facilityId } = await params;
 
   // Prefetch data for client components

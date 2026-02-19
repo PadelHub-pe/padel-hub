@@ -60,7 +60,7 @@ export function CalendarTimeIndicator({
       <div className="h-[2px] flex-1 bg-red-500" />
 
       {/* AHORA badge */}
-      <div className="absolute -left-1 -top-5 rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+      <div className="absolute -top-5 -left-1 rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
         AHORA
       </div>
     </div>

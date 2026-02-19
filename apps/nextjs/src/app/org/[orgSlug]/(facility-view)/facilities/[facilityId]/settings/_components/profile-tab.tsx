@@ -6,6 +6,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 import {
@@ -18,8 +21,6 @@ import {
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
 import { toast } from "@wifo/ui/toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -99,7 +100,7 @@ export function ProfileTab() {
 
         {/* Avatar */}
         <div className="mb-8 flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-xl font-bold text-white">
+          <div className="from-primary-500 to-primary-700 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br text-xl font-bold text-white">
             {initials}
           </div>
           <div>
@@ -127,9 +128,7 @@ export function ProfileTab() {
             />
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Email
-              </label>
+              <label className="text-sm font-medium text-gray-700">Email</label>
               <Input
                 value={profile.email}
                 disabled
@@ -167,7 +166,7 @@ export function ProfileTab() {
           <div className="mt-5 space-y-4">
             {/* Organization */}
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 text-xs font-bold text-white">
+              <div className="from-primary-500 to-primary-700 flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-xs font-bold text-white">
                 {profile.organization.name
                   .split(" ")
                   .map((w) => w[0])
@@ -194,16 +193,14 @@ export function ProfileTab() {
             {/* Assigned Facilities */}
             {profile.facilityNames.length > 0 && (
               <div>
-                <p className="mb-2 text-sm text-gray-600">
-                  Locales asignados:
-                </p>
+                <p className="mb-2 text-sm text-gray-600">Locales asignados:</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.facilityNames.map((name) => (
                     <span
                       key={name}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200"
                     >
-                      <span className="h-2 w-2 rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600" />
+                      <span className="from-secondary-400 to-secondary-600 h-2 w-2 rounded-full bg-gradient-to-br" />
                       {name}
                     </span>
                   ))}

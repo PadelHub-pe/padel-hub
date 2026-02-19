@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
@@ -25,13 +29,21 @@ export function BookingsView() {
   const limit = 10;
 
   // Selected booking for detail drawer
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
+    null,
+  );
 
   // Create booking dialog
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions({ facilityId }));
-  const { data: bookingsData, refetch, isFetching } = useQuery({
+  const { data: courts } = useSuspenseQuery(
+    trpc.court.list.queryOptions({ facilityId }),
+  );
+  const {
+    data: bookingsData,
+    refetch,
+    isFetching,
+  } = useQuery({
     ...trpc.booking.list.queryOptions({
       facilityId,
       search: search || undefined,

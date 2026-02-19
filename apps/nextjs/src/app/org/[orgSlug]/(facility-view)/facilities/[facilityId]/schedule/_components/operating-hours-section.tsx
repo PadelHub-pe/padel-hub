@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-} from "@wifo/ui/form";
+import { Checkbox } from "@wifo/ui/checkbox";
+import { Form, FormControl, FormField, FormItem } from "@wifo/ui/form";
 import {
   Select,
   SelectContent,
@@ -20,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wifo/ui/select";
-import { Checkbox } from "@wifo/ui/checkbox";
 import { toast } from "@wifo/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
@@ -119,7 +115,11 @@ export function OperatingHoursSection({
           Horarios de Operacion
         </CardTitle>
         {!isEditing ? (
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+          >
             <EditIcon className="mr-2 h-4 w-4" />
             Editar
           </Button>
@@ -143,7 +143,9 @@ export function OperatingHoursSection({
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-3">
               {orderedDays.map((dayIndex) => {
-                const fieldIndex = hours.findIndex((h) => h.dayOfWeek === dayIndex);
+                const fieldIndex = hours.findIndex(
+                  (h) => h.dayOfWeek === dayIndex,
+                );
                 if (fieldIndex === -1) return null;
 
                 return (
@@ -196,7 +198,9 @@ function DayRow({ dayIndex, fieldIndex, isEditing, hours, form }: DayRowProps) {
                 <FormControl>
                   <Checkbox
                     checked={!field.value}
-                    onCheckedChange={(checked: boolean) => field.onChange(!checked)}
+                    onCheckedChange={(checked: boolean) =>
+                      field.onChange(!checked)
+                    }
                   />
                 </FormControl>
                 <span className="text-xs text-gray-500">

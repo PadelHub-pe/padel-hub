@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
+
 import { cn } from "@wifo/ui";
 import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
 import { Toaster } from "@wifo/ui/toast";
@@ -16,10 +17,12 @@ export const metadata: Metadata = {
       : "http://localhost:3000",
   ),
   title: "PadelHub - Court Owner Dashboard",
-  description: "Manage your padel courts, bookings, and grow your business with PadelHub",
+  description:
+    "Manage your padel courts, bookings, and grow your business with PadelHub",
   openGraph: {
     title: "PadelHub - Court Owner Dashboard",
-    description: "Manage your padel courts, bookings, and grow your business with PadelHub",
+    description:
+      "Manage your padel courts, bookings, and grow your business with PadelHub",
     url: "https://dashboard.padelhub.pe",
     siteName: "PadelHub",
   },

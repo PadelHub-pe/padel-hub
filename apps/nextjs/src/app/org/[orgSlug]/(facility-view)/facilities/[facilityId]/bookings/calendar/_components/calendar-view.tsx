@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
@@ -28,12 +32,17 @@ export function CalendarView() {
   // State
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const [quickBookingSlot, setQuickBookingSlot] = useState<QuickBookingSlot | null>(null);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
+    null,
+  );
+  const [quickBookingSlot, setQuickBookingSlot] =
+    useState<QuickBookingSlot | null>(null);
   const [showMiniCalendar, setShowMiniCalendar] = useState(true);
 
   // Fetch courts for quick booking form
-  const { data: courts } = useSuspenseQuery(trpc.court.list.queryOptions({ facilityId }));
+  const { data: courts } = useSuspenseQuery(
+    trpc.court.list.queryOptions({ facilityId }),
+  );
 
   // Fetch day or week data based on view mode
   const { data: dayData, refetch: refetchDay } = useQuery({
@@ -94,7 +103,8 @@ export function CalendarView() {
       const [openHour] = dayData.operatingHours.openTime.split(":").map(Number);
 
       // Use current hour if within operating hours, otherwise use opening time
-      const startHour = currentHour >= (openHour ?? 8) ? currentHour : (openHour ?? 8);
+      const startHour =
+        currentHour >= (openHour ?? 8) ? currentHour : (openHour ?? 8);
       const startTime = `${startHour.toString().padStart(2, "0")}:00`;
 
       setQuickBookingSlot({
@@ -126,7 +136,11 @@ export function CalendarView() {
   // Get current stats
   const stats =
     viewMode === "day"
-      ? dayData?.stats ?? { totalBookings: 0, revenueInCents: 0, utilizationPercent: 0 }
+      ? (dayData?.stats ?? {
+          totalBookings: 0,
+          revenueInCents: 0,
+          utilizationPercent: 0,
+        })
       : {
           totalBookings: weekData?.stats.totalBookings ?? 0,
           revenueInCents: weekData?.stats.revenueInCents ?? 0,
@@ -148,7 +162,10 @@ export function CalendarView() {
       {showMiniCalendar && (
         <div className="hidden w-64 shrink-0 flex-col border-r bg-gray-50 lg:flex">
           <div className="flex-1 p-4">
-            <MiniCalendar selectedDate={currentDate} onDateSelect={handleDateChange} />
+            <MiniCalendar
+              selectedDate={currentDate}
+              onDateSelect={handleDateChange}
+            />
           </div>
           <button
             onClick={() => setShowMiniCalendar(false)}
@@ -187,29 +204,27 @@ export function CalendarView() {
         </div>
 
         <div className="mt-4 flex-1 overflow-auto">
-          {viewMode === "day" ? (
-            dayData && (
-              <CalendarDayGrid
-                currentDate={currentDate}
-                courts={dayData.courts}
-                bookings={dayData.bookings}
-                operatingHours={dayData.operatingHours}
-                peakPeriods={dayData.peakPeriods}
-                onBookingClick={handleBookingClick}
-                onEmptySlotClick={handleEmptySlotClick}
-              />
-            )
-          ) : (
-            weekData && (
-              <CalendarWeekGrid
-                weekStart={weekStart}
-                days={weekData.days}
-                bookings={weekData.bookings}
-                onBookingClick={handleBookingClick}
-                onDayClick={handleDayClickInWeekView}
-              />
-            )
-          )}
+          {viewMode === "day"
+            ? dayData && (
+                <CalendarDayGrid
+                  currentDate={currentDate}
+                  courts={dayData.courts}
+                  bookings={dayData.bookings}
+                  operatingHours={dayData.operatingHours}
+                  peakPeriods={dayData.peakPeriods}
+                  onBookingClick={handleBookingClick}
+                  onEmptySlotClick={handleEmptySlotClick}
+                />
+              )
+            : weekData && (
+                <CalendarWeekGrid
+                  weekStart={weekStart}
+                  days={weekData.days}
+                  bookings={weekData.bookings}
+                  onBookingClick={handleBookingClick}
+                  onDayClick={handleDayClickInWeekView}
+                />
+              )}
         </div>
       </div>
 
@@ -242,16 +257,36 @@ export function CalendarView() {
 
 function ChevronLeftDoubleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5"
+      />
     </svg>
   );
 }
 
 function ChevronRightDoubleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5"
+      />
     </svg>
   );
 }

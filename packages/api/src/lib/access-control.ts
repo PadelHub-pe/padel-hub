@@ -2,12 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 
 import type { db as DbType } from "@wifo/db/client";
-import {
-  facilities,
-  organizationMembers
-  
-} from "@wifo/db/schema";
-import type {orgRoleEnum} from "@wifo/db/schema";
+import type { orgRoleEnum } from "@wifo/db/schema";
+import { facilities, organizationMembers } from "@wifo/db/schema";
 
 // =============================================================================
 // Types

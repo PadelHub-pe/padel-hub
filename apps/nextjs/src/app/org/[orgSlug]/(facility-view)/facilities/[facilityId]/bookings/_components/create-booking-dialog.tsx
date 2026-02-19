@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
   useQuery,
@@ -9,7 +10,6 @@ import {
 } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
-import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod/v4";
 
@@ -175,7 +175,11 @@ export function CreateBookingDialog({
     },
   });
 
-  const { fields: playerFields, append: appendPlayer, remove: removePlayer } = useFieldArray({
+  const {
+    fields: playerFields,
+    append: appendPlayer,
+    remove: removePlayer,
+  } = useFieldArray({
     control: form.control,
     name: "players",
   });
@@ -266,23 +270,27 @@ export function CreateBookingDialog({
   // Detect booking conflict
   const conflict = useMemo(() => {
     if (!watchCourtId || !watchStartTime || !endTime || !slotInfo) return null;
-    return slotInfo.existingBookings.find(
-      (b) =>
-        b.courtId === watchCourtId &&
-        normalizeTime(b.startTime) < endTime &&
-        normalizeTime(b.endTime) > watchStartTime,
-    ) ?? null;
+    return (
+      slotInfo.existingBookings.find(
+        (b) =>
+          b.courtId === watchCourtId &&
+          normalizeTime(b.startTime) < endTime &&
+          normalizeTime(b.endTime) > watchStartTime,
+      ) ?? null
+    );
   }, [watchCourtId, watchStartTime, endTime, slotInfo]);
 
   // Detect blocked slot conflict
   const blockedConflict = useMemo(() => {
     if (!watchCourtId || !watchStartTime || !endTime || !slotInfo) return null;
-    return slotInfo.blockedSlots.find(
-      (b) =>
-        (b.courtId === null || b.courtId === watchCourtId) &&
-        normalizeTime(b.startTime) < endTime &&
-        normalizeTime(b.endTime) > watchStartTime,
-    ) ?? null;
+    return (
+      slotInfo.blockedSlots.find(
+        (b) =>
+          (b.courtId === null || b.courtId === watchCourtId) &&
+          normalizeTime(b.startTime) < endTime &&
+          normalizeTime(b.endTime) > watchStartTime,
+      ) ?? null
+    );
   }, [watchCourtId, watchStartTime, endTime, slotInfo]);
 
   const isClosed = slotInfo?.operatingHours.isClosed ?? false;
@@ -401,10 +409,7 @@ export function CreateBookingDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Hora inicio *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
@@ -429,10 +434,7 @@ export function CreateBookingDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Duración *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
@@ -463,15 +465,20 @@ export function CreateBookingDialog({
                     { locale: es },
                   )}{" "}
                   &middot;{" "}
-                  {ALL_TIME_SLOTS.find((s) => s.value === watchStartTime)
-                    ?.label}{" "}
+                  {
+                    ALL_TIME_SLOTS.find((s) => s.value === watchStartTime)
+                      ?.label
+                  }{" "}
                   &ndash;{" "}
                   {formatTimeLabel(
                     ...(endTime.split(":").map(Number) as [number, number]),
                   )}
                 </span>
                 {isPeak && (
-                  <Badge variant="outline" className="ml-auto border-orange-300 bg-orange-50 text-orange-700">
+                  <Badge
+                    variant="outline"
+                    className="ml-auto border-orange-300 bg-orange-50 text-orange-700"
+                  >
                     Horario pico
                   </Badge>
                 )}
@@ -492,9 +499,10 @@ export function CreateBookingDialog({
             {/* Blocked slot warning */}
             {blockedConflict && !conflict && (
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-                <span className="font-medium">Bloqueado:</span>{" "}
-                Horario bloqueado de {normalizeTime(blockedConflict.startTime)}{" "}
-                a {normalizeTime(blockedConflict.endTime)} ({blockedConflict.reason})
+                <span className="font-medium">Bloqueado:</span> Horario
+                bloqueado de {normalizeTime(blockedConflict.startTime)} a{" "}
+                {normalizeTime(blockedConflict.endTime)} (
+                {blockedConflict.reason})
               </div>
             )}
 
@@ -547,7 +555,9 @@ export function CreateBookingDialog({
             {/* Additional players (positions 2-4) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Jugadores adicionales</span>
+                <span className="text-sm font-medium">
+                  Jugadores adicionales
+                </span>
                 {playerFields.length < 3 && (
                   <Button
                     type="button"

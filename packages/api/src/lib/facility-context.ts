@@ -27,7 +27,10 @@ interface DbContext {
  * Get facility with its courts
  * Commonly used for court selection, booking creation, etc.
  */
-export async function getFacilityWithCourts(ctx: DbContext, facilityId: string) {
+export async function getFacilityWithCourts(
+  ctx: DbContext,
+  facilityId: string,
+) {
   const facility = await ctx.db.query.facilities.findFirst({
     where: eq(facilities.id, facilityId),
     with: {
@@ -180,7 +183,7 @@ export async function getFacilityForCalendar(
       id: b.id,
       code: b.code,
       courtId: b.courtId,
-      courtName: b.court?.name ?? null,
+      courtName: b.court?.name ?? null, // eslint-disable-line @typescript-eslint/no-unnecessary-condition
       startTime: b.startTime.substring(0, 5),
       endTime: b.endTime.substring(0, 5),
       status: b.status,

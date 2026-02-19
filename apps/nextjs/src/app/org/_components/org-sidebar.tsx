@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+
 import { signOut } from "@wifo/auth/client";
 import { Avatar, AvatarFallback } from "@wifo/ui/avatar";
 import { Button } from "@wifo/ui/button";

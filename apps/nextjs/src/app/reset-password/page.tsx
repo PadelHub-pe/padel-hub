@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { resetPassword } from "@wifo/auth/client";
 import { Button } from "@wifo/ui/button";
 import {
@@ -22,12 +25,12 @@ import {
   FormMessage,
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -100,7 +103,8 @@ export default function ResetPasswordPage() {
 
       if (result.error) {
         form.setError("root", {
-          message: result.error.message ?? "Error al restablecer la contraseña.",
+          message:
+            result.error.message ?? "Error al restablecer la contraseña.",
         });
         return;
       }

@@ -1,16 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
+import type { TeamMemberRow } from "./team-columns";
 import { DataTable } from "~/components/ui/data-table";
 import { useTRPC } from "~/trpc/react";
 import { EditMemberDialog } from "./edit-member-dialog";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { RemoveMemberDialog } from "./remove-member-dialog";
-import type { TeamMemberRow } from "./team-columns";
 import { getTeamColumns } from "./team-columns";
 
 interface TeamTabProps {
@@ -60,7 +65,9 @@ export function TeamTab({ organizationId }: TeamTabProps) {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Equipo y Roles</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Equipo y Roles
+          </h2>
           <p className="mt-1 text-sm text-gray-500">
             Administra los miembros de tu organización y sus permisos
           </p>
