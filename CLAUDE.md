@@ -79,14 +79,26 @@ When `eslint-disable` is truly necessary, prefer block-scoped `/* eslint-disable
 ```bash
 pnpm db:push          # Push Drizzle schema to database
 pnpm db:studio        # Open Drizzle Studio UI
+pnpm db:seed          # Seed sample data (test accounts + facilities)
+pnpm db:create-admin  # Add a platform admin user
+pnpm db:reset         # Reset database and run migrations + seed
 pnpm auth:generate    # Regenerate Better Auth schema
 ```
 
 ### Other
 ```bash
 pnpm ui-add           # Add shadcn/ui components interactively
+pnpm email:dev        # React Email preview server (http://localhost:3333)
 pnpm turbo gen init   # Scaffold new package from templates
 ```
+
+## Commit Conventions
+
+Format: `type(scope): message` (lowercase, imperative mood)
+
+- **Types**: `feat`, `fix`, `refactor`, `chore`, `docs`
+- **Scopes**: `web`, `admin`, `landing`, `repo`, `auth`, `db`
+- Examples: `feat(web): add booking calendar view`, `chore(repo): fix lint and format issues`
 
 ## Architecture
 
