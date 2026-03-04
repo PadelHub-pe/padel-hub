@@ -24,6 +24,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "push": "pnpm with-env drizzle-kit push",
+    "create-admin": "pnpm with-env tsx src/create-admin.ts",
     "seed": "pnpm with-env tsx src/seed.ts",
     "migrate:owner-accounts": "pnpm with-env tsx src/migrate-owner-accounts.ts",
     "studio": "pnpm with-env drizzle-kit studio",
