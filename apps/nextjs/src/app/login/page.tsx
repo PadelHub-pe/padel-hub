@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -101,9 +102,13 @@ export default function LoginPage() {
         <div className="max-w-md">
           {/* Logo */}
           <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-xl font-bold">
-              P
-            </div>
+            <Image
+              src="/images/logomark-reversed.svg"
+              alt="PadelHub"
+              width={40}
+              height={41}
+              className="h-10 w-auto"
+            />
             <span className="text-2xl font-bold">PadelHub</span>
           </div>
 

@@ -82,7 +82,7 @@
 
 ---
 
-### TASK-04: Use brand logomark on login page
+### ~~TASK-04: Use brand logomark on login page~~ ✅
 **Type**: bug-fix
 **Priority**: P2
 **Depends on**: none
