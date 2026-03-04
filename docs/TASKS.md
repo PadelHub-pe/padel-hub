@@ -171,7 +171,7 @@ These items from the spec are confirmed working in the codebase:
 
 ---
 
-### TASK-07: Add invite router tests
+### ~~TASK-07: Add invite router tests~~ ✅
 **Type**: feature
 **Priority**: P1
 **Depends on**: TASK-06, TASK-01
