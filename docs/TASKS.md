@@ -141,7 +141,7 @@ These items from the spec are confirmed working in the codebase:
 - ✅ 1.9 No public signup link — login page links to `padelhub.pe` landing for access requests
 - ✅ 1.10 Google OAuth on invite — register page has Google button, callback processes existing users
 
-### TASK-06: Set up Vitest test infrastructure
+### ~~TASK-06: Set up Vitest test infrastructure~~ ✅
 **Type**: config
 **Priority**: P1
 **Depends on**: none
