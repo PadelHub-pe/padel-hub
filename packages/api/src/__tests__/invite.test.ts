@@ -69,6 +69,7 @@ interface MockDbOpts {
   memberFindFirst?: Mock;
   insertValues?: Mock;
   updateSet?: Mock;
+  selectResult?: unknown[];
 }
 
 function createMockDb(opts?: MockDbOpts) {
@@ -77,6 +78,16 @@ function createMockDb(opts?: MockDbOpts) {
     opts?.updateSet ?? vi.fn().mockReturnValue({ where: updateWhereFn });
   const insertValuesFn: Mock =
     opts?.insertValues ?? vi.fn().mockResolvedValue(undefined);
+
+  // Chain for db.select().from().innerJoin().where()
+  const selectResult = opts?.selectResult ?? [];
+  const selectWhereFn: Mock = vi.fn().mockResolvedValue(selectResult);
+  const selectInnerJoinFn: Mock = vi
+    .fn()
+    .mockReturnValue({ where: selectWhereFn });
+  const selectFromFn: Mock = vi
+    .fn()
+    .mockReturnValue({ innerJoin: selectInnerJoinFn });
 
   return {
     query: {
@@ -94,6 +105,7 @@ function createMockDb(opts?: MockDbOpts) {
         findFirst: opts?.memberFindFirst ?? vi.fn().mockResolvedValue(null),
       },
     },
+    select: vi.fn().mockReturnValue({ from: selectFromFn }),
     insert: vi.fn().mockReturnValue({ values: insertValuesFn }),
     update: vi.fn().mockReturnValue({ set: updateSetFn }),
   };
@@ -118,12 +130,13 @@ function createMockAuthApi() {
 // ---------------------------------------------------------------------------
 
 function publicCaller(db: MockDb, authApi = createMockAuthApi()) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   return createCaller({
     db: db as any,
     session: null,
     authApi: authApi as any,
   });
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
 function authedCaller(
@@ -519,5 +532,97 @@ describe("invite.acceptExisting", () => {
     await expect(
       caller.invite.acceptExisting({ token: "valid-token" }),
     ).rejects.toThrow("UNAUTHORIZED");
+  });
+});
+
+// ===========================================================================
+
+describe("invite.getPendingInvites", () => {
+  const sessionUser = { id: "user-1", email: "user@example.com" };
+
+  it("returns pending invites for authenticated user", async () => {
+    const futureDate = new Date(Date.now() + 86400000);
+    const db = createMockDb({
+      selectResult: [
+        {
+          id: "inv-1",
+          token: "token-1",
+          role: "org_admin",
+          expiresAt: futureDate,
+          organizationName: "Org A",
+          organizationSlug: "org-a",
+        },
+        {
+          id: "inv-2",
+          token: "token-2",
+          role: "staff",
+          expiresAt: futureDate,
+          organizationName: "Org B",
+          organizationSlug: "org-b",
+        },
+      ],
+    });
+    const caller = authedCaller(db, sessionUser);
+
+    const result = await caller.invite.getPendingInvites();
+
+    expect(result).toEqual([
+      {
+        id: "inv-1",
+        token: "token-1",
+        role: "org_admin",
+        roleLabel: "Administrador",
+        expiresAt: futureDate,
+        organizationName: "Org A",
+        organizationSlug: "org-a",
+      },
+      {
+        id: "inv-2",
+        token: "token-2",
+        role: "staff",
+        roleLabel: "Staff",
+        expiresAt: futureDate,
+        organizationName: "Org B",
+        organizationSlug: "org-b",
+      },
+    ]);
+  });
+
+  it("returns empty array when no pending invites", async () => {
+    const db = createMockDb({ selectResult: [] });
+    const caller = authedCaller(db, sessionUser);
+
+    const result = await caller.invite.getPendingInvites();
+
+    expect(result).toEqual([]);
+  });
+
+  it("filters out expired invites (past expiresAt)", async () => {
+    const db = createMockDb({
+      selectResult: [
+        {
+          id: "inv-expired",
+          token: "token-exp",
+          role: "org_admin",
+          expiresAt: new Date(Date.now() - 1000),
+          organizationName: "Expired Org",
+          organizationSlug: "expired-org",
+        },
+      ],
+    });
+    const caller = authedCaller(db, sessionUser);
+
+    const result = await caller.invite.getPendingInvites();
+
+    expect(result).toEqual([]);
+  });
+
+  it("throws UNAUTHORIZED when not authenticated", async () => {
+    const db = createMockDb();
+    const caller = publicCaller(db);
+
+    await expect(caller.invite.getPendingInvites()).rejects.toThrow(
+      "UNAUTHORIZED",
+    );
   });
 });

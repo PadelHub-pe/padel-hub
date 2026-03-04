@@ -6,6 +6,7 @@ import {
   accessRequests,
   organizationInvites,
   organizationMembers,
+  organizations,
   user,
 } from "@wifo/db/schema";
 
@@ -243,4 +244,46 @@ export const inviteRouter = createTRPCRouter({
         organizationSlug: invite.organization.slug,
       };
     }),
+
+  /**
+   * Get pending invites for the authenticated user's email.
+   * Used to prompt users to accept invites after login.
+   */
+  getPendingInvites: protectedProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+
+    const invites = await ctx.db
+      .select({
+        id: organizationInvites.id,
+        token: organizationInvites.token,
+        role: organizationInvites.role,
+        expiresAt: organizationInvites.expiresAt,
+        organizationName: organizations.name,
+        organizationSlug: organizations.slug,
+      })
+      .from(organizationInvites)
+      .innerJoin(
+        organizations,
+        eq(organizationInvites.organizationId, organizations.id),
+      )
+      .where(
+        and(
+          eq(organizationInvites.email, ctx.session.user.email),
+          eq(organizationInvites.status, "pending"),
+        ),
+      );
+
+    // Filter out expired invites in application code (expiresAt check)
+    return invites
+      .filter((inv) => inv.expiresAt > now)
+      .map((inv) => ({
+        id: inv.id,
+        token: inv.token,
+        role: inv.role,
+        roleLabel: ROLE_LABELS[inv.role] ?? inv.role,
+        expiresAt: inv.expiresAt,
+        organizationName: inv.organizationName,
+        organizationSlug: inv.organizationSlug,
+      }));
+  }),
 });

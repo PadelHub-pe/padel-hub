@@ -60,7 +60,7 @@
 
 ---
 
-### TASK-03: Post-login pending invite prompt
+### ~~TASK-03: Post-login pending invite prompt~~ ✅
 **Type**: feature
 **Priority**: P2
 **Depends on**: TASK-01
