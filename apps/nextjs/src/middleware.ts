@@ -1,6 +1,48 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { getAuthLimiter } from "~/lib/rate-limit";
+
+// --- Rate Limiting ---
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "127.0.0.1"
+  );
+}
+
+async function checkRateLimit(
+  request: NextRequest,
+): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+
+  if (!pathname.startsWith("/api/auth")) return null;
+  if (request.method !== "POST") return null;
+
+  const limiter = getAuthLimiter();
+  if (!limiter) return null;
+
+  const ip = getClientIp(request);
+  const result = await limiter.limit(ip);
+  if (result.success) return null;
+
+  return NextResponse.json(
+    { error: "Too many requests" },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.ceil(result.reset / 1000)),
+        "X-RateLimit-Limit": String(result.limit),
+        "X-RateLimit-Remaining": String(result.remaining),
+      },
+    },
+  );
+}
+
+// --- Session Auth ---
+
 const PUBLIC_ROUTES = [
   "/login",
   "/register",
@@ -21,13 +63,10 @@ function hasSessionCookie(request: NextRequest): boolean {
   );
 }
 
-export function middleware(request: NextRequest) {
+function checkAuth(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes
-  if (isPublicRoute(pathname)) {
-    return NextResponse.next();
-  }
+  if (isPublicRoute(pathname)) return NextResponse.next();
 
   // Allow /no-organization for authenticated users
   if (pathname === "/no-organization") {
@@ -44,9 +83,22 @@ export function middleware(request: NextRequest) {
 
   // Protected routes — require session cookie
   if (!hasSessionCookie(request)) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/login", request.url));
   }
+
+  return null;
+}
+
+// --- Main ---
+
+export async function middleware(request: NextRequest) {
+  // Step 1: Rate limiting
+  const rateLimitResponse = await checkRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Step 2: Session auth
+  const authResponse = checkAuth(request);
+  if (authResponse) return authResponse;
 
   return NextResponse.next();
 }

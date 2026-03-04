@@ -37,7 +37,7 @@
 
 ---
 
-### TASK-02: Add rate limiting to web dashboard middleware
+### ~~TASK-02: Add rate limiting to web dashboard middleware~~ ✅
 **Type**: feature
 **Priority**: P1
 **Depends on**: none

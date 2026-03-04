@@ -65,9 +65,11 @@ export default function LoginPage() {
       });
 
       if (result.error) {
-        form.setError("root", {
-          message: "Email o contraseña incorrectos",
-        });
+        const message =
+          result.error.status === 429
+            ? "Cuenta bloqueada temporalmente. Intenta en 15 minutos."
+            : "Email o contraseña incorrectos";
+        form.setError("root", { message });
       } else {
         router.push("/org");
       }

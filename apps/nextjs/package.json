@@ -21,6 +21,8 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
+    "@upstash/ratelimit": "catalog:",
+    "@upstash/redis": "catalog:",
     "@wifo/api": "workspace:*",
     "@wifo/auth": "workspace:*",
     "@wifo/db": "workspace:*",
