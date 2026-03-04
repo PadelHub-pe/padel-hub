@@ -102,6 +102,7 @@ export const inviteStatusEnum = pgEnum("invite_status", [
   "pending",
   "accepted",
   "expired",
+  "cancelled",
 ]);
 
 /**

@@ -44,6 +44,10 @@ export const inviteRouter = createTRPCRouter({
         return { valid: false as const, error: "expired" as const };
       }
 
+      if (invite.status === "cancelled") {
+        return { valid: false as const, error: "cancelled" as const };
+      }
+
       // Check if email already has an account
       const existingUser = await ctx.db.query.user.findFirst({
         where: eq(user.email, invite.email),

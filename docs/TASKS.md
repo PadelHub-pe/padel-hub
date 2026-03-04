@@ -15,7 +15,7 @@
 
 ## Tasks
 
-### TASK-01: Add `cancelled` status to invite enum and update invite handling
+### ✅ TASK-01: Add `cancelled` status to invite enum and update invite handling
 **Type**: feature
 **Priority**: P1
 **Depends on**: none
@@ -133,7 +133,7 @@ These items from the spec are confirmed working in the codebase:
 - ✅ 1.1 Login (email/password) — form validation, error handling, remember me, loading states
 - ✅ 1.2 Login (Google OAuth) — social sign-in with callback to `/org`
 - ✅ 1.3 Invite acceptance — token validation, email pre-fill, name suggestion, account creation, auto-login
-- ✅ 1.4 Token validation — invalid/used/expired handling (cancelled pending TASK-01)
+- ✅ 1.4 Token validation — invalid/used/expired/cancelled handling
 - ✅ 1.5 Forgot/reset password — both pages, Resend integration, always-success pattern
 - ✅ 1.6 Session persistence — 24h default, cookie-based, httpOnly, refresh interval
 - ✅ 1.7 Org membership validation — server-side in `[orgSlug]/layout.tsx`

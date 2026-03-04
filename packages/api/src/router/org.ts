@@ -870,7 +870,8 @@ export const orgRouter = {
       }
 
       await ctx.db
-        .delete(organizationInvites)
+        .update(organizationInvites)
+        .set({ status: "cancelled" })
         .where(eq(organizationInvites.id, inviteId));
 
       return { success: true };

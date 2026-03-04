@@ -31,7 +31,7 @@ import { Input } from "@wifo/ui/input";
 const loginSchema = z.object({
   email: z.string().email("Ingresa un email válido"),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
-  rememberMe: z.boolean().default(false),
+  rememberMe: z.boolean(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;

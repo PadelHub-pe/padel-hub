@@ -41,16 +41,11 @@ const courtSchema = z.object({
   description: z
     .string()
     .max(500, "La descripción no puede exceder 500 caracteres")
-    .transform((val) => val || undefined)
     .optional(),
   type: z.enum(["indoor", "outdoor"]),
   priceInSoles: z.string().min(1, "La tarifa estándar es requerida"),
   peakPriceInSoles: z.string().optional(),
-  imageUrl: z
-    .string()
-    .url("URL de imagen inválida")
-    .or(z.literal(""))
-    .transform((val) => val || undefined),
+  imageUrl: z.string().url("URL de imagen inválida").or(z.literal("")),
 });
 
 type CourtFormValues = z.infer<typeof courtSchema>;
@@ -120,10 +115,12 @@ export function CourtCreateForm() {
       name: values.name,
       type: values.type,
       status: values.status,
-      description: values.description,
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: convert empty string to undefined
+      description: values.description || undefined,
       priceInCents,
       peakPriceInCents,
-      imageUrl: values.imageUrl,
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: convert empty string to undefined
+      imageUrl: values.imageUrl || undefined,
     });
   }
 

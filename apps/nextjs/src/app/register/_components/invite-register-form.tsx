@@ -324,7 +324,7 @@ function InviteForm({
 function InvalidTokenMessage({
   error,
 }: {
-  error: "invalid" | "used" | "expired";
+  error: "invalid" | "used" | "expired" | "cancelled";
 }) {
   const messages = {
     invalid: {
@@ -341,6 +341,10 @@ function InvalidTokenMessage({
       title: "Invitación expirada",
       description:
         "Esta invitación ha expirado. Solicita al administrador de tu organización que te envíe una nueva.",
+    },
+    cancelled: {
+      title: "Invitación cancelada",
+      description: "Esta invitación fue cancelada.",
     },
   };
 
