@@ -214,7 +214,7 @@ These items from the spec are confirmed working in the codebase:
 
 ---
 
-### TASK-08: Add middleware and access control tests
+### ~~TASK-08: Add middleware and access control tests~~ ✅
 **Type**: feature
 **Priority**: P2
 **Depends on**: TASK-06, TASK-02
