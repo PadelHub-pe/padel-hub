@@ -5,10 +5,16 @@ import { useParams, usePathname } from "next/navigation";
 
 import { cn } from "@wifo/ui";
 
+import type { usePermission } from "~/hooks/use-permission";
+import { usePermission as usePermissionHook } from "~/hooks/use-permission";
+
+type PermissionKey = keyof ReturnType<typeof usePermission>;
+
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  permission?: PermissionKey;
 }
 
 interface NavSection {
@@ -30,6 +36,7 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
           label: "Canchas",
           href: `${base}/courts`,
           icon: CourtsIcon,
+          permission: "canConfigureFacility",
         },
       ],
     },
@@ -55,28 +62,43 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
           label: "Horarios",
           href: `${base}/schedule`,
           icon: ScheduleIcon,
+          permission: "canConfigureFacility",
         },
         {
           label: "Precios",
           href: `${base}/pricing`,
           icon: PricingIcon,
+          permission: "canConfigureFacility",
         },
         {
           label: "Ajustes",
           href: `${base}/settings`,
           icon: SettingsIcon,
+          permission: "canConfigureFacility",
         },
       ],
     },
   ];
 }
 
-export function FacilitySidebarNav() {
+interface FacilitySidebarNavProps {
+  userRole: "org_admin" | "facility_manager" | "staff";
+}
+
+export function FacilitySidebarNav({ userRole }: FacilitySidebarNavProps) {
   const pathname = usePathname();
   const params = useParams();
   const orgSlug = params.orgSlug as string;
   const facilityId = params.facilityId as string;
-  const navSections = getNavSections(orgSlug, facilityId);
+  const permissions = usePermissionHook(userRole);
+  const navSections = getNavSections(orgSlug, facilityId)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) => !item.permission || permissions[item.permission],
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <div className="space-y-6">

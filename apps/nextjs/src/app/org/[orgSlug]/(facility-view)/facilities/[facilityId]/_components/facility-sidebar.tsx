@@ -74,7 +74,7 @@ export function FacilitySidebar({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <FacilitySidebarNav />
+        <FacilitySidebarNav userRole={userRole} />
       </nav>
 
       {/* User info */}

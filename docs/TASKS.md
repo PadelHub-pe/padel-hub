@@ -51,7 +51,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - Add tests for manager invite scoping
 - **Estimate:** Small
 
-### TASK-3.3: usePermission Hook + Role-Based Sidebar Filtering
+### ~~TASK-3.3: usePermission Hook + Role-Based Sidebar Filtering~~ ✅
 - **Type:** feature
 - **Priority:** P0
 - **Depends on:** nothing

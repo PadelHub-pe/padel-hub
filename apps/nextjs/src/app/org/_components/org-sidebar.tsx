@@ -19,12 +19,14 @@ interface Organization {
 
 interface OrgSidebarProps {
   organizations: Organization[];
+  currentRole: Organization["role"];
   userEmail: string;
   userName?: string;
 }
 
 export function OrgSidebar({
   organizations,
+  currentRole,
   userEmail,
   userName,
 }: OrgSidebarProps) {
@@ -61,7 +63,7 @@ export function OrgSidebar({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <OrgSidebarNav />
+        <OrgSidebarNav userRole={currentRole} />
       </nav>
 
       {/* User info */}

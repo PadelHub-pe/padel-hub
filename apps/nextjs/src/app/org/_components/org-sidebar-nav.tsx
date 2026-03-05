@@ -5,10 +5,16 @@ import { useParams, usePathname } from "next/navigation";
 
 import { cn } from "@wifo/ui";
 
+import type { usePermission } from "~/hooks/use-permission";
+import { usePermission as usePermissionHook } from "~/hooks/use-permission";
+
+type PermissionKey = keyof ReturnType<typeof usePermission>;
+
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  permission?: PermissionKey;
 }
 
 interface NavSection {
@@ -44,6 +50,7 @@ function getNavSections(orgSlug: string): NavSection[] {
           label: "Reportes",
           href: `/org/${orgSlug}/reports`,
           icon: ReportsIcon,
+          permission: "canViewReports",
         },
       ],
     },
@@ -54,17 +61,30 @@ function getNavSections(orgSlug: string): NavSection[] {
           label: "Ajustes",
           href: `/org/${orgSlug}/settings`,
           icon: SettingsIcon,
+          permission: "canManageOrg",
         },
       ],
     },
   ];
 }
 
-export function OrgSidebarNav() {
+interface OrgSidebarNavProps {
+  userRole: "org_admin" | "facility_manager" | "staff";
+}
+
+export function OrgSidebarNav({ userRole }: OrgSidebarNavProps) {
   const pathname = usePathname();
   const params = useParams();
   const orgSlug = params.orgSlug as string;
-  const navSections = getNavSections(orgSlug);
+  const permissions = usePermissionHook(userRole);
+  const navSections = getNavSections(orgSlug)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) => !item.permission || permissions[item.permission],
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <div className="space-y-6">
