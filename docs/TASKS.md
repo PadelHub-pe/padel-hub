@@ -70,9 +70,9 @@ Files to create:
 - `packages/images/src/url.ts` — (empty placeholder, implemented in TASK-IMG-3)
 
 Acceptance criteria:
-- [ ] `pnpm install` resolves cleanly
-- [ ] `pnpm typecheck` passes
-- [ ] Package importable as `@wifo/images` from `packages/api`
+- [x] `pnpm install` resolves cleanly
+- [x] `pnpm typecheck` passes
+- [x] Package importable as `@wifo/images` from `packages/api`
 
 **Depends on:** nothing (can start before TASK-IMG-1)
 
