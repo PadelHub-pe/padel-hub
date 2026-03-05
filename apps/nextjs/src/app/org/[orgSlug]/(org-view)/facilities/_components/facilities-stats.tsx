@@ -13,9 +13,14 @@ interface FacilitiesStatsProps {
       }
     | undefined;
   isLoading: boolean;
+  suppressTrends?: boolean;
 }
 
-export function FacilitiesStats({ stats, isLoading }: FacilitiesStatsProps) {
+export function FacilitiesStats({
+  stats,
+  isLoading,
+  suppressTrends,
+}: FacilitiesStatsProps) {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -45,7 +50,7 @@ export function FacilitiesStats({ stats, isLoading }: FacilitiesStatsProps) {
       <StatCard
         title="Reservas del Mes"
         value={stats.monthBookings}
-        change={stats.monthBookingsTrend}
+        change={suppressTrends ? undefined : stats.monthBookingsTrend}
         icon={<BookingsIcon className="h-5 w-5" />}
         iconColor="amber"
       />
@@ -56,7 +61,7 @@ export function FacilitiesStats({ stats, isLoading }: FacilitiesStatsProps) {
           maximumFractionDigits: 0,
         })}
         prefix="S/ "
-        change={stats.monthRevenueTrend}
+        change={suppressTrends ? undefined : stats.monthRevenueTrend}
         icon={<RevenueIcon className="h-5 w-5" />}
         iconColor="purple"
       />

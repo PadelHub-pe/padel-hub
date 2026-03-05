@@ -8,6 +8,7 @@ import { AddFacilityCard } from "./add-facility-card";
 import { FacilitiesFilters } from "./facilities-filters";
 import { FacilitiesGrid } from "./facilities-grid";
 import { FacilitiesStats } from "./facilities-stats";
+import { FacilityEmptyState } from "./facility-empty-state";
 
 interface FacilitiesViewProps {
   organizationId: string;
@@ -65,30 +66,43 @@ export function FacilitiesView({
       </div>
 
       {/* Stats */}
-      <FacilitiesStats stats={stats} isLoading={false} />
-
-      {/* Filters */}
-      <div className="mt-8 mb-6">
-        <FacilitiesFilters
-          search={search}
-          onSearchChange={setSearch}
-          status={status}
-          onStatusChange={setStatus}
-          district={district}
-          onDistrictChange={setDistrict}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          districts={districts}
-          onClearFilters={handleClearFilters}
-        />
-      </div>
-
-      {/* Facilities Grid */}
-      <FacilitiesGrid
-        facilities={facilities}
+      <FacilitiesStats
+        stats={stats}
         isLoading={false}
-        addFacilityCard={<AddFacilityCard />}
+        suppressTrends={stats.totalFacilities === 0}
       />
+
+      {stats.totalFacilities === 0 ? (
+        /* First-time empty state */
+        <div className="mt-8">
+          <FacilityEmptyState />
+        </div>
+      ) : (
+        <>
+          {/* Filters */}
+          <div className="mt-8 mb-6">
+            <FacilitiesFilters
+              search={search}
+              onSearchChange={setSearch}
+              status={status}
+              onStatusChange={setStatus}
+              district={district}
+              onDistrictChange={setDistrict}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              districts={districts}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+
+          {/* Facilities Grid */}
+          <FacilitiesGrid
+            facilities={facilities}
+            isLoading={false}
+            addFacilityCard={<AddFacilityCard />}
+          />
+        </>
+      )}
     </div>
   );
 }
