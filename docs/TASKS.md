@@ -32,7 +32,7 @@ Most of Flow 2 is already built. These tasks cover the **gaps** between the curr
 
 See `docs/TECHNICAL_PLAN.md` for full gap analysis.
 
-### TASK-2.1: Add facility card actions menu + inactive styling [feature] [P0]
+### TASK-2.1: Add facility card actions menu + inactive styling [feature] [P0] ✅
 
 **What**: Add "⋯" dropdown menu to each facility card with actions: "Ver Dashboard", "Editar", "Desactivar"/"Reactivar". Make inactive cards render at 75% opacity with gray gradient header. Make card body clickable (navigate to dashboard).
 

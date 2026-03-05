@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+
+import { toast } from "@wifo/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
 import { AddFacilityCard } from "./add-facility-card";
@@ -13,13 +19,16 @@ import { FacilityEmptyState } from "./facility-empty-state";
 interface FacilitiesViewProps {
   organizationId: string;
   organizationName: string;
+  userRole: "org_admin" | "facility_manager" | "staff";
 }
 
 export function FacilitiesView({
   organizationId,
   organizationName,
+  userRole,
 }: FacilitiesViewProps) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
@@ -48,11 +57,44 @@ export function FacilitiesView({
     trpc.org.getDistricts.queryOptions({ organizationId }),
   );
 
+  const updateStatus = useMutation(
+    trpc.org.updateFacilityStatus.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries(
+          trpc.org.getFacilities.queryOptions({
+            organizationId,
+            search: search || undefined,
+            status,
+            district,
+            sortBy,
+          }),
+        );
+        void queryClient.invalidateQueries(
+          trpc.org.getStats.queryOptions({ organizationId }),
+        );
+      },
+    }),
+  );
+
   const handleClearFilters = () => {
     setSearch("");
     setStatus("all");
     setDistrict(undefined);
     setSortBy("name");
+  };
+
+  const handleReactivate = (facility: { id: string; name: string }) => {
+    updateStatus.mutate(
+      { facilityId: facility.id, isActive: true },
+      {
+        onSuccess: () => {
+          toast.success(`${facility.name} reactivado`);
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      },
+    );
   };
 
   return (
@@ -100,6 +142,8 @@ export function FacilitiesView({
             facilities={facilities}
             isLoading={false}
             addFacilityCard={<AddFacilityCard />}
+            userRole={userRole}
+            onReactivate={handleReactivate}
           />
         </>
       )}

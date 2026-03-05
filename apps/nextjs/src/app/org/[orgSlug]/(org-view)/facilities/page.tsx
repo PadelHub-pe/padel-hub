@@ -37,7 +37,11 @@ export default async function FacilitiesPage({ params }: FacilitiesPageProps) {
   return (
     <HydrateClient>
       <Suspense fallback={<FacilitiesPageSkeleton />}>
-        <FacilitiesView organizationId={org.id} organizationName={org.name} />
+        <FacilitiesView
+          organizationId={org.id}
+          organizationName={org.name}
+          userRole={org.role}
+        />
       </Suspense>
     </HydrateClient>
   );
