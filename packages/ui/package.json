@@ -24,7 +24,8 @@
     "./sheet": "./src/sheet.tsx",
     "./dialog": "./src/dialog.tsx",
     "./popover": "./src/popover.tsx",
-    "./tabs": "./src/tabs.tsx"
+    "./tabs": "./src/tabs.tsx",
+    "./tooltip": "./src/tooltip.tsx"
   },
   "license": "MIT",
   "scripts": {

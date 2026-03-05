@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -31,6 +32,12 @@ import {
   SelectValue,
 } from "@wifo/ui/select";
 import { toast } from "@wifo/ui/toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@wifo/ui/tooltip";
 
 import type { TeamMemberRow } from "./team-columns";
 import { useTRPC } from "~/trpc/react";
@@ -41,6 +48,22 @@ const editMemberSchema = z.object({
 });
 
 type EditMemberFormValues = z.infer<typeof editMemberSchema>;
+type Role = EditMemberFormValues["role"];
+
+const ROLE_RANK: Record<Role, number> = {
+  org_admin: 3,
+  facility_manager: 2,
+  staff: 1,
+};
+
+const DEMOTION_MESSAGES: Record<string, string> = {
+  "org_admin->facility_manager":
+    "Perderá acceso a la configuración de la organización y solo podrá gestionar los locales asignados.",
+  "org_admin->staff":
+    "Perderá acceso a la configuración de la organización y solo podrá operar reservas en los locales asignados.",
+  "facility_manager->staff":
+    "Solo podrá operar reservas y calendario en los locales asignados, sin acceso a configuración.",
+};
 
 interface EditMemberDialogProps {
   open: boolean;
@@ -48,6 +71,7 @@ interface EditMemberDialogProps {
   organizationId: string;
   member: TeamMemberRow;
   facilities: { id: string; name: string }[];
+  adminCount: number;
 }
 
 export function EditMemberDialog({
@@ -56,9 +80,13 @@ export function EditMemberDialog({
   organizationId,
   member,
   facilities,
+  adminCount,
 }: EditMemberDialogProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [demotionConfirmed, setDemotionConfirmed] = useState(false);
+
+  const isLastAdmin = member.role === "org_admin" && adminCount <= 1;
 
   const form = useForm<EditMemberFormValues>({
     resolver: standardSchemaResolver(editMemberSchema),
@@ -69,6 +97,20 @@ export function EditMemberDialog({
   });
 
   const watchedRole = form.watch("role");
+  const watchedFacilityIds = form.watch("facilityIds");
+
+  const isDemotion = ROLE_RANK[watchedRole] < ROLE_RANK[member.role];
+  const demotionKey = isDemotion ? `${member.role}->${watchedRole}` : null;
+  const demotionMessage = demotionKey ? DEMOTION_MESSAGES[demotionKey] : null;
+
+  const needsFacilities = watchedRole !== "org_admin";
+  const hasFacilities = watchedFacilityIds.length > 0;
+  const canSubmit =
+    !isDemotion || demotionConfirmed
+      ? needsFacilities
+        ? hasFacilities
+        : true
+      : false;
 
   const updateMember = useMutation(
     trpc.org.updateMember.mutationOptions({
@@ -94,6 +136,14 @@ export function EditMemberDialog({
     });
   }
 
+  function handleRoleChange(
+    newRole: string,
+    fieldOnChange: (v: string) => void,
+  ) {
+    fieldOnChange(newRole);
+    setDemotionConfirmed(false);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -113,7 +163,7 @@ export function EditMemberDialog({
                 <FormItem>
                   <FormLabel>Rol</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(v) => handleRoleChange(v, field.onChange)}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -123,10 +173,41 @@ export function EditMemberDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="org_admin">Administrador</SelectItem>
-                      <SelectItem value="facility_manager">
-                        Gerente de Local
-                      </SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
+                      {isLastAdmin ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <SelectItem value="facility_manager" disabled>
+                                  Gerente de Local
+                                </SelectItem>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              Es el único administrador
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <SelectItem value="staff" disabled>
+                                  Staff
+                                </SelectItem>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              Es el único administrador
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <>
+                          <SelectItem value="facility_manager">
+                            Gerente de Local
+                          </SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -134,7 +215,40 @@ export function EditMemberDialog({
               )}
             />
 
-            {watchedRole !== "org_admin" && (
+            {isDemotion && demotionMessage && (
+              <div className="flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+                <svg
+                  className="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                  <path d="M12 9v4" />
+                  <path d="M12 17h.01" />
+                </svg>
+                <div className="space-y-2">
+                  <p className="text-sm text-amber-800">{demotionMessage}</p>
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={demotionConfirmed}
+                      onCheckedChange={(checked) =>
+                        setDemotionConfirmed(checked === true)
+                      }
+                    />
+                    <span className="text-sm text-amber-700">
+                      Confirmo el cambio de rol
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {needsFacilities && (
               <FormField
                 control={form.control}
                 name="facilityIds"
@@ -170,6 +284,11 @@ export function EditMemberDialog({
                         />
                       ))}
                     </div>
+                    {!hasFacilities && (
+                      <p className="text-sm text-amber-600">
+                        Selecciona al menos un local
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -190,7 +309,10 @@ export function EditMemberDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={updateMember.isPending}>
+              <Button
+                type="submit"
+                disabled={updateMember.isPending || !canSubmit}
+              >
                 {updateMember.isPending ? "Guardando..." : "Guardar"}
               </Button>
             </DialogFooter>

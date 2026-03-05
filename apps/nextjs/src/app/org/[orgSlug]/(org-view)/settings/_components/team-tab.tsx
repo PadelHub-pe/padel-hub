@@ -89,6 +89,9 @@ export function TeamTab({ organizationId }: TeamTabProps) {
 
   const activeCount = data.members.filter((m) => m.type === "member").length;
   const pendingCount = data.members.filter((m) => m.type === "invite").length;
+  const adminCount = data.members.filter(
+    (m) => m.type === "member" && m.role === "org_admin",
+  ).length;
   const isAlone = activeCount === 1 && pendingCount === 0;
 
   const getRowClassName = useMemo(
@@ -149,6 +152,7 @@ export function TeamTab({ organizationId }: TeamTabProps) {
           organizationId={organizationId}
           member={editMember}
           facilities={data.facilities}
+          adminCount={adminCount}
         />
       )}
 

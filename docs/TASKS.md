@@ -121,7 +121,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - Pass `userRole` and `userFacilityIds` props to dialog
 - **Estimate:** Small
 
-### TASK-3.7: Edit Member Dialog Enhancements
+### TASK-3.7: Edit Member Dialog Enhancements ✅
 - **Type:** feature
 - **Priority:** P1
 - **Depends on:** TASK-3.1
