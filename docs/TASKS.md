@@ -37,7 +37,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - Add tests for: sole admin removal blocked, sole admin demotion blocked, removal OK when 2+ admins, demotion OK when 2+ admins
 - **Estimate:** Small
 
-### TASK-3.2: Facility Manager Invite Scoping (API)
+### TASK-3.2: Facility Manager Invite Scoping (API) ✅
 - **Type:** feature
 - **Priority:** P0
 - **Depends on:** nothing

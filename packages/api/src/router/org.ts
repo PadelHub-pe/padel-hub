@@ -596,12 +596,15 @@ export const orgRouter = {
 
       const membership = await verifyOrgMembership(ctx, organizationId);
 
-      if (membership.role !== "org_admin") {
+      if (membership.role === "staff") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Solo los administradores pueden ver el equipo",
+          message: "No tienes permisos para ver el equipo",
         });
       }
+
+      const isManager = membership.role === "facility_manager";
+      const callerFacilityIds = membership.facilityIds ?? [];
 
       // Get members with user info
       const members = await ctx.db.query.organizationMembers.findMany({
@@ -624,6 +627,21 @@ export const orgRouter = {
       });
 
       const facilityMap = new Map(orgFacilities.map((f) => [f.id, f.name]));
+
+      /**
+       * For facility_manager: filter to only members/invites with overlapping facilities.
+       * org_admin members are always visible (they manage all facilities).
+       * facility_manager with empty facilityIds = all-facilities access → visible.
+       */
+      function isVisibleToManager(
+        memberFacilityIds: string[],
+        memberRole: string,
+      ): boolean {
+        if (memberRole === "org_admin") return true;
+        if (memberRole === "facility_manager" && memberFacilityIds.length === 0)
+          return true;
+        return memberFacilityIds.some((id) => callerFacilityIds.includes(id));
+      }
 
       const memberList = members.map((m) => ({
         id: m.id,
@@ -656,9 +674,21 @@ export const orgRouter = {
         expiresAt: inv.expiresAt,
       }));
 
+      // Apply facility scoping for managers
+      const filteredMembers = isManager
+        ? memberList.filter((m) => isVisibleToManager(m.facilityIds, m.role))
+        : memberList;
+      const filteredInvites = isManager
+        ? inviteList.filter((inv) =>
+            isVisibleToManager(inv.facilityIds, inv.role),
+          )
+        : inviteList;
+
       return {
-        members: [...memberList, ...inviteList],
-        facilities: orgFacilities,
+        members: [...filteredMembers, ...filteredInvites],
+        facilities: isManager
+          ? orgFacilities.filter((f) => callerFacilityIds.includes(f.id))
+          : orgFacilities,
       };
     }),
 
@@ -669,11 +699,43 @@ export const orgRouter = {
 
       const membership = await verifyOrgMembership(ctx, organizationId);
 
-      if (membership.role !== "org_admin") {
+      // Role-based invite restrictions
+      if (membership.role === "staff") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Solo los administradores pueden invitar miembros",
+          message: "No tienes permisos para invitar miembros",
         });
+      }
+
+      if (membership.role === "facility_manager") {
+        // Facility managers can only invite staff
+        if (role !== "staff") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Solo puedes invitar miembros con rol de staff",
+          });
+        }
+
+        // facilityIds must be provided and be a subset of manager's own facilityIds
+        const managerFacilityIds = membership.facilityIds ?? [];
+        const requestedFacilityIds = facilityIds ?? [];
+
+        if (requestedFacilityIds.length === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Debes asignar al menos un local",
+          });
+        }
+
+        const isSubset = requestedFacilityIds.every((id) =>
+          managerFacilityIds.includes(id),
+        );
+        if (!isSubset) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Solo puedes asignar locales a los que tienes acceso",
+          });
+        }
       }
 
       // Check no existing member with same email
