@@ -90,7 +90,7 @@ See `docs/TECHNICAL_PLAN.md` for full gap analysis.
 
 ---
 
-### TASK-2.4: URL-persisted filters + result count [feature] [P0]
+### TASK-2.4: URL-persisted filters + result count [feature] [P0] ✅
 
 **What**: Sync filter state with URL query params so filtered views are shareable. Add result count display ("Mostrando X de Y locales").
 

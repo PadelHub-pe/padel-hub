@@ -3,13 +3,43 @@ import { Suspense } from "react";
 import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { FacilitiesView } from "./_components/facilities-view";
 
+type StatusFilter = "all" | "active" | "inactive";
+type SortBy = "name" | "bookings" | "revenue" | "utilization";
+
+const validStatuses = new Set<StatusFilter>(["all", "active", "inactive"]);
+const validSorts = new Set<SortBy>([
+  "name",
+  "bookings",
+  "revenue",
+  "utilization",
+]);
+
 interface FacilitiesPageProps {
   params: Promise<{ orgSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function FacilitiesPage({ params }: FacilitiesPageProps) {
+export default async function FacilitiesPage({
+  params,
+  searchParams,
+}: FacilitiesPageProps) {
   const { orgSlug } = await params;
+  const sp = await searchParams;
   const caller = await api();
+
+  // Parse filter params for prefetch
+  const statusParam = typeof sp.status === "string" ? sp.status : "all";
+  const sortParam = typeof sp.sort === "string" ? sp.sort : "name";
+  const districtParam =
+    typeof sp.district === "string" ? sp.district : undefined;
+  const searchParam = typeof sp.q === "string" ? sp.q : undefined;
+
+  const status: StatusFilter = validStatuses.has(statusParam as StatusFilter)
+    ? (statusParam as StatusFilter)
+    : "all";
+  const sortBy: SortBy = validSorts.has(sortParam as SortBy)
+    ? (sortParam as SortBy)
+    : "name";
 
   // Get organization ID from slug
   const organizations = await caller.org.getMyOrganizations();
@@ -23,13 +53,15 @@ export default async function FacilitiesPage({ params }: FacilitiesPageProps) {
     );
   }
 
-  // Prefetch data
+  // Prefetch data with URL filter params
   prefetch(trpc.org.getStats.queryOptions({ organizationId: org.id }));
   prefetch(
     trpc.org.getFacilities.queryOptions({
       organizationId: org.id,
-      status: "all",
-      sortBy: "name",
+      search: searchParam,
+      status,
+      district: districtParam,
+      sortBy,
     }),
   );
   prefetch(trpc.org.getDistricts.queryOptions({ organizationId: org.id }));

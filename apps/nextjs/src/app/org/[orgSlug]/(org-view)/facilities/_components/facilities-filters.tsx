@@ -25,6 +25,8 @@ interface FacilitiesFiltersProps {
   ) => void;
   districts: string[];
   onClearFilters: () => void;
+  filteredCount: number;
+  totalCount: number;
 }
 
 const statusOptions = [
@@ -51,6 +53,8 @@ export function FacilitiesFilters({
   onSortByChange,
   districts,
   onClearFilters,
+  filteredCount,
+  totalCount,
 }: FacilitiesFiltersProps) {
   const [searchInput, setSearchInput] = useState(search);
 
@@ -152,6 +156,13 @@ export function FacilitiesFilters({
           <XIcon className="mr-1 h-4 w-4" />
           Limpiar filtros
         </Button>
+      )}
+
+      {/* Result count */}
+      {hasActiveFilters && (
+        <span className="ml-auto text-sm text-gray-500">
+          Mostrando {filteredCount} de {totalCount} locales
+        </span>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useMutation,
   useQueryClient,
@@ -17,6 +18,27 @@ import { FacilitiesGrid } from "./facilities-grid";
 import { FacilitiesStats } from "./facilities-stats";
 import { FacilityEmptyState } from "./facility-empty-state";
 
+type StatusFilter = "all" | "active" | "inactive";
+type SortBy = "name" | "bookings" | "revenue" | "utilization";
+
+const validStatuses = new Set<StatusFilter>(["all", "active", "inactive"]);
+const validSorts = new Set<SortBy>([
+  "name",
+  "bookings",
+  "revenue",
+  "utilization",
+]);
+
+function parseStatus(value: string | null): StatusFilter {
+  return value && validStatuses.has(value as StatusFilter)
+    ? (value as StatusFilter)
+    : "all";
+}
+
+function parseSortBy(value: string | null): SortBy {
+  return value && validSorts.has(value as SortBy) ? (value as SortBy) : "name";
+}
+
 interface FacilitiesViewProps {
   organizationId: string;
   organizationName: string;
@@ -30,13 +52,52 @@ export function FacilitiesView({
 }: FacilitiesViewProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
-  const [district, setDistrict] = useState<string | undefined>(undefined);
-  const [sortBy, setSortBy] = useState<
-    "name" | "bookings" | "revenue" | "utilization"
-  >("name");
+  const search = searchParams.get("q") ?? "";
+  const status = parseStatus(searchParams.get("status"));
+  const district = searchParams.get("district") ?? undefined;
+  const sortBy = parseSortBy(searchParams.get("sort"));
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      }
+      // Remove default values to keep URL clean
+      if (params.get("status") === "all") params.delete("status");
+      if (params.get("sort") === "name") params.delete("sort");
+
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : ".", { scroll: false });
+    },
+    [searchParams, router],
+  );
+
+  const setSearch = useCallback(
+    (value: string) => updateParams({ q: value || undefined }),
+    [updateParams],
+  );
+  const setStatus = useCallback(
+    (value: StatusFilter) =>
+      updateParams({ status: value === "all" ? undefined : value }),
+    [updateParams],
+  );
+  const setDistrict = useCallback(
+    (value: string | undefined) => updateParams({ district: value }),
+    [updateParams],
+  );
+  const setSortBy = useCallback(
+    (value: SortBy) =>
+      updateParams({ sort: value === "name" ? undefined : value }),
+    [updateParams],
+  );
 
   const { data: stats } = useSuspenseQuery(
     trpc.org.getStats.queryOptions({
@@ -83,10 +144,7 @@ export function FacilitiesView({
   } | null>(null);
 
   const handleClearFilters = () => {
-    setSearch("");
-    setStatus("all");
-    setDistrict(undefined);
-    setSortBy("name");
+    router.replace(".", { scroll: false });
   };
 
   const handleDeactivate = (facility: { id: string; name: string }) => {
@@ -160,6 +218,8 @@ export function FacilitiesView({
               onSortByChange={setSortBy}
               districts={districts}
               onClearFilters={handleClearFilters}
+              filteredCount={facilities.length}
+              totalCount={stats.totalFacilities}
             />
           </div>
 
