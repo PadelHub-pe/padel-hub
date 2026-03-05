@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import { Checkbox } from "@wifo/ui/checkbox";
 import {
@@ -24,16 +25,27 @@ import {
   FormMessage,
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@wifo/ui/select";
 import { toast } from "@wifo/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
+
+const ROLE_OPTIONS = [
+  {
+    value: "org_admin" as const,
+    label: "Administrador",
+    description: "Acceso total a la organizacion",
+  },
+  {
+    value: "facility_manager" as const,
+    label: "Manager de Local",
+    description: "Gestiona y configura locales asignados",
+  },
+  {
+    value: "staff" as const,
+    label: "Staff",
+    description: "Opera reservas y calendario en locales asignados",
+  },
+];
 
 const inviteSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -43,11 +55,15 @@ const inviteSchema = z.object({
 
 type InviteFormValues = z.infer<typeof inviteSchema>;
 
+type UserRole = "org_admin" | "facility_manager" | "staff";
+
 interface InviteMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
   facilities: { id: string; name: string }[];
+  userRole: UserRole;
+  userFacilityIds: string[];
 }
 
 export function InviteMemberDialog({
@@ -55,20 +71,33 @@ export function InviteMemberDialog({
   onOpenChange,
   organizationId,
   facilities,
+  userRole,
 }: InviteMemberDialogProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  const availableRoles =
+    userRole === "facility_manager"
+      ? ROLE_OPTIONS.filter((r) => r.value === "staff")
+      : ROLE_OPTIONS;
+
+  const defaultRole =
+    userRole === "facility_manager" ? "staff" : "facility_manager";
 
   const form = useForm<InviteFormValues>({
     resolver: standardSchemaResolver(inviteSchema),
     defaultValues: {
       email: "",
-      role: "facility_manager",
+      role: defaultRole,
       facilityIds: [],
     },
   });
 
   const watchedRole = form.watch("role");
+  const watchedFacilityIds = form.watch("facilityIds");
+
+  const needsFacilities = watchedRole !== "org_admin";
+  const missingFacilities = needsFacilities && watchedFacilityIds.length === 0;
 
   const inviteMember = useMutation(
     trpc.org.inviteMember.mutationOptions({
@@ -77,7 +106,7 @@ export function InviteMemberDialog({
         void queryClient.invalidateQueries(
           trpc.org.getTeamMembers.queryOptions({ organizationId }),
         );
-        form.reset();
+        form.reset({ email: "", role: defaultRole, facilityIds: [] });
         onOpenChange(false);
       },
       onError: (error) => {
@@ -131,29 +160,42 @@ export function InviteMemberDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rol</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="org_admin">Administrador</SelectItem>
-                      <SelectItem value="facility_manager">
-                        Gerente de Local
-                      </SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    {availableRoles.map((option) => (
+                      <div
+                        key={option.value}
+                        role="radio"
+                        aria-checked={field.value === option.value}
+                        tabIndex={0}
+                        className={cn(
+                          "cursor-pointer rounded-lg border p-3 transition-colors",
+                          field.value === option.value
+                            ? "border-primary bg-primary/5"
+                            : "border-gray-200 hover:border-gray-300",
+                        )}
+                        onClick={() => field.onChange(option.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === " " || e.key === "Enter") {
+                            e.preventDefault();
+                            field.onChange(option.value);
+                          }
+                        }}
+                      >
+                        <div className="text-sm font-medium">
+                          {option.label}
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                          {option.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {watchedRole !== "org_admin" && (
+            {needsFacilities && (
               <FormField
                 control={form.control}
                 name="facilityIds"
@@ -189,6 +231,11 @@ export function InviteMemberDialog({
                         />
                       ))}
                     </div>
+                    {missingFacilities && (
+                      <p className="text-muted-foreground text-xs">
+                        Selecciona al menos 1 local
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -209,7 +256,10 @@ export function InviteMemberDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={inviteMember.isPending}>
+              <Button
+                type="submit"
+                disabled={inviteMember.isPending || missingFacilities}
+              >
                 {inviteMember.isPending ? "Enviando..." : "Enviar Invitación"}
               </Button>
             </DialogFooter>

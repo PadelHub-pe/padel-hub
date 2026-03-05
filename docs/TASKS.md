@@ -104,7 +104,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - Expired invites: show "Expirada" status (amber-red) with resend as only action
 - **Estimate:** Small
 
-### TASK-3.6: Invite Dialog Enhancements
+### ~~TASK-3.6: Invite Dialog Enhancements~~ ✅
 - **Type:** feature
 - **Priority:** P1
 - **Depends on:** TASK-3.2

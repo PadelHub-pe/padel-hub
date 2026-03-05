@@ -87,6 +87,10 @@ export function TeamTab({ organizationId }: TeamTabProps) {
     [data.members],
   );
 
+  const currentUser = data.members.find((m) => m.isCurrentUser);
+  const userRole = currentUser?.role ?? "staff";
+  const userFacilityIds = currentUser?.facilityIds ?? [];
+
   const activeCount = data.members.filter((m) => m.type === "member").length;
   const pendingCount = data.members.filter((m) => m.type === "invite").length;
   const adminCount = data.members.filter(
@@ -143,6 +147,8 @@ export function TeamTab({ organizationId }: TeamTabProps) {
         onOpenChange={setInviteOpen}
         organizationId={organizationId}
         facilities={data.facilities}
+        userRole={userRole}
+        userFacilityIds={userFacilityIds}
       />
 
       {editMember && (
