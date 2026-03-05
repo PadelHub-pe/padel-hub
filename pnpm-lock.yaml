@@ -534,6 +534,9 @@ importers:
       '@wifo/email':
         specifier: workspace:*
         version: link:../email
+      '@wifo/images':
+        specifier: workspace:*
+        version: link:../images
       '@wifo/validators':
         specifier: workspace:*
         version: link:../validators
@@ -14696,7 +14699,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
-      metro-config: 0.83.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      metro-config: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:

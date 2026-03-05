@@ -142,11 +142,11 @@ Files to modify:
 - `packages/api/package.json` — add `@wifo/images` dependency
 
 Acceptance criteria:
-- [ ] `getUploadUrl` returns upload URL for authorized users, throws UNAUTHORIZED otherwise
-- [ ] `confirmUpload` stores image ID in correct DB column (photos array or single field)
-- [ ] `delete` removes from DB and Cloudflare
-- [ ] `reorder` updates photos array order
-- [ ] All procedures check entity-specific permissions
+- [x] `getUploadUrl` returns upload URL for authorized users, throws UNAUTHORIZED otherwise
+- [x] `confirmUpload` stores image ID in correct DB column (photos array or single field)
+- [x] `delete` removes from DB and Cloudflare
+- [x] `reorder` updates photos array order
+- [x] All procedures check entity-specific permissions
 
 **Depends on:** TASK-IMG-4, TASK-IMG-3
 

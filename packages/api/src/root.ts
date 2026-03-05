@@ -6,6 +6,7 @@ import { calendarRouter } from "./router/calendar";
 import { courtRouter } from "./router/court";
 import { dashboardRouter } from "./router/dashboard";
 import { facilityRouter } from "./router/facility";
+import { imagesRouter } from "./router/images";
 import { inviteRouter } from "./router/invite";
 import { orgRouter } from "./router/org";
 import { postRouter } from "./router/post";
@@ -22,6 +23,7 @@ export const appRouter = createTRPCRouter({
   court: courtRouter,
   dashboard: dashboardRouter,
   facility: facilityRouter,
+  images: imagesRouter,
   invite: inviteRouter,
   org: orgRouter,
   post: postRouter,
