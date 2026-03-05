@@ -14,6 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@wifo/ui/dropdown-menu";
 
+import { getClientImageUrl } from "~/lib/image-url";
+
 interface Facility {
   id: string;
   name: string;
@@ -48,9 +50,10 @@ export function FacilityCard({
   const router = useRouter();
   const orgSlug = params.orgSlug as string;
 
-  const photoUrl =
-    facility.photos[0] ??
-    "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&h=200&fit=crop";
+  const firstPhoto = facility.photos[0];
+  const photoUrl = firstPhoto
+    ? getClientImageUrl(firstPhoto, "card")
+    : "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&h=200&fit=crop";
 
   const dashboardPath = facility.isSetupComplete
     ? `/org/${orgSlug}/facilities/${facility.id}`

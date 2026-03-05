@@ -4,6 +4,7 @@ import { Badge } from "@wifo/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wifo/ui/tabs";
 
 import { FacilityInfoTab } from "./facility-info-tab";
+import { FacilityPhotosTab } from "./facility-photos-tab";
 import { NotificationsTab } from "./notifications-tab";
 import { ProfileTab } from "./profile-tab";
 import { SecurityTab } from "./security-tab";
@@ -28,6 +29,7 @@ export function FacilitySettingsView({
         <TabsList variant="line" className="mb-6 w-full justify-start border-b">
           <TabsTrigger value="profile">Mi Perfil</TabsTrigger>
           <TabsTrigger value="facility">Info del Local</TabsTrigger>
+          <TabsTrigger value="photos">Fotos</TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             Notificaciones
             <Badge variant="secondary" className="ml-1 text-[10px]">
@@ -48,6 +50,10 @@ export function FacilitySettingsView({
 
         <TabsContent value="facility">
           <FacilityInfoTab facilityId={facilityId} />
+        </TabsContent>
+
+        <TabsContent value="photos">
+          <FacilityPhotosTab facilityId={facilityId} />
         </TabsContent>
 
         <TabsContent value="notifications">

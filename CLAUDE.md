@@ -92,7 +92,7 @@ pnpm test             # Run all tests with Vitest
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current coverage**: `packages/api` (access-control, invite router), `packages/validators` (setup)
+- **Current coverage**: `packages/api` (access-control, invite router), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
@@ -107,7 +107,7 @@ pnpm turbo gen init   # Scaffold new package from templates
 Format: `type(scope): message` (lowercase, imperative mood)
 
 - **Types**: `feat`, `fix`, `refactor`, `chore`, `docs`
-- **Scopes**: `web`, `admin`, `landing`, `repo`, `auth`, `db`, `api`
+- **Scopes**: `web`, `admin`, `landing`, `repo`, `auth`, `db`, `api`, `images`
 - Examples: `feat(web): add booking calendar view`, `chore(repo): fix lint and format issues`
 
 ## Architecture
@@ -124,6 +124,7 @@ Format: `type(scope): message` (lowercase, imperative mood)
   ├─ auth             # Better Auth authentication
   ├─ db               # Drizzle ORM + schema definitions
   ├─ email            # Email templates & sending (React Email + Resend)
+  ├─ images           # Cloudflare Images integration (upload, delete, URL builder)
   ├─ ui               # Shared React components (shadcn-ui)
   └─ validators       # Shared Zod validation schemas
 /tooling
@@ -303,13 +304,34 @@ Organized brand assets with three color variants (fullcolor, navy, reversed) and
 
 Landing page copies the needed assets to `apps/landing/public/images/` (logomark, horizontal logos, OG image) and `apps/landing/public/` (favicons).
 
+### Images Package (`packages/images`)
+
+Cloudflare Images integration for direct browser uploads and server-side management.
+
+- **Stack**: Cloudflare Images API, `@t3-oss/env-core`, Zod
+- **Exports**: `@wifo/images` (upload, delete, config), `@wifo/images/url` (URL builder), `@wifo/images/env` (env validation)
+- **Upload flow**: Direct Creator Upload — server gets one-time upload URL from Cloudflare → client uploads directly → server confirms
+
+**Entity types** (`facility`, `court`, `organization`, `user`):
+- `facility` — gallery mode (up to 10 photos, stored as `photos: string[]`)
+- `court`, `organization`, `user` — single image mode (1 image, stored as URL string)
+
+**tRPC router** (`images.*`): `getUploadUrl`, `confirmUpload`, `delete`, `reorder` — all use `protectedProcedure` with entity-scoped access control.
+
+**URL helpers** (`@wifo/images/url`):
+- `getImageUrl(imageId, variant)` — single image URL
+- `getImageSrcSet(imageId)` — responsive srcset (thumbnail, card, gallery)
+- `getAvatarUrl(imageId)` — avatar variant
+
+**Variants**: `thumbnail` (200px), `card` (400px), `gallery` (800px), `full` (1600px), `avatar` (96px).
+
 ### Package Dependencies Flow
 ```
 @wifo/db → @wifo/auth → @wifo/api → Apps
                 ↓            ↑
            @wifo/validators  @wifo/email
-                ↓
-           @wifo/ui
+                ↓            ↑
+           @wifo/ui     @wifo/images
 ```
 
 ## Tech Stack
@@ -493,6 +515,8 @@ Required in `.env` (copy from `.env.example`):
 Optional:
 - `ADMIN_SITE_PASSWORD` - Site-level password gate for admin panel
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis for rate limiting (falls back to in-memory)
+- `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_IMAGES_TOKEN` - Cloudflare Images API credentials
+- `CLOUDFLARE_IMAGES_HASH` / `NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH` - Cloudflare Images delivery hash
 
 ## Initial Setup
 

@@ -8,7 +8,7 @@ import { LIMITS } from "@wifo/images";
 import { cn } from "@wifo/ui";
 import { toast } from "@wifo/ui/toast";
 
-import { env } from "~/env";
+import { getClientImageUrl } from "~/lib/image-url";
 import { useTRPC } from "~/trpc/react";
 import { ImageGallery } from "./ImageGallery";
 import { ImagePreview } from "./ImagePreview";
@@ -92,11 +92,6 @@ interface UploadingFile {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function buildImageUrl(imageId: string, variant: ImageVariant): string {
-  if (imageId.startsWith("http")) return imageId;
-  return `https://imagedelivery.net/${env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH}/${imageId}/${variant}`;
-}
 
 function uploadToCloudflare(
   uploadUrl: string,
@@ -378,7 +373,7 @@ export function ImageUpload({
   const galleryItems = [
     ...value.map((id) => ({
       id,
-      src: buildImageUrl(id, variant),
+      src: getClientImageUrl(id, variant),
     })),
     ...uploading.map((u) => ({
       id: u.tempId,
@@ -458,7 +453,7 @@ export function ImageUpload({
           onDrop={handleDrop}
         >
           <ImagePreview
-            src={buildImageUrl(existingId, variant)}
+            src={getClientImageUrl(existingId, variant)}
             onDelete={() => handleDelete(existingId)}
             aspectRatio={aspectRatio}
           />
