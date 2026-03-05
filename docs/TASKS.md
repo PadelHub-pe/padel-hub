@@ -90,11 +90,11 @@ Functions:
 Key behavior: if `imageId` starts with `http`, return it as-is (external URL passthrough). This ensures backward compat with Unsplash URLs in seed data and Google avatar URLs.
 
 Acceptance criteria:
-- [ ] `getImageUrl('abc', 'thumbnail')` returns correct Cloudflare URL
-- [ ] `getImageUrl('https://example.com/img.jpg', 'thumbnail')` returns the URL as-is
-- [ ] `getAvatarUrl(null)` returns null
-- [ ] `getImageSrcSet('abc')` returns valid srcSet with 3 sizes
-- [ ] Importable separately via `@wifo/images/url` (no server env vars needed)
+- [x] `getImageUrl('abc', 'thumbnail')` returns correct Cloudflare URL
+- [x] `getImageUrl('https://example.com/img.jpg', 'thumbnail')` returns the URL as-is
+- [x] `getAvatarUrl(null)` returns null
+- [x] `getImageSrcSet('abc')` returns valid srcSet with 3 sizes
+- [x] Importable separately via `@wifo/images/url` (no server env vars needed)
 
 **Depends on:** TASK-IMG-2
 
