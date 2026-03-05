@@ -205,14 +205,14 @@ States: empty, drag-over, uploading (progress), uploaded, error, max-reached.
 All copy in Spanish: "Arrastra o haz clic para subir", "Suelta para subir", "Archivo muy grande", etc.
 
 Acceptance criteria:
-- [ ] Drag-and-drop works in Chrome, Safari, Firefox
-- [ ] Client-side rejects files > 10MB and non-image types
-- [ ] Upload progress shown during transfer
-- [ ] Local preview appears instantly, swaps to Cloudflare URL after
-- [ ] Gallery mode: drag-to-reorder, shows "N/M fotos" count, hides zone at max
-- [ ] Single mode: new upload replaces existing (deletes old)
-- [ ] Delete with confirmation
-- [ ] Network error shows retry option
+- [x] Drag-and-drop works in Chrome, Safari, Firefox
+- [x] Client-side rejects files > 10MB and non-image types
+- [x] Upload progress shown during transfer
+- [x] Local preview appears instantly, swaps to Cloudflare URL after
+- [x] Gallery mode: drag-to-reorder, shows "N/M fotos" count, hides zone at max
+- [x] Single mode: new upload replaces existing (deletes old)
+- [x] Delete with confirmation
+- [x] Network error shows retry option
 
 **Depends on:** TASK-IMG-5, TASK-IMG-6
 
