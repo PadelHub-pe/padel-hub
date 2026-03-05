@@ -41,6 +41,11 @@ const USER_STAFF = {
 const router = createTRPCRouter({ org: orgRouter });
 const createCaller = createCallerFactory(router);
 
+/** Derive a valid UUID for a membership from a user UUID. */
+function memId(userId: string): string {
+  return userId.replace(/^.{8}/, "20000000");
+}
+
 function makeOrg() {
   return {
     id: ORG_ID,
@@ -64,7 +69,7 @@ function makeMembership(
   overrides?: Partial<{ id: string }>,
 ) {
   return {
-    id: overrides?.id ?? `mem-${userId}`,
+    id: overrides?.id ?? memId(userId),
     organizationId: ORG_ID,
     userId,
     role,
@@ -450,6 +455,361 @@ describe("org.getTeamMembers – facility_manager scoping", () => {
     await expect(
       caller.org.getTeamMembers({ organizationId: ORG_ID }),
     ).rejects.toThrow("No tienes permisos para ver el equipo");
+  });
+});
+
+// ===========================================================================
+// Tests: inviteMember – duplicate prevention
+// ===========================================================================
+
+describe("org.inviteMember – duplicate prevention", () => {
+  it("blocks invite when email is already a member", async () => {
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [
+        makeMemberWithUser(
+          "00000000-0000-1000-a000-000000000301",
+          "staff",
+          [FACILITY_A],
+          "existing@test.com",
+        ),
+      ],
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.inviteMember({
+        organizationId: ORG_ID,
+        email: "existing@test.com",
+        role: "staff",
+      }),
+    ).rejects.toThrow("Este email ya es miembro de la organización");
+  });
+
+  it("blocks invite when email has pending invite", async () => {
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [],
+      existingPendingInviteEmail: "pending@test.com",
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.inviteMember({
+        organizationId: ORG_ID,
+        email: "pending@test.com",
+        role: "staff",
+      }),
+    ).rejects.toThrow("Ya existe una invitación pendiente para este email");
+  });
+
+  it("allows invite when no existing member or invite", async () => {
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [],
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    const result = await caller.org.inviteMember({
+      organizationId: ORG_ID,
+      email: "brand-new@test.com",
+      role: "staff",
+    });
+
+    expect(result).toEqual(expect.objectContaining({ id: "new-invite-1" }));
+  });
+});
+
+// ===========================================================================
+// Mock DB builder for updateMember / removeMember
+// ===========================================================================
+
+interface MemberActionMockOpts {
+  callerMembership: ReturnType<typeof makeMembership>;
+  targetMember?: ReturnType<typeof makeMembership> | null;
+  adminCount?: number;
+}
+
+function createMemberActionMockDb(opts: MemberActionMockOpts) {
+  let findFirstCallCount = 0;
+
+  const selectWhereFn = vi
+    .fn()
+    .mockResolvedValue([{ adminCount: opts.adminCount ?? 1 }]);
+  const selectFromFn = vi.fn().mockReturnValue({ where: selectWhereFn });
+
+  const targetMember = opts.targetMember ?? null;
+  const updateReturningFn = vi.fn().mockResolvedValue([targetMember]);
+  const updateWhereFn = vi
+    .fn()
+    .mockReturnValue({ returning: updateReturningFn });
+  const updateSetFn = vi.fn().mockReturnValue({ where: updateWhereFn });
+
+  const deleteWhereFn = vi.fn().mockResolvedValue(undefined);
+
+  return {
+    query: {
+      organizationMembers: {
+        findFirst: vi.fn().mockImplementation(() => {
+          findFirstCallCount++;
+          if (findFirstCallCount === 1) return opts.callerMembership;
+          return targetMember;
+        }),
+      },
+    },
+    select: vi.fn().mockReturnValue({ from: selectFromFn }),
+    update: vi.fn().mockReturnValue({ set: updateSetFn }),
+    delete: vi.fn().mockReturnValue({ where: deleteWhereFn }),
+  };
+}
+
+function memberActionCaller(
+  db: ReturnType<typeof createMemberActionMockDb>,
+  sessionUser: { id: string; name: string; email: string },
+) {
+  return createCaller({
+    db: db as any,
+    session: { user: sessionUser } as any,
+    authApi: {} as any,
+  });
+}
+
+// ===========================================================================
+// Tests: updateMember – self-edit prevention
+// ===========================================================================
+
+describe("org.updateMember – self-edit prevention", () => {
+  it("blocks editing own role", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(USER_ADMIN.id, "org_admin"),
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.updateMember({
+        organizationId: ORG_ID,
+        memberId: memId(USER_ADMIN.id),
+        role: "facility_manager",
+      }),
+    ).rejects.toThrow("No puedes editar tu propio rol");
+  });
+});
+
+// ===========================================================================
+// Tests: removeMember – self-remove prevention
+// ===========================================================================
+
+describe("org.removeMember – self-remove prevention", () => {
+  it("blocks removing self", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(USER_ADMIN.id, "org_admin"),
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.removeMember({
+        organizationId: ORG_ID,
+        memberId: memId(USER_ADMIN.id),
+      }),
+    ).rejects.toThrow("No puedes eliminarte a ti mismo");
+  });
+});
+
+// ===========================================================================
+// Tests: updateMember – permission checks
+// ===========================================================================
+
+describe("org.updateMember – permission checks", () => {
+  it("blocks non-admin from editing members", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_MANAGER.id, "facility_manager", [
+        FACILITY_A,
+      ]),
+    });
+    const caller = memberActionCaller(db, USER_MANAGER);
+
+    await expect(
+      caller.org.updateMember({
+        organizationId: ORG_ID,
+        memberId: "20000000-0000-1000-a000-000000000999",
+        role: "staff",
+      }),
+    ).rejects.toThrow("Solo los administradores pueden editar miembros");
+  });
+});
+
+// ===========================================================================
+// Tests: removeMember – permission checks
+// ===========================================================================
+
+describe("org.removeMember – permission checks", () => {
+  it("blocks non-admin from removing members", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_MANAGER.id, "facility_manager", [
+        FACILITY_A,
+      ]),
+    });
+    const caller = memberActionCaller(db, USER_MANAGER);
+
+    await expect(
+      caller.org.removeMember({
+        organizationId: ORG_ID,
+        memberId: "20000000-0000-1000-a000-000000000999",
+      }),
+    ).rejects.toThrow("Solo los administradores pueden eliminar miembros");
+  });
+});
+
+// ===========================================================================
+// Tests: last admin protection
+// ===========================================================================
+
+const OTHER_USER_ID = "00000000-0000-1000-a000-000000000401";
+
+describe("org.removeMember – last admin protection", () => {
+  it("blocks removal of sole org_admin", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "org_admin"),
+      adminCount: 1,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.removeMember({
+        organizationId: ORG_ID,
+        memberId: memId(OTHER_USER_ID),
+      }),
+    ).rejects.toThrow("No se puede dejar la organización sin administrador");
+  });
+
+  it("allows removal when 2+ org_admins exist", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "org_admin"),
+      adminCount: 2,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    const result = await caller.org.removeMember({
+      organizationId: ORG_ID,
+      memberId: memId(OTHER_USER_ID),
+    });
+
+    expect(result).toEqual({ success: true });
+  });
+
+  it("allows removal of non-admin regardless of admin count", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "facility_manager", [
+        FACILITY_A,
+      ]),
+      adminCount: 1,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    const result = await caller.org.removeMember({
+      organizationId: ORG_ID,
+      memberId: memId(OTHER_USER_ID),
+    });
+
+    expect(result).toEqual({ success: true });
+  });
+});
+
+describe("org.updateMember – last admin protection", () => {
+  it("blocks demotion of sole org_admin to facility_manager", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "org_admin"),
+      adminCount: 1,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.updateMember({
+        organizationId: ORG_ID,
+        memberId: memId(OTHER_USER_ID),
+        role: "facility_manager",
+      }),
+    ).rejects.toThrow("No se puede dejar la organización sin administrador");
+  });
+
+  it("blocks demotion of sole org_admin to staff", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "org_admin"),
+      adminCount: 1,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    await expect(
+      caller.org.updateMember({
+        organizationId: ORG_ID,
+        memberId: memId(OTHER_USER_ID),
+        role: "staff",
+      }),
+    ).rejects.toThrow("No se puede dejar la organización sin administrador");
+  });
+
+  it("allows demotion when 2+ org_admins exist", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "org_admin"),
+      adminCount: 2,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    const result = await caller.org.updateMember({
+      organizationId: ORG_ID,
+      memberId: memId(OTHER_USER_ID),
+      role: "facility_manager",
+    });
+
+    expect(result).toBeDefined();
+  });
+
+  it("skips admin count check when role stays org_admin", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "org_admin"),
+      adminCount: 1,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    const result = await caller.org.updateMember({
+      organizationId: ORG_ID,
+      memberId: memId(OTHER_USER_ID),
+      role: "org_admin",
+      facilityIds: [],
+    });
+
+    expect(result).toBeDefined();
+    // Should not have called select (admin count query)
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("skips admin count check when changing non-admin role", async () => {
+    const db = createMemberActionMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      targetMember: makeMembership(OTHER_USER_ID, "facility_manager", [
+        FACILITY_A,
+      ]),
+      adminCount: 1,
+    });
+    const caller = memberActionCaller(db, USER_ADMIN);
+
+    const result = await caller.org.updateMember({
+      organizationId: ORG_ID,
+      memberId: memId(OTHER_USER_ID),
+      role: "staff",
+    });
+
+    expect(result).toBeDefined();
+    expect(db.select).not.toHaveBeenCalled();
   });
 });
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */

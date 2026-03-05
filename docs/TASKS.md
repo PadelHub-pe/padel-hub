@@ -135,7 +135,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - Pass admin count to dialog for last-admin UI hints
 - **Estimate:** Small
 
-### TASK-3.8: Tests for Flow 3
+### TASK-3.8: Tests for Flow 3 ✅
 - **Type:** feature
 - **Priority:** P1
 - **Depends on:** TASK-3.1, TASK-3.2
