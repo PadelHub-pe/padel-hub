@@ -87,7 +87,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - Redirects are server-side (in page.tsx server components)
 - **Estimate:** Medium
 
-### TASK-3.5: Team Table Polish
+### TASK-3.5: Team Table Polish ✅
 - **Type:** feature
 - **Priority:** P1
 - **Depends on:** nothing

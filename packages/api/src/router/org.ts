@@ -653,6 +653,7 @@ export const orgRouter = {
           .filter(Boolean) as string[],
         isCurrentUser: false,
         createdAt: inv.createdAt,
+        expiresAt: inv.expiresAt,
       }));
 
       return {

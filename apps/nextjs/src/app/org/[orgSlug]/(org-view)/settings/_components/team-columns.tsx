@@ -1,6 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@wifo/ui/avatar";
 import { Badge } from "@wifo/ui/badge";
@@ -24,6 +26,7 @@ export interface TeamMemberRow {
   facilityNames: string[];
   isCurrentUser: boolean;
   createdAt: Date;
+  expiresAt?: Date;
 }
 
 const roleLabels: Record<string, string> = {
@@ -35,8 +38,12 @@ const roleLabels: Record<string, string> = {
 const roleBadgeClasses: Record<string, string> = {
   org_admin: "bg-red-100 text-red-700 hover:bg-red-100",
   facility_manager: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  staff: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+  staff: "bg-green-100 text-green-700 hover:bg-green-100",
 };
+
+function isExpired(row: TeamMemberRow): boolean {
+  return row.type === "invite" && !!row.expiresAt && new Date() > row.expiresAt;
+}
 
 interface TeamColumnsOptions {
   onEdit: (member: TeamMemberRow) => void;
@@ -87,6 +94,15 @@ export function getTeamColumns(
               {m.type === "member" && (
                 <span className="text-xs text-gray-500">{m.email}</span>
               )}
+              {m.type === "invite" && (
+                <span className="text-xs text-gray-400">
+                  Invitado{" "}
+                  {formatDistanceToNow(m.createdAt, {
+                    addSuffix: true,
+                    locale: es,
+                  })}
+                </span>
+              )}
             </div>
           </div>
         );
@@ -136,7 +152,19 @@ export function getTeamColumns(
       accessorKey: "type",
       header: "Estado",
       cell: ({ row }) => {
-        const isPending = row.original.type === "invite";
+        const m = row.original;
+        const expired = isExpired(m);
+
+        if (expired) {
+          return (
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-red-400" />
+              <span className="text-sm text-red-600">Expirada</span>
+            </div>
+          );
+        }
+
+        const isPending = m.type === "invite";
         return (
           <div className="flex items-center gap-2">
             <div
@@ -155,6 +183,21 @@ export function getTeamColumns(
       cell: ({ row }) => {
         const m = row.original;
         if (m.isCurrentUser) return null;
+
+        const expired = isExpired(m);
+
+        if (expired) {
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => options.onResend(m)}
+            >
+              Reenviar
+            </Button>
+          );
+        }
 
         return (
           <DropdownMenu>
