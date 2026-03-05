@@ -111,11 +111,11 @@ Files:
 Both use `fetch()` against Cloudflare Images REST API. No external dependencies.
 
 Acceptance criteria:
-- [ ] `requestUploadUrl()` returns `{ uploadUrl, imageId }` from Cloudflare
-- [ ] Metadata (entityType, entityId, uploadedBy, uploadedAt) attached to upload
-- [ ] `getImageDetails()` returns image info including variants
-- [ ] `deleteImage()` returns boolean, logs errors, doesn't throw
-- [ ] All functions require server-side env vars (API token)
+- [x] `requestUploadUrl()` returns `{ uploadUrl, imageId }` from Cloudflare
+- [x] Metadata (entityType, entityId, uploadedBy, uploadedAt) attached to upload
+- [x] `getImageDetails()` returns image info including variants
+- [x] `deleteImage()` returns boolean, logs errors, doesn't throw
+- [x] All functions require server-side env vars (API token)
 
 **Depends on:** TASK-IMG-2, TASK-IMG-1 (for testing)
 
