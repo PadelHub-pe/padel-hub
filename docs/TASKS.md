@@ -240,9 +240,9 @@ Files to modify:
 
 **Wire ImageUpload into court creation/editing.**
 
-- Replace URL text input in `photo-section.tsx` with `<ImageUpload mode="single" entityType="court">`
-- Update court cards to use `getImageUrl(imageUrl, 'thumbnail')` for display
-- Update court create/edit forms
+- [x] Replace URL text input in `photo-section.tsx` with `<ImageUpload mode="single" entityType="court">`
+- [x] Update court cards to use `getImageUrl(imageUrl, 'thumbnail')` for display
+- [x] Update court create/edit forms
 
 Files to modify:
 - `apps/nextjs/.../courts/_components/photo-section.tsx`

@@ -9,6 +9,7 @@ import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 
+import { getClientImageUrl } from "~/lib/image-url";
 import { useTRPC } from "~/trpc/react";
 
 interface CourtViewProps {
@@ -50,6 +51,9 @@ export function CourtView({ id }: CourtViewProps) {
 
   const status = statusConfig[court.status];
   const type = typeConfig[court.type];
+  const imageUrl = court.imageUrl
+    ? getClientImageUrl(court.imageUrl, "card")
+    : null;
   const formattedPrice = court.priceInCents
     ? `S/ ${(court.priceInCents / 100).toFixed(2)}`
     : null;
@@ -97,12 +101,12 @@ export function CourtView({ id }: CourtViewProps) {
             <div
               className={cn(
                 "relative h-48 overflow-hidden rounded-lg bg-gradient-to-br md:h-64",
-                court.imageUrl ? "" : status.gradient,
+                imageUrl ? "" : status.gradient,
               )}
               style={
-                court.imageUrl
+                imageUrl
                   ? {
-                      backgroundImage: `url(${court.imageUrl})`,
+                      backgroundImage: `url(${imageUrl})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }
@@ -118,7 +122,7 @@ export function CourtView({ id }: CourtViewProps) {
               >
                 {type.icon} {type.label}
               </Badge>
-              {!court.imageUrl && (
+              {!imageUrl && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-white/80">
                     <ImageIcon className="mx-auto h-12 w-12" />

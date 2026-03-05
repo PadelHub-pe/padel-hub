@@ -45,7 +45,6 @@ const courtSchema = z.object({
   type: z.enum(["indoor", "outdoor"]),
   priceInSoles: z.string().min(1, "La tarifa estándar es requerida"),
   peakPriceInSoles: z.string().optional(),
-  imageUrl: z.string().url("URL de imagen inválida").or(z.literal("")),
 });
 
 type CourtFormValues = z.infer<typeof courtSchema>;
@@ -83,7 +82,6 @@ export function CourtCreateForm() {
       type: "indoor",
       priceInSoles: "",
       peakPriceInSoles: "",
-      imageUrl: "",
     },
   });
 
@@ -119,12 +117,9 @@ export function CourtCreateForm() {
       description: values.description || undefined,
       priceInCents,
       peakPriceInCents,
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: convert empty string to undefined
-      imageUrl: values.imageUrl || undefined,
     });
   }
 
-  const imageUrl = form.watch("imageUrl");
   const description = form.watch("description") ?? "";
   const type = form.watch("type");
 
@@ -382,56 +377,20 @@ export function CourtCreateForm() {
               </CardContent>
             </Card>
 
-            {/* Photo */}
+            {/* Photo info */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-gray-900">
                   Foto de la Cancha
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div
-                  className={cn(
-                    "relative h-48 overflow-hidden rounded-lg border-2 border-dashed",
-                    imageUrl
-                      ? "border-transparent"
-                      : "border-gray-300 bg-gray-50",
-                  )}
-                >
-                  {imageUrl ? (
-                    <div
-                      className="h-full w-full bg-cover bg-center"
-                      style={{ backgroundImage: `url(${imageUrl})` }}
-                    />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center text-gray-400">
-                      <ImageIcon className="h-12 w-12" />
-                      <p className="mt-2 text-sm">Vista previa de imagen</p>
-                      <p className="text-xs">Resolución mínima: 800x600px</p>
-                    </div>
-                  )}
+              <CardContent>
+                <div className="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400">
+                  <ImageIcon className="h-10 w-10" />
+                  <p className="mt-2 text-sm">
+                    Podrás subir una foto después de crear la cancha
+                  </p>
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL de la imagen</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="url"
-                          placeholder="https://ejemplo.com/imagen-cancha.jpg"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <FormDescription>
-                        Formatos soportados: JPG, PNG, WebP
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
           </div>

@@ -35,7 +35,7 @@ const courtEditSchema = z.object({
   type: z.enum(["indoor", "outdoor"]),
   priceInSoles: z.string().optional(),
   peakPriceInSoles: z.string().optional(),
-  imageUrl: z.string().url("URL de imagen inválida").or(z.literal("")),
+  imageUrl: z.string(),
 });
 
 export type CourtEditFormValues = z.infer<typeof courtEditSchema>;
@@ -168,7 +168,7 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
             <BasicInfoSection control={form.control} />
             <CourtTypeSection control={form.control} />
             <PricingSection control={form.control} />
-            <PhotoSection control={form.control} />
+            <PhotoSection control={form.control} courtId={id} />
 
             <DangerZoneSection
               courtName={court.name}

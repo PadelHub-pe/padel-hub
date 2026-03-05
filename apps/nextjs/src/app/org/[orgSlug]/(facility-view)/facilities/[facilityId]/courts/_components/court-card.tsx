@@ -7,6 +7,8 @@ import { cn } from "@wifo/ui";
 import { Badge } from "@wifo/ui/badge";
 import { Card } from "@wifo/ui/card";
 
+import { getClientImageUrl } from "~/lib/image-url";
+
 interface CourtCardProps {
   court: {
     id: string;
@@ -57,6 +59,10 @@ export function CourtCard({ court }: CourtCardProps) {
   const status = statusConfig[court.status];
   const type = typeConfig[court.type];
 
+  const imageUrl = court.imageUrl
+    ? getClientImageUrl(court.imageUrl, "thumbnail")
+    : null;
+
   const formattedPrice = court.priceInCents
     ? `S/ ${(court.priceInCents / 100).toFixed(0)}/hr`
     : null;
@@ -71,12 +77,12 @@ export function CourtCard({ court }: CourtCardProps) {
         <div
           className={cn(
             "relative h-32 bg-gradient-to-br transition-transform duration-200 group-hover:scale-[1.02]",
-            court.imageUrl ? "" : status.gradient,
+            imageUrl ? "" : status.gradient,
           )}
           style={
-            court.imageUrl
+            imageUrl
               ? {
-                  backgroundImage: `url(${court.imageUrl})`,
+                  backgroundImage: `url(${imageUrl})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }
