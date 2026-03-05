@@ -154,12 +154,12 @@ Acceptance criteria:
 
 ### TASK-IMG-6: Environment Variables [config]
 
-- [ ] Add `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_IMAGES_HASH`, `CLOUDFLARE_IMAGES_TOKEN` to `.env.local`
-- [ ] Add to `.env.example` with placeholders
-- [ ] Add to Vercel env vars (production + preview)
-- [ ] `CLOUDFLARE_IMAGES_HASH` exposed client-side (it's in delivery URLs) — add to `apps/nextjs` public env if needed
-- [ ] Add `imagedelivery.net` to `next.config.js` `images.remotePatterns`
-- [ ] Missing vars throw clear error at startup (via `@t3-oss/env-core`)
+- [x] Add `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_IMAGES_HASH`, `CLOUDFLARE_IMAGES_TOKEN` to `.env.local`
+- [x] Add to `.env.example` with placeholders
+- [x] Add to Vercel env vars (production + preview) — deferred until dashboard deployment
+- [x] `CLOUDFLARE_IMAGES_HASH` exposed client-side (it's in delivery URLs) — add to `apps/nextjs` public env if needed
+- [x] Add `imagedelivery.net` to `next.config.js` `images.remotePatterns`
+- [x] Missing vars throw clear error at startup (via `@t3-oss/env-core`)
 
 **Depends on:** TASK-IMG-1, TASK-IMG-2
 

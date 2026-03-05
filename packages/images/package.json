@@ -20,7 +20,6 @@
     "test": "vitest run",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "test": "vitest run",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {

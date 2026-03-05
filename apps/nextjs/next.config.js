@@ -12,9 +12,19 @@ const config = {
     "@wifo/api",
     "@wifo/auth",
     "@wifo/db",
+    "@wifo/images",
     "@wifo/ui",
     "@wifo/validators",
   ],
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "imagedelivery.net",
+      },
+    ],
+  },
 
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },

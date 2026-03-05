@@ -4,7 +4,9 @@ const TEST_HASH = "test-account-hash";
 
 describe("url", () => {
   beforeEach(() => {
+    vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "test-account-id");
     vi.stubEnv("CLOUDFLARE_IMAGES_HASH", TEST_HASH);
+    vi.stubEnv("CLOUDFLARE_IMAGES_TOKEN", "test-token");
   });
 
   afterEach(() => {
