@@ -24,7 +24,7 @@ Facility card actions, deactivation dialog, empty state, URL-persisted filters, 
 
 See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already exists. Tasks focus on the gaps: last admin protection, role-based UI enforcement, facility scoping, and polish.
 
-### TASK-3.1: Last Admin Protection (API)
+### ~~TASK-3.1: Last Admin Protection (API)~~ ✅
 - **Type:** feature
 - **Priority:** P0 (safety-critical)
 - **Depends on:** nothing

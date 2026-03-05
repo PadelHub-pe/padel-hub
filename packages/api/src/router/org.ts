@@ -114,6 +114,35 @@ async function verifyOrgMembership(
   return membership;
 }
 
+/**
+ * Throws FORBIDDEN if the target is the last org_admin in the organization.
+ * Counts only active members (not pending invites).
+ */
+async function validateNotLastAdmin(
+  db: typeof DbType,
+  organizationId: string,
+  targetRole: string,
+) {
+  if (targetRole !== "org_admin") return;
+
+  const [result] = await db
+    .select({ adminCount: count() })
+    .from(organizationMembers)
+    .where(
+      and(
+        eq(organizationMembers.organizationId, organizationId),
+        eq(organizationMembers.role, "org_admin"),
+      ),
+    );
+
+  if (!result || result.adminCount <= 1) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "No se puede dejar la organización sin administrador",
+    });
+  }
+}
+
 // =============================================================================
 // Router
 // =============================================================================
@@ -843,6 +872,11 @@ export const orgRouter = {
         });
       }
 
+      // Block demotion of the last org_admin
+      if (target.role === "org_admin" && role !== "org_admin") {
+        await validateNotLastAdmin(ctx.db, organizationId, target.role);
+      }
+
       const [updated] = await ctx.db
         .update(organizationMembers)
         .set({ role, facilityIds: facilityIds ?? [] })
@@ -891,6 +925,9 @@ export const orgRouter = {
           message: "No puedes eliminarte a ti mismo",
         });
       }
+
+      // Block removal of the last org_admin
+      await validateNotLastAdmin(ctx.db, organizationId, target.role);
 
       await ctx.db
         .delete(organizationMembers)
