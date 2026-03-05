@@ -51,7 +51,7 @@ See `docs/TECHNICAL_PLAN.md` for full gap analysis.
 
 ---
 
-### TASK-2.2: Add deactivation confirmation dialog + toast [feature] [P0]
+### TASK-2.2: Add deactivation confirmation dialog + toast [feature] [P0] ✅
 
 **What**: When user clicks "Desactivar" from card menu, show confirmation dialog with facility name and pending bookings warning. On confirm, call `org.updateFacilityStatus` with optimistic UI. Show toast on success. Reactivation needs no dialog — just API call + toast.
 

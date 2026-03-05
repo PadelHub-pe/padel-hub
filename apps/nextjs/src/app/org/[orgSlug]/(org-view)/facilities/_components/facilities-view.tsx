@@ -11,6 +11,7 @@ import { toast } from "@wifo/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
 import { AddFacilityCard } from "./add-facility-card";
+import { DeactivateDialog } from "./deactivate-dialog";
 import { FacilitiesFilters } from "./facilities-filters";
 import { FacilitiesGrid } from "./facilities-grid";
 import { FacilitiesStats } from "./facilities-stats";
@@ -76,11 +77,36 @@ export function FacilitiesView({
     }),
   );
 
+  const [deactivateTarget, setDeactivateTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
   const handleClearFilters = () => {
     setSearch("");
     setStatus("all");
     setDistrict(undefined);
     setSortBy("name");
+  };
+
+  const handleDeactivate = (facility: { id: string; name: string }) => {
+    setDeactivateTarget(facility);
+  };
+
+  const handleConfirmDeactivate = () => {
+    if (!deactivateTarget) return;
+    updateStatus.mutate(
+      { facilityId: deactivateTarget.id, isActive: false },
+      {
+        onSuccess: () => {
+          toast.success(`${deactivateTarget.name} desactivado`);
+          setDeactivateTarget(null);
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      },
+    );
   };
 
   const handleReactivate = (facility: { id: string; name: string }) => {
@@ -143,10 +169,22 @@ export function FacilitiesView({
             isLoading={false}
             addFacilityCard={<AddFacilityCard />}
             userRole={userRole}
+            onDeactivate={handleDeactivate}
             onReactivate={handleReactivate}
           />
         </>
       )}
+
+      {/* Deactivation Confirmation Dialog */}
+      <DeactivateDialog
+        facility={deactivateTarget}
+        open={!!deactivateTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeactivateTarget(null);
+        }}
+        onConfirm={handleConfirmDeactivate}
+        isPending={updateStatus.isPending}
+      />
     </div>
   );
 }
