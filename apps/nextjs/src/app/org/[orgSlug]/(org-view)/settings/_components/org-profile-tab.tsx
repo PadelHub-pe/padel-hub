@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
@@ -22,6 +23,7 @@ import { Input } from "@wifo/ui/input";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
 
+import { ImageUpload } from "~/components/images/ImageUpload";
 import { useTRPC } from "~/trpc/react";
 
 const orgProfileSchema = z.object({
@@ -51,6 +53,20 @@ export function OrgProfileTab({ organizationId }: OrgProfileTabProps) {
   const { data: org } = useSuspenseQuery(
     trpc.org.getOrgProfile.queryOptions({ organizationId }),
   );
+
+  const [logoValue, setLogoValue] = useState<string[]>(
+    org.logoUrl ? [org.logoUrl] : [],
+  );
+
+  function handleLogoChange(ids: string[]) {
+    setLogoValue(ids);
+    void queryClient.invalidateQueries(
+      trpc.org.getOrgProfile.queryOptions({ organizationId }),
+    );
+    void queryClient.invalidateQueries(
+      trpc.org.getMyOrganizations.queryOptions(),
+    );
+  }
 
   const form = useForm<OrgProfileFormValues>({
     resolver: standardSchemaResolver(orgProfileSchema),
@@ -97,21 +113,22 @@ export function OrgProfileTab({ organizationId }: OrgProfileTabProps) {
         </p>
       </div>
 
-      {/* Logo placeholder */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-xl font-bold text-white">
-          {org.name
-            .split(" ")
-            .map((w) => w[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase()}
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-900">{org.name}</p>
-          <p className="text-xs text-gray-500">
-            La carga de logo estará disponible próximamente
-          </p>
+      {/* Logo upload */}
+      <div className="mb-8">
+        <p className="mb-2 text-sm font-medium text-gray-900">
+          Logo de la organización
+        </p>
+        <div className="w-32">
+          <ImageUpload
+            entityType="organization"
+            entityId={organizationId}
+            mode="single"
+            value={logoValue}
+            onChange={handleLogoChange}
+            variant="avatar"
+            aspectRatio="1/1"
+            placeholder="Subir logo"
+          />
         </div>
       </div>
 

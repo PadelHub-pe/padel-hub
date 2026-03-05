@@ -254,17 +254,17 @@ Files to modify:
 
 ---
 
-### TASK-IMG-10: Integrate with Org Logo [feature]
+### TASK-IMG-10: Integrate with Org Logo [feature] ✅
 
 **Wire ImageUpload into org profile settings.**
 
-- Replace "coming soon" placeholder in `org-profile-tab.tsx` with `<ImageUpload mode="single" entityType="organization">`
-- Update sidebar/switcher to use `getImageUrl(logoUrl, 'avatar')` for logo display
-- Handle null logo gracefully (show initials fallback)
+- [x] Replace "coming soon" placeholder in `org-profile-tab.tsx` with `<ImageUpload mode="single" entityType="organization">`
+- [x] Update sidebar/switcher to use `getImageUrl(logoUrl, 'avatar')` for logo display
+- [x] Handle null logo gracefully (show initials fallback)
 
-Files to modify:
+Files modified:
 - `apps/nextjs/.../org-profile-tab.tsx`
-- Sidebar components showing org logo
+- `apps/nextjs/.../org-selector.tsx`
 
 **Depends on:** TASK-IMG-7
 

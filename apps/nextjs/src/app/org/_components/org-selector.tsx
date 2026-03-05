@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@wifo/ui/dropdown-menu";
 
+import { env } from "~/env";
+
 interface Organization {
   id: string;
   name: string;
@@ -30,6 +32,11 @@ const roleLabels: Record<Organization["role"], string> = {
   facility_manager: "Manager",
   staff: "Staff",
 };
+
+function getLogoUrl(logoUrl: string): string {
+  if (logoUrl.startsWith("http")) return logoUrl;
+  return `https://imagedelivery.net/${env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH}/${logoUrl}/avatar`;
+}
 
 export function OrgSelector({ organizations }: OrgSelectorProps) {
   const router = useRouter();
@@ -51,7 +58,7 @@ export function OrgSelector({ organizations }: OrgSelectorProps) {
       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold text-white">
         {currentOrg.logoUrl ? (
           <img
-            src={currentOrg.logoUrl}
+            src={getLogoUrl(currentOrg.logoUrl)}
             alt={currentOrg.name}
             className="h-9 w-9 rounded-lg object-cover"
           />
@@ -109,7 +116,7 @@ export function OrgSelector({ organizations }: OrgSelectorProps) {
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">
                   {org.logoUrl ? (
                     <img
-                      src={org.logoUrl}
+                      src={getLogoUrl(org.logoUrl)}
                       alt={org.name}
                       className="h-8 w-8 rounded-md object-cover"
                     />
