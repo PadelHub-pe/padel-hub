@@ -85,6 +85,16 @@ pnpm db:reset         # Reset database and run migrations + seed
 pnpm auth:generate    # Regenerate Better Auth schema
 ```
 
+### Testing
+```bash
+pnpm test             # Run all tests with Vitest
+```
+
+- **Framework**: Vitest with `describe`/`it`/`expect`
+- **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
+- **Current coverage**: `packages/api` (access-control, invite router), `packages/validators` (setup)
+- **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
+
 ### Other
 ```bash
 pnpm ui-add           # Add shadcn/ui components interactively
@@ -97,7 +107,7 @@ pnpm turbo gen init   # Scaffold new package from templates
 Format: `type(scope): message` (lowercase, imperative mood)
 
 - **Types**: `feat`, `fix`, `refactor`, `chore`, `docs`
-- **Scopes**: `web`, `admin`, `landing`, `repo`, `auth`, `db`
+- **Scopes**: `web`, `admin`, `landing`, `repo`, `auth`, `db`, `api`
 - Examples: `feat(web): add booking calendar view`, `chore(repo): fix lint and format issues`
 
 ## Architecture
@@ -183,6 +193,7 @@ Internal Next.js app for PadelHub platform administrators to manage access reque
 - **Port**: 3001 (`pnpm dev:admin`)
 - **Auth**: Cookie-based session with `platformAdmins` table check via `adminProcedure`
 - **Middleware**: Redirects unauthenticated users to `/login`, authenticated `/` to `/access-requests`
+- **Site protection**: Optional `ADMIN_SITE_PASSWORD` env var enables a `/gate` password page before any admin route
 
 **Route structure:**
 ```
@@ -478,6 +489,10 @@ Required in `.env` (copy from `.env.example`):
 - `RESEND_API_KEY` - Resend API key for transactional emails (optional in dev — logs to console)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth credentials
 - OAuth credentials for player auth (Google, Apple per PRD requirements)
+
+Optional:
+- `ADMIN_SITE_PASSWORD` - Site-level password gate for admin panel
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis for rate limiting (falls back to in-memory)
 
 ## Initial Setup
 

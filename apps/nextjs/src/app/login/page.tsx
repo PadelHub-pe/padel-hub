@@ -73,9 +73,13 @@ export default function LoginPage() {
       } else {
         router.push("/org");
       }
-    } catch {
+    } catch (error) {
+      const isNetworkError =
+        error instanceof TypeError && error.message === "Failed to fetch";
       form.setError("root", {
-        message: "Ocurrió un error inesperado. Intenta nuevamente.",
+        message: isNetworkError
+          ? "Error de conexión. Verifica tu internet e intenta nuevamente."
+          : "Ocurrió un error inesperado. Intenta nuevamente.",
       });
     }
   }

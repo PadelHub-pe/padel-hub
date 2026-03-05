@@ -103,8 +103,7 @@ export default function ResetPasswordPage() {
 
       if (result.error) {
         form.setError("root", {
-          message:
-            result.error.message ?? "Error al restablecer la contraseña.",
+          message: "Este enlace ha expirado. Solicita uno nuevo.",
         });
         return;
       }
