@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { CourtsView } from "./_components/courts-view";
 
 interface FacilityCourtsPageProps {
@@ -10,7 +11,15 @@ interface FacilityCourtsPageProps {
 export default async function FacilityCourtsPage({
   params,
 }: FacilityCourtsPageProps) {
-  const { facilityId } = await params;
+  const { orgSlug, facilityId } = await params;
+
+  // Staff cannot access court configuration
+  const caller = await api();
+  const organizations = await caller.org.getMyOrganizations();
+  const org = organizations.find((o) => o.slug === orgSlug);
+  if (org?.role === "staff") {
+    redirect(`/org/${orgSlug}/facilities/${facilityId}`);
+  }
 
   // Prefetch data for client components
   prefetch(trpc.court.list.queryOptions({ facilityId }));

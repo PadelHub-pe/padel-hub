@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { FacilitySettingsView } from "./_components/facility-settings-view";
 
 interface FacilitySettingsPageProps {
@@ -10,7 +11,15 @@ interface FacilitySettingsPageProps {
 export default async function FacilitySettingsPage({
   params,
 }: FacilitySettingsPageProps) {
-  const { facilityId } = await params;
+  const { orgSlug, facilityId } = await params;
+
+  // Staff cannot access facility settings
+  const caller = await api();
+  const organizations = await caller.org.getMyOrganizations();
+  const org = organizations.find((o) => o.slug === orgSlug);
+  if (org?.role === "staff") {
+    redirect(`/org/${orgSlug}/facilities/${facilityId}`);
+  }
 
   // Prefetch data in parallel
   prefetch(trpc.account.getMyProfile.queryOptions());

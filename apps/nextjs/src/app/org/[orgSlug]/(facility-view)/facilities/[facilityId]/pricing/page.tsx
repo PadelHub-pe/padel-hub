@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { PricingView } from "./_components/pricing-view";
 
 interface FacilityPricingPageProps {
@@ -10,7 +11,15 @@ interface FacilityPricingPageProps {
 export default async function FacilityPricingPage({
   params,
 }: FacilityPricingPageProps) {
-  const { facilityId } = await params;
+  const { orgSlug, facilityId } = await params;
+
+  // Staff cannot access pricing configuration
+  const caller = await api();
+  const organizations = await caller.org.getMyOrganizations();
+  const org = organizations.find((o) => o.slug === orgSlug);
+  if (org?.role === "staff") {
+    redirect(`/org/${orgSlug}/facilities/${facilityId}`);
+  }
 
   prefetch(trpc.pricing.getOverview.queryOptions({ facilityId }));
   prefetch(

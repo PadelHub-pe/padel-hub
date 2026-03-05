@@ -7,12 +7,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **PadelHub** is a two-sided platform connecting padel players with court facilities in Lima, Peru. Built on T3 Stack (create-t3-turbo) with Turborepo, pnpm workspaces, and full-stack TypeScript with tRPC.
 
 ### Applications
+
 - **Mobile App** (Expo): Player-facing app for court discovery, booking, and open match coordination
 - **Web Dashboard** (Next.js): Court owner dashboard for facility management, reservations, and analytics
 - **Admin Panel** (Next.js): Internal PadelHub admin panel for managing access requests and organizations
 - **Landing Page** (Astro): B2B marketing page for facility owner lead generation ("Solicitar Acceso")
 
 ### Product Requirements
+
 See `PRD.MD` for complete functional requirements, data models, and user flows.
 
 ## Domain Concepts
@@ -27,6 +29,7 @@ See `PRD.MD` for complete functional requirements, data models, and user flows.
 - **Skill Category**: 6-1 scale (6=beginner, 1=professional) - note: lower is better
 
 ### Key Entities
+
 ```
 Organization ─┬─► OrganizationMember (role: org_admin | facility_manager | staff)
               │
@@ -45,6 +48,7 @@ Organization ─┬─► OrganizationMember (role: org_admin | facility_manager
 ## Commands
 
 ### Development
+
 ```bash
 pnpm dev              # Run all apps in watch mode
 pnpm dev:next         # Run only Next.js app (http://localhost:3000)
@@ -53,6 +57,7 @@ pnpm dev:landing      # Run only Astro landing page (http://localhost:4321)
 ```
 
 ### Building & Quality
+
 ```bash
 pnpm build            # Build all packages
 pnpm lint             # ESLint across all workspaces
@@ -64,6 +69,7 @@ pnpm lint:ws          # Workspace dependency lint (sherif)
 ```
 
 **IMPORTANT: Code quality checks are mandatory.** After writing or modifying code, always run `pnpm lint`, `pnpm format`, and `pnpm lint:ws` to verify compliance. Do NOT bypass lint rules with eslint-disable comments unless there is a genuine technical reason (e.g., library API constraints). Instead, fix the underlying issue:
+
 - `no-non-null-assertion` → Add proper null checks or use `?? defaultValue`
 - `no-unnecessary-condition` → Remove redundant optional chains or nullish coalescing
 - `no-unused-vars` → Remove the unused import/variable
@@ -76,6 +82,7 @@ pnpm lint:ws          # Workspace dependency lint (sherif)
 When `eslint-disable` is truly necessary, prefer block-scoped `/* eslint-disable */` / `/* eslint-enable */` over `eslint-disable-next-line` for multi-line expressions that Prettier may reformat.
 
 ### Database
+
 ```bash
 pnpm db:push          # Push Drizzle schema to database
 pnpm db:studio        # Open Drizzle Studio UI
@@ -86,6 +93,7 @@ pnpm auth:generate    # Regenerate Better Auth schema
 ```
 
 ### Testing
+
 ```bash
 pnpm test             # Run all tests with Vitest
 ```
@@ -96,6 +104,7 @@ pnpm test             # Run all tests with Vitest
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
+
 ```bash
 pnpm ui-add           # Add shadcn/ui components interactively
 pnpm email:dev        # React Email preview server (http://localhost:3333)
@@ -146,6 +155,7 @@ Astro app with zero-JS-by-default static sections and one React island for the e
 - **DB table**: `access_requests` — stores "Solicitar Acceso" email submissions
 
 **Vercel deployment:**
+
 - Root Directory: `apps/landing`
 - Build Command: `astro build` (not `pnpm build`, to skip `with-env` on Vercel)
 - Env var: `POSTGRES_URL` required for the API endpoint
@@ -163,17 +173,19 @@ Transactional email system using React Email for templates and Resend for delive
 - **Preview**: `pnpm -F @wifo/email preview` opens React Email preview on `:3333`
 
 **Templates:**
+
 - `OrganizationInvite` — Team member invite (used by `org.inviteMember`, `org.resendInvite`)
 - `AccessRequestApproval` — Congratulations email when admin approves access request
 - `AccessRequestConfirmation` — Thank-you email when user submits on landing page
 - `PasswordReset` — Password reset link (wired via Better Auth `sendResetPassword` hook)
 
 **Public API** (exported from `@wifo/email`):
+
 ```typescript
 import {
-  sendOrganizationInvite,
   sendAccessRequestApproval,
   sendAccessRequestConfirmation,
+  sendOrganizationInvite,
   sendPasswordReset,
 } from "@wifo/email";
 ```
@@ -181,6 +193,7 @@ import {
 **Environment**: Uses Vercel env vars (`VERCEL_ENV`, `VERCEL_URL`, `VERCEL_PROJECT_PRODUCTION_URL`) for `baseUrl` resolution. `RESEND_API_KEY` is optional in dev.
 
 **Integration points:**
+
 - `packages/api/src/router/admin.ts` — `sendAccessRequestApproval` on approve
 - `packages/api/src/router/org.ts` — `sendOrganizationInvite` on invite/resend
 - `apps/nextjs/src/auth/server.ts` — `sendPasswordReset` via `onSendResetPassword` callback
@@ -197,6 +210,7 @@ Internal Next.js app for PadelHub platform administrators to manage access reque
 - **Site protection**: Optional `ADMIN_SITE_PASSWORD` env var enables a `/gate` password page before any admin route
 
 **Route structure:**
+
 ```
 apps/admin/src/app/
 ├─ _components/admin-layout.tsx   # Sidebar + main content wrapper
@@ -219,10 +233,12 @@ apps/admin/src/app/
 ```
 
 **Key flows:**
+
 - **Approve access request** → Creates organization + facility shell (inactive) + org_admin invite (7-day token) + marks request as approved
 - **Reject access request** → Marks request as rejected with optional notes
 
 **tRPC procedures** (all use `adminProcedure`):
+
 - `admin.getStats` - Platform overview (org/facility/user/pending counts)
 - `admin.listAccessRequests` - Paginated list with status filter + search
 - `admin.approveAccessRequest` - Full approval flow (org + facility + invite)
@@ -230,6 +246,7 @@ apps/admin/src/app/
 - `admin.listOrganizations` - Paginated list with member/facility counts
 
 **Database tables:**
+
 - `platform_admins` - userId reference to `user` table, grants admin panel access
 - `organization_invites` - Token-based invites (role, facilityIds, expiresAt, status)
 
@@ -249,9 +266,11 @@ apps/nextjs/src/app/
 │           ├─ layout.tsx     # Auth validation only (no sidebar)
 │           ├─ (org-view)/    # Org-level views with OrgSidebar
 │           │   ├─ layout.tsx # Renders OrgSidebar
-│           │   └─ facilities/
-│           │       ├─ page.tsx           # Facilities list
-│           │       └─ _components/       # FacilityCard, filters, etc.
+│           │   ├─ facilities/
+│           │   │   ├─ page.tsx           # Facilities list
+│           │   │   └─ _components/       # FacilityCard, filters, etc.
+│           │   └─ settings/              # Org settings (team, profile)
+│           │       └─ _components/       # TeamTab, InviteDialog, EditMemberDialog
 │           └─ (facility-view)/           # Facility-level views with FacilitySidebar
 │               └─ facilities/
 │                   └─ [facilityId]/
@@ -264,19 +283,28 @@ apps/nextjs/src/app/
 ```
 
 **Key routing patterns:**
+
 - Route groups `(org-view)` and `(facility-view)` prevent layout nesting - each has its own sidebar
 - `[orgSlug]` layout handles auth validation, child layouts handle sidebars
 - Facility root (`/org/[orgSlug]/facilities/[facilityId]`) renders the dashboard directly
 - Use `useParams()` to get `orgSlug` and `facilityId` for building navigation links
 
 **URL examples:**
+
 - `/org/padel-group-lima/facilities` - List all facilities
+- `/org/padel-group-lima/settings` - Org settings (team, profile)
 - `/org/padel-group-lima/facilities/new` - Quick create facility form
 - `/org/padel-group-lima/facilities/abc123` - Facility dashboard
 - `/org/padel-group-lima/facilities/abc123/setup` - Setup wizard (courts + schedule)
 - `/org/padel-group-lima/facilities/abc123/courts` - Courts management
+- `/org/padel-group-lima/facilities/abc123/bookings` - Bookings list
+- `/org/padel-group-lima/facilities/abc123/bookings/calendar` - Calendar view
+- `/org/padel-group-lima/facilities/abc123/schedule` - Operating hours
+- `/org/padel-group-lima/facilities/abc123/pricing` - Court pricing
+- `/org/padel-group-lima/facilities/abc123/settings` - Facility settings
 
 **Facility Onboarding Flow:**
+
 1. Quick Create (`/facilities/new`) - Creates inactive facility with minimal fields
 2. Setup Wizard (`/facilities/[id]/setup`) - Configure courts and schedule
 3. Complete Setup - Activates facility (sets `onboardingCompletedAt`, `isActive=true`)
@@ -287,17 +315,18 @@ Incomplete facilities show "Pendiente" badge on cards and setup banner on dashbo
 
 Organized brand assets with three color variants (fullcolor, navy, reversed) and multiple densities (@1x, @2x, @3x):
 
-| Folder | Contents |
-|--------|----------|
-| `logomark/` | Icon-only logo (padel ball shape, blue+green) |
-| `horizontal/` | Icon + "PadelHub" text side by side |
-| `stacked/` | Icon + text stacked vertically |
-| `wordmark/` | Text-only "PadelHub" |
-| `favicons/` | PNG at 16, 32, 48, 180, 192, 512px |
-| `app-icons/` | Android + iOS app icons |
-| `social/` | Avatar, OG images |
+| Folder        | Contents                                      |
+| ------------- | --------------------------------------------- |
+| `logomark/`   | Icon-only logo (padel ball shape, blue+green) |
+| `horizontal/` | Icon + "PadelHub" text side by side           |
+| `stacked/`    | Icon + text stacked vertically                |
+| `wordmark/`   | Text-only "PadelHub"                          |
+| `favicons/`   | PNG at 16, 32, 48, 180, 192, 512px            |
+| `app-icons/`  | Android + iOS app icons                       |
+| `social/`     | Avatar, OG images                             |
 
 **Color variants:**
+
 - `fullcolor` — Blue (#3B82F6) + green (#10B981) + navy text
 - `navy` — All navy monochrome
 - `reversed` — All white (for dark backgrounds)
@@ -313,12 +342,14 @@ Cloudflare Images integration for direct browser uploads and server-side managem
 - **Upload flow**: Direct Creator Upload — server gets one-time upload URL from Cloudflare → client uploads directly → server confirms
 
 **Entity types** (`facility`, `court`, `organization`, `user`):
+
 - `facility` — gallery mode (up to 10 photos, stored as `photos: string[]`)
 - `court`, `organization`, `user` — single image mode (1 image, stored as URL string)
 
 **tRPC router** (`images.*`): `getUploadUrl`, `confirmUpload`, `delete`, `reorder` — all use `protectedProcedure` with entity-scoped access control.
 
 **URL helpers** (`@wifo/images/url`):
+
 - `getImageUrl(imageId, variant)` — single image URL
 - `getImageSrcSet(imageId)` — responsive srcset (thumbnail, card, gallery)
 - `getAvatarUrl(imageId)` — avatar variant
@@ -326,6 +357,7 @@ Cloudflare Images integration for direct browser uploads and server-side managem
 **Variants**: `thumbnail` (200px), `card` (400px), `gallery` (800px), `full` (1600px), `avatar` (96px).
 
 ### Package Dependencies Flow
+
 ```
 @wifo/db → @wifo/auth → @wifo/api → Apps
                 ↓            ↑
@@ -346,16 +378,18 @@ Cloudflare Images integration for direct browser uploads and server-side managem
 ## Key Patterns
 
 ### Date Handling
+
 - Use `date-fns` and `date-fns-tz` for all date manipulation and formatting
 - Default timezone: `America/Lima` (PET, UTC-5)
 - Store dates in database as timestamps
 - Format dates for display using `format()` from date-fns with Spanish locale
 - Use `startOfDay()`, `endOfDay()`, `addDays()` for date range calculations
 - Example:
+
   ```typescript
-  import { format, startOfDay, addDays } from "date-fns";
-  import { es } from "date-fns/locale";
+  import { addDays, format, startOfDay } from "date-fns";
   import { toZonedTime } from "date-fns-tz";
+  import { es } from "date-fns/locale";
 
   const TIMEZONE = "America/Lima";
   const limaDate = toZonedTime(new Date(), TIMEZONE);
@@ -363,10 +397,12 @@ Cloudflare Images integration for direct browser uploads and server-side managem
   ```
 
 ### Tables (Web Dashboard)
+
 - Use TanStack Table (`@tanstack/react-table`) for all data tables in the Next.js dashboard
 - Reusable DataTable component: `apps/nextjs/src/components/ui/data-table.tsx`
 - Define columns in separate `*-columns.tsx` files for each table
 - Pattern:
+
   ```typescript
   // Define column definitions
   import type { ColumnDef } from "@tanstack/react-table";
@@ -392,9 +428,11 @@ Cloudflare Images integration for direct browser uploads and server-side managem
   ```
 
 ### Forms (Web Dashboard)
+
 - Use React Hook Form (`react-hook-form`) with Zod validation for all forms
 - Form components available from `@wifo/ui/form`
 - Pattern:
+
   ```typescript
   import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
   import { useForm } from "react-hook-form";
@@ -460,6 +498,7 @@ Cloudflare Images integration for direct browser uploads and server-side managem
     );
   }
   ```
+
 - Key features:
   - `standardSchemaResolver` integrates Zod v4 schemas with react-hook-form (Zod v4 implements Standard Schema)
   - `FormMessage` automatically displays field errors
@@ -468,7 +507,9 @@ Cloudflare Images integration for direct browser uploads and server-side managem
   - Error messages should be in Spanish
 
 ### Facility Setup Components
+
 Reusable setup wizard components in `apps/nextjs/src/components/facility-setup/`:
+
 - `StepIndicator` - Progress indicator with configurable step labels
 - `StepCourts` - Court creation form (add/remove courts with name + type)
 - `StepSchedule` - Operating hours per day + default pricing
@@ -491,21 +532,73 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 <StepSchedule schedule={schedule} onChange={setSchedule} />
 ```
 
-### tRPC Procedures
-- Use `publicProcedure` for unauthenticated endpoints
-- Use `protectedProcedure` for authenticated endpoints (defined in `packages/api/src/trpc.ts`)
-- Use `adminProcedure` for admin-only endpoints (checks `platformAdmins` table)
+### tRPC Routers & Procedures
+
+**Procedure types** (defined in `packages/api/src/trpc.ts`):
+
+- `publicProcedure` — No auth required, timing middleware only
+- `protectedProcedure` — Requires authenticated session (`ctx.session.user`)
+- `adminProcedure` — Requires `platformAdmins` table entry (admin panel only)
+
+**Router overview** (`packages/api/src/router/`):
+
+| Router      | Key Procedures                                                                                                        | Auth             |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `admin`     | getStats, listAccessRequests, approveAccessRequest, rejectAccessRequest, listOrganizations                            | admin            |
+| `org`       | getTeamMembers, inviteMember, updateMember, removeMember, resendInvite, cancelInvite, getOrgProfile, updateOrgProfile | protected        |
+| `invite`    | validate, accept, acceptExisting, getPendingInvites                                                                   | public/protected |
+| `facility`  | getProfile, updateProfile, getSetupStatus, saveCourts, saveSchedule, completeSetup                                    | protected        |
+| `court`     | list, getById, create, update, delete                                                                                 | protected        |
+| `booking`   | list, getById, confirm, cancel, updateStatus, createManual, getStats                                                  | protected        |
+| `calendar`  | getSlots (calendar view data)                                                                                         | protected        |
+| `schedule`  | get, update (operating hours)                                                                                         | protected        |
+| `pricing`   | get, update (court pricing)                                                                                           | protected        |
+| `dashboard` | getStats (facility dashboard)                                                                                         | protected        |
+| `account`   | getMyProfile, updateMyProfile                                                                                         | protected        |
+| `images`    | getUploadUrl, confirmUpload, delete, reorder                                                                          | protected        |
+| `auth`      | getSession                                                                                                            | public           |
+
+### RBAC & Access Control
+
+Centralized in `packages/api/src/lib/access-control.ts`. All facility-scoped routers use `verifyFacilityAccess(ctx, facilityId, permission)`.
+
+**Roles & permissions:**
+
+| Permission           | `org_admin` | `facility_manager` | `staff` |
+| -------------------- | :---------: | :----------------: | :-----: |
+| `facility:read`      |     all     |        all         | scoped  |
+| `facility:write`     |     all     |       scoped       |   no    |
+| `booking:read/write` |     all     |       scoped       | scoped  |
+| `court:write`        |     all     |       scoped       |   no    |
+| `schedule:write`     |     all     |       scoped       |   no    |
+| `pricing:write`      |     all     |       scoped       |   no    |
+| `team:manage`        |     yes     |         no         |   no    |
+
+**Facility scoping** (via `facilityIds` array on membership):
+
+- `org_admin` — empty = all facilities
+- `facility_manager` — empty = all facilities
+- `staff` — empty = no access (must be explicitly assigned)
+
+**UI enforcement** (Next.js hooks in `apps/nextjs/src/hooks/`):
+
+- `usePermission(role)` — Returns `canManageOrg`, `canConfigureFacility`, `canInviteStaff`, `canManageBookings`, `canViewReports`
+- `useFacilityContext()` — Returns `orgSlug`, `facilityId`, `basePath` for facility-scoped pages
 
 ### Workspace Packages
+
 - All internal packages use `workspace:*` specifier
 - All packages prefixed with `@wifo/`
 
 ### Auth Schema Generation
+
 - Better Auth CLI uses `packages/auth/script/auth-cli.ts` (separate from main export)
 - Run `pnpm auth:generate` after database schema changes
 
 ### Environment Variables
+
 Required in `.env` (copy from `.env.example`):
+
 - `POSTGRES_URL` - Supabase/Vercel Postgres connection string
 - `AUTH_SECRET` - Generate via `openssl rand -base64 32`
 - `RESEND_API_KEY` - Resend API key for transactional emails (optional in dev — logs to console)
@@ -513,10 +606,38 @@ Required in `.env` (copy from `.env.example`):
 - OAuth credentials for player auth (Google, Apple per PRD requirements)
 
 Optional:
+
 - `ADMIN_SITE_PASSWORD` - Site-level password gate for admin panel
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis for rate limiting (falls back to in-memory)
 - `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_IMAGES_TOKEN` - Cloudflare Images API credentials
 - `CLOUDFLARE_IMAGES_HASH` / `NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH` - Cloudflare Images delivery hash
+
+## Testing Conventions
+
+- **Framework**: Vitest with `describe`/`it`/`expect`
+- **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
+- **Current suites**: `access-control` (104), `invite` (24), `team` (27), `images` (21), `validators` (1) — 186 total
+- **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
+- **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()` — return typed objects with optional overrides
+- **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)
+- **Error assertions**: `expect(...).rejects.toThrow("Spanish error message")`
+- **ESLint overrides**: Tests use `/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */` at file top for mock compatibility
+
+```typescript
+// Typical test setup pattern
+const router = createTRPCRouter({ org: orgRouter });
+const createCaller = createCallerFactory(router);
+const caller = createCaller({
+  db: mockDb as any,
+  session: { user: { id: "user-1" } } as any,
+  authApi: mockAuthApi as any,
+});
+
+// Factory pattern
+function makeMembership(overrides?: Partial<OrgMember>) {
+  return { id: "member-1", role: "org_admin", facilityIds: [], ...overrides };
+}
+```
 
 ## Initial Setup
 
@@ -533,10 +654,12 @@ pnpm dev              # Start development
 ## Local Development with Supabase
 
 ### Prerequisites
+
 - Docker Desktop must be running
 - Supabase CLI installed (`brew install supabase/tap/supabase`)
 
 ### Commands
+
 ```bash
 pnpm supabase:start   # Start local Supabase containers
 pnpm supabase:stop    # Stop local Supabase containers
@@ -545,14 +668,17 @@ pnpm db:reset         # Reset database and run migrations + seed
 ```
 
 ### Local URLs (when running)
-| Service | URL |
-|---------|-----|
-| API | http://127.0.0.1:54321 |
-| Database | postgresql://postgres:postgres@127.0.0.1:54322/postgres |
-| Studio | http://127.0.0.1:54323 |
-| Inbucket (emails) | http://127.0.0.1:54324 |
+
+| Service           | URL                                                     |
+| ----------------- | ------------------------------------------------------- |
+| API               | http://127.0.0.1:54321                                  |
+| Database          | postgresql://postgres:postgres@127.0.0.1:54322/postgres |
+| Studio            | http://127.0.0.1:54323                                  |
+| Inbucket (emails) | http://127.0.0.1:54324                                  |
 
 ### Switching between Local and Production
+
 Update `POSTGRES_URL` in your `.env` file:
+
 - **Local**: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
 - **Production**: Use the Supabase cloud connection string

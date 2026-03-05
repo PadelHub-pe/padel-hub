@@ -1,8 +1,26 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
+import { api } from "~/trpc/server";
 import { ScheduleView } from "./_components/schedule-view";
 
-export default function FacilitySchedulePage() {
+interface FacilitySchedulePageProps {
+  params: Promise<{ orgSlug: string; facilityId: string }>;
+}
+
+export default async function FacilitySchedulePage({
+  params,
+}: FacilitySchedulePageProps) {
+  const { orgSlug, facilityId } = await params;
+
+  // Staff cannot access schedule configuration
+  const caller = await api();
+  const organizations = await caller.org.getMyOrganizations();
+  const org = organizations.find((o) => o.slug === orgSlug);
+  if (org?.role === "staff") {
+    redirect(`/org/${orgSlug}/facilities/${facilityId}`);
+  }
+
   return (
     <Suspense fallback={<SchedulePageSkeleton />}>
       <ScheduleView />

@@ -69,7 +69,7 @@ See `docs/TECHNICAL_PLAN.md` for full context. Most backend + team UI already ex
   - `facility_manager` sees full FacilitySidebar (all items)
 - **Estimate:** Medium
 
-### TASK-3.4: Route-Level Access Guards
+### ~~TASK-3.4: Route-Level Access Guards~~ ✅
 - **Type:** feature
 - **Priority:** P0
 - **Depends on:** TASK-3.3

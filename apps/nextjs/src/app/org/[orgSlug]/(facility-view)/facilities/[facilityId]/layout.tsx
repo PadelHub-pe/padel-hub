@@ -40,6 +40,13 @@ export default async function FacilityLayout({
   const facility = facilities.find((f) => f.id === facilityId);
 
   if (!facility) {
+    // Scoped user accessing unassigned facility: redirect to first assigned facility
+    const firstFacility = facilities[0];
+    if (firstFacility) {
+      redirect(
+        `/org/${orgSlug}/facilities/${firstFacility.id}?message=no-access`,
+      );
+    }
     redirect(`/org/${orgSlug}/facilities`);
   }
 

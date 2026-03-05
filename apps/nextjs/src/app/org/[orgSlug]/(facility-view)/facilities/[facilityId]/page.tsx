@@ -6,6 +6,7 @@ import {
   ScheduleTable,
   StatsGrid,
 } from "~/components/dashboard";
+import { RedirectToast } from "~/components/redirect-toast";
 import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 
 interface FacilityDashboardPageProps {
@@ -34,6 +35,7 @@ export default async function FacilityDashboardPage({
 
   return (
     <HydrateClient>
+      <RedirectToast />
       <div className="p-8">
         {/* Setup Incomplete Banner */}
         {!setupStatus.isComplete && (
