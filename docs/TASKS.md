@@ -124,7 +124,7 @@ See `docs/TECHNICAL_PLAN.md` for full gap analysis.
 
 ---
 
-### TASK-2.6: Add "Agregar Local" button to facilities page header [feature] [P0]
+### TASK-2.6: Add "Agregar Local" button to facilities page header [feature] [P0] ✅
 
 **What**: Add a primary CTA button in the page header row next to the title, navigating to `/org/[slug]/facilities/new`.
 

@@ -1,13 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
+import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
@@ -54,6 +56,8 @@ export function FacilitiesView({
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
+  const orgSlug = params.orgSlug as string;
 
   const search = searchParams.get("q") ?? "";
   const status = parseStatus(searchParams.get("status"));
@@ -184,11 +188,18 @@ export function FacilitiesView({
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Locales</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gestiona los locales de {organizationName}
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Locales</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Gestiona los locales de {organizationName}
+          </p>
+        </div>
+        {userRole === "org_admin" && (
+          <Button asChild>
+            <Link href={`/org/${orgSlug}/facilities/new`}>Agregar Local</Link>
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
