@@ -27,7 +27,7 @@ Produce a dependency map:
 - TASK-XX → independent
 
 ## Step 3: Group into Parallel Batches
-
+**VERY IMPORTANT: Make sure not to parallelize more than 4 tasks at the same time, and avoid any file that can cause merge conflicts that are hard to solve. We want this proccess to increase our speed not to make us slow with complex merge conflicts resolutions.
 Organize tasks into sequential batches where tasks within a batch
 have NO dependencies on each other:
 
@@ -43,7 +43,7 @@ touch [area] — review merge carefully."
 ## Step 4: Read Worktree Config
 
 Read .claude/worktree.json for this project's worktree setup requirements.
-Use it to generate the correct setup commands in Step 5:
+Adapt to the project accordingly and use it to generate the correct setup commands in Step 5:
 
 - "copy": files to cp from main project into each worktree
 - "install": dependency install command to run
@@ -65,36 +65,36 @@ Use the task type to determine branch prefix (feat/fix/refactor/chore).
 # From your main project directory:
 
 # --- TASK-XX ---
-git worktree add ../[project]-task-XX -b feat/task-XX
-cp .env ../[project]-task-XX/.env
+git worktree add [project]-task-XX -b feat/task-XX
+cp .env [project]-task-XX/.env
 # (repeat for each file in worktree.json "copy")
-cd ../[project]-task-XX
+cd [project]-task-XX
 pnpm install
-# (run each command in worktree.json "postSetup")
+# (run each command in worktree.json "postSetup" but make sure those commands are useful inside the project)
 cd -
 
 # --- TASK-YY ---
-git worktree add ../[project]-task-YY -b fix/task-YY
-cp .env ../[project]-task-YY/.env
-cd ../[project]-task-YY
+git worktree add [project]-task-YY -b fix/task-YY
+cp .env [project]-task-YY/.env
+cd [project]-task-YY
 pnpm install
 cd -
 ```
 
-### Launch Claude Instances (one terminal per task)
+### Launch Claude Instances (one terminal per task and skip permissions)
 
 ```bash
 # Terminal 1:
-cd ../[project]-task-XX && claude
+cd [project]-task-XX && claude --dangerously-skip-permissions
 # Claude will auto-detect branch feat/task-XX and pick up TASK-XX
 
 # Terminal 2:
-cd ../[project]-task-YY && claude
+cd [project]-task-YY && claude --dangerously-skip-permissions
 # Claude will auto-detect branch fix/task-YY and pick up TASK-YY
 ```
 
 ### Rebase Back (after all tasks in batch complete)
-
+**VERY IMPORTANT: Use rebase instead of merge to keep a clean git history**
 ```bash
 cd /path/to/main/project
 
@@ -108,10 +108,10 @@ pnpm typecheck
 pnpm test                   # full suite — catch integration issues
 
 # Clean up
-git worktree remove ../[project]-task-XX
-git worktree remove ../[project]-task-YY
-git branch -d feat/task-XX
-git branch -d fix/task-YY
+git worktree remove [project]-task-XX -f
+git worktree remove [project]-task-YY -f
+git branch -D feat/task-XX
+git branch -D fix/task-YY
 ```
 
 ## Step 6: Summary

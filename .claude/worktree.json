@@ -1,6 +1,5 @@
 {
   "copy": [".env", ".env.local"],
   "install": "pnpm install",
-  "postSetup": ["pnpm db:generate"],
   "verify": "pnpm typecheck && pnpm test"
 }
