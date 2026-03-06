@@ -84,7 +84,7 @@ Expand `facility.getSetupStatus` to return full progress model needed by wizard,
 
 ---
 
-### TASK-4.02: Default operating hours on facility creation [feature]
+### TASK-4.02: Default operating hours on facility creation [feature] ✅
 
 **Priority:** P0 | **Depends on:** none
 
@@ -95,10 +95,10 @@ When a facility is created, insert default operating hours (Mon-Sun 7:00-22:00) 
 - Verify admin panel's `approveAccessRequest` also creates facilities — ensure it goes through the same path or add defaults there too
 
 **Acceptance criteria:**
-- [ ] New facility has 7 operating hours rows (dayOfWeek 0-6)
-- [ ] All days default to 07:00-22:00, isClosed=false
-- [ ] Schedule wizard step shows pre-filled hours
-- [ ] Admin panel facility creation also gets defaults
+- [x] New facility has 7 operating hours rows (dayOfWeek 0-6)
+- [x] All days default to 07:00-22:00, isClosed=false
+- [x] Schedule wizard step shows pre-filled hours
+- [x] Admin panel facility creation also gets defaults
 
 ---
 

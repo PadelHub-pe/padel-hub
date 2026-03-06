@@ -15,6 +15,7 @@ import {
 } from "@wifo/db/schema";
 import { sendOrganizationInvite } from "@wifo/email";
 
+import { insertDefaultOperatingHours } from "../lib/default-operating-hours";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -552,6 +553,9 @@ export const orgRouter = {
           message: "Error al crear el local",
         });
       }
+
+      // Insert default operating hours (Mon-Sun 07:00-22:00)
+      await insertDefaultOperatingHours(ctx.db, facility.id);
 
       return {
         id: facility.id,

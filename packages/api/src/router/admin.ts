@@ -12,6 +12,7 @@ import {
 } from "@wifo/db/schema";
 import { sendAccessRequestApproval } from "@wifo/email";
 
+import { insertDefaultOperatingHours } from "../lib/default-operating-hours";
 import { adminProcedure, createTRPCRouter } from "../trpc";
 
 function slugify(text: string): string {
@@ -199,16 +200,24 @@ export const adminRouter = createTRPCRouter({
         }
 
         // 2. Create facility shell (inactive, needs setup)
-        await tx.insert(facilities).values({
-          organizationId: org.id,
-          name: input.facilityName,
-          address: "Por configurar",
-          district: request.district ?? "Lima",
-          city: "Lima",
-          phone: request.phone ?? "",
-          email: request.email,
-          isActive: false,
-        });
+        const [facility] = await tx
+          .insert(facilities)
+          .values({
+            organizationId: org.id,
+            name: input.facilityName,
+            address: "Por configurar",
+            district: request.district ?? "Lima",
+            city: "Lima",
+            phone: request.phone ?? "",
+            email: request.email,
+            isActive: false,
+          })
+          .returning();
+
+        // Insert default operating hours (Mon-Sun 07:00-22:00)
+        if (facility) {
+          await insertDefaultOperatingHours(tx, facility.id);
+        }
 
         // 3. Create invite (org_admin, 7 days)
         await tx.insert(organizationInvites).values({
