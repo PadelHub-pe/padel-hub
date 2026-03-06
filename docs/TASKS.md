@@ -309,15 +309,15 @@ Add Step 3 to the wizard for facility photos and amenity selection.
   - "Anterior" returns to Step 2
 
 **Acceptance criteria:**
-- [ ] ImageUpload renders in gallery mode
-- [ ] Can upload up to 10 photos
-- [ ] First photo marked as cover
-- [ ] Drag-to-reorder works
-- [ ] Delete photo works
-- [ ] Amenity chips toggle correctly
-- [ ] Photos NOT required for activation
-- [ ] Nudge shown if no photos uploaded
-- [ ] "Completar Configuracion" always enabled on this step
+- [x] ImageUpload renders in gallery mode
+- [x] Can upload up to 10 photos
+- [x] First photo marked as cover
+- [x] Drag-to-reorder works
+- [x] Delete photo works
+- [x] Amenity chips toggle correctly
+- [x] Photos NOT required for activation
+- [x] Nudge shown if no photos uploaded
+- [x] "Completar Configuracion" always enabled on this step
 
 ---
 

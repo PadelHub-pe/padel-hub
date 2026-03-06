@@ -20,6 +20,7 @@ import {
   createDefaultOperatingHours,
   StepCourts,
   StepIndicator,
+  StepPhotos,
   StepSchedule,
 } from "~/components/facility-setup";
 import { useTRPC } from "~/trpc/react";
@@ -28,6 +29,7 @@ import { useTRPC } from "~/trpc/react";
 const SETUP_STEPS: SetupStep[] = [
   { number: 1, label: "Canchas" },
   { number: 2, label: "Horarios" },
+  { number: 3, label: "Fotos" },
 ];
 
 // Step 1: Courts Schema
@@ -147,6 +149,19 @@ export function SetupWizard({
           parseFloat(values.defaultPriceInSoles) * 100,
         ),
       });
+      setCurrentStep(3);
+    } catch (error) {
+      setGeneralError(
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error. Intenta nuevamente.",
+      );
+    }
+  }
+
+  async function handleCompleteSetup() {
+    setGeneralError(null);
+    try {
       await completeSetup.mutateAsync({ facilityId });
     } catch (error) {
       setGeneralError(
@@ -162,6 +177,8 @@ export function SetupWizard({
       await courtsForm.handleSubmit(handleCourtsSubmit)();
     } else if (currentStep === 2) {
       await scheduleForm.handleSubmit(handleScheduleSubmit)();
+    } else if (currentStep === 3) {
+      await handleCompleteSetup();
     }
   }
 
@@ -214,6 +231,7 @@ export function SetupWizard({
               </form>
             </Form>
           )}
+          {currentStep === 3 && <StepPhotos facilityId={facilityId} />}
         </CardContent>
       </Card>
 
@@ -250,9 +268,9 @@ export function SetupWizard({
         >
           {isLoading ? (
             <LoadingSpinner />
-          ) : currentStep === 2 ? (
+          ) : currentStep === 3 ? (
             <>
-              Finalizar configuración
+              Completar Configuración
               <CheckIcon className="ml-1 h-4 w-4" />
             </>
           ) : (
