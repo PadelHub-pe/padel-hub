@@ -180,10 +180,10 @@ export const facilityRouter = {
         "facility:read",
       );
 
-      // Get courts count
+      // Get courts with pricing info
       const facilityCourts = await ctx.db.query.courts.findMany({
         where: eq(courts.facilityId, facilityId),
-        columns: { id: true },
+        columns: { id: true, priceInCents: true },
       });
 
       // Get operating hours count
@@ -194,11 +194,32 @@ export const facilityRouter = {
 
       const hasCourts = facilityCourts.length > 0;
       const hasSchedule = facilityHours.length > 0;
+      const hasPricing =
+        hasCourts &&
+        facilityCourts.every(
+          (c) => c.priceInCents !== null && c.priceInCents > 0,
+        );
+      const hasPhotos = (facility.photos ?? []).length > 0;
+      const hasAmenities = (facility.amenities ?? []).length > 0;
       const isComplete = facility.onboardingCompletedAt !== null;
+
+      // P0 steps: courts, schedule, pricing
+      const completedSteps =
+        (hasCourts ? 1 : 0) + (hasSchedule ? 1 : 0) + (hasPricing ? 1 : 0);
+      const totalSteps = 3;
+      const canActivate = hasCourts && hasSchedule && hasPricing;
 
       return {
         isComplete,
         onboardingCompletedAt: facility.onboardingCompletedAt,
+        hasCourts,
+        hasSchedule,
+        hasPricing,
+        hasPhotos,
+        hasAmenities,
+        completedSteps,
+        totalSteps,
+        canActivate,
         steps: {
           courts: {
             completed: hasCourts,

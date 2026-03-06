@@ -77,10 +77,10 @@ Expand `facility.getSetupStatus` to return full progress model needed by wizard,
   - Already complete facility → isComplete=true
 
 **Acceptance criteria:**
-- [ ] `getSetupStatus` returns all fields
-- [ ] Progress computed from actual DB data
-- [ ] Tests cover all combinations
-- [ ] `canActivate` is true only when all P0 requirements met
+- [x] `getSetupStatus` returns all fields
+- [x] Progress computed from actual DB data
+- [x] Tests cover all combinations
+- [x] `canActivate` is true only when all P0 requirements met
 
 ---
 
