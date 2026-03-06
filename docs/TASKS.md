@@ -46,11 +46,11 @@ Add `slug`, `latitude`, and `longitude` columns to the `facilities` table.
 - Update `CreateFacilitySchema` (drizzle-zod) if auto-generated
 
 **Acceptance criteria:**
-- [ ] `slug`, `latitude`, `longitude` columns exist on facilities table
-- [ ] Unique constraint on (organizationId, slug)
-- [ ] `pnpm db:push` succeeds
-- [ ] Seed data has valid slugs
-- [ ] Existing code unaffected (all new columns nullable)
+- [x] `slug`, `latitude`, `longitude` columns exist on facilities table
+- [x] Unique constraint on (organizationId, slug)
+- [x] `pnpm db:push` succeeds
+- [x] Seed data has valid slugs
+- [x] Existing code unaffected (all new columns nullable)
 
 ---
 

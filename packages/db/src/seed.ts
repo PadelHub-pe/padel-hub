@@ -371,6 +371,7 @@ async function seed() {
       id: facility1Id,
       organizationId: orgId,
       name: "Padel Club San Isidro",
+      slug: "padel-club-san-isidro",
       description:
         "Nuestro club principal con canchas de primer nivel en el corazón de San Isidro",
       address: "Av. Javier Prado Este 1234",
@@ -397,6 +398,7 @@ async function seed() {
       id: facility2Id,
       organizationId: orgId,
       name: "Padel Club Miraflores",
+      slug: "padel-club-miraflores",
       description: "Club moderno cerca al malecón con vista al mar",
       address: "Calle Schell 456",
       district: "Miraflores",
@@ -415,6 +417,7 @@ async function seed() {
       id: facility3Id,
       organizationId: orgId,
       name: "Padel Club La Molina",
+      slug: "padel-club-la-molina",
       description: "Próximamente - Nuestro nuevo club en La Molina",
       address: "Av. La Fontana 789",
       district: "La Molina",

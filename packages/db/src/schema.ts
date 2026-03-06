@@ -3,6 +3,7 @@ import {
   boolean,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   text,
@@ -166,31 +167,38 @@ export const CreatePostSchema = createInsertSchema(Post, {
 /**
  * Facilities table - represents a padel venue/club
  */
-export const facilities = pgTable("facilities", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  // Organization reference - all facilities must belong to an organization
-  organizationId: uuid("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 200 }).notNull(),
-  description: text("description"),
-  address: varchar("address", { length: 500 }).notNull(),
-  district: varchar("district", { length: 100 }).notNull(),
-  city: varchar("city", { length: 100 }).notNull().default("Lima"),
-  phone: varchar("phone", { length: 20 }).notNull(),
-  email: varchar("email", { length: 255 }),
-  website: varchar("website", { length: 255 }),
-  amenities: jsonb("amenities").$type<string[]>().default([]),
-  photos: jsonb("photos").$type<string[]>().default([]),
-  isActive: boolean("is_active").default(false).notNull(),
-  // Onboarding tracking (migrated from ownerAccounts)
-  onboardingCompletedAt: timestamp("onboarding_completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+export const facilities = pgTable(
+  "facilities",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Organization reference - all facilities must belong to an organization
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 200 }).notNull(),
+    slug: varchar("slug", { length: 250 }),
+    description: text("description"),
+    address: varchar("address", { length: 500 }).notNull(),
+    district: varchar("district", { length: 100 }).notNull(),
+    city: varchar("city", { length: 100 }).notNull().default("Lima"),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    website: varchar("website", { length: 255 }),
+    latitude: numeric("latitude"),
+    longitude: numeric("longitude"),
+    amenities: jsonb("amenities").$type<string[]>().default([]),
+    photos: jsonb("photos").$type<string[]>().default([]),
+    isActive: boolean("is_active").default(false).notNull(),
+    // Onboarding tracking (migrated from ownerAccounts)
+    onboardingCompletedAt: timestamp("onboarding_completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.slug)],
+);
 
 export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
   organization: one(organizations, {
