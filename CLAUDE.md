@@ -100,7 +100,7 @@ pnpm test             # Run all tests with Vitest
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current coverage**: `packages/api` (access-control, invite router), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
+- **Current coverage**: `packages/api` (access-control, invite, team, setup, default-operating-hours, last-admin), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
@@ -513,9 +513,11 @@ Reusable setup wizard components in `apps/nextjs/src/components/facility-setup/`
 - `StepIndicator` - Progress indicator with configurable step labels
 - `StepCourts` - Court creation form (add/remove courts with name + type)
 - `StepSchedule` - Operating hours per day + default pricing
+- `StepPhotos` - Facility photo upload (Cloudflare Images integration)
+- `AmenityChips` - Amenity selection with chip-style toggles
 
 ```typescript
-import { StepIndicator, StepCourts, StepSchedule } from "~/components/facility-setup";
+import { StepIndicator, StepCourts, StepSchedule, StepPhotos, AmenityChips } from "~/components/facility-setup";
 
 // StepIndicator props
 <StepIndicator
@@ -616,7 +618,7 @@ Optional:
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current suites**: `access-control` (104), `invite` (24), `team` (27), `images` (21), `validators` (1) — 186 total
+- **Current suites**: `access-control` (24), `invite` (24), `team` (27), `setup` (27), `default-operating-hours` (2), `last-admin` (8), `images` (21), `validators` (1) — 192 total
 - **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
 - **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()` — return typed objects with optional overrides
 - **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)
