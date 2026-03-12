@@ -68,7 +68,8 @@ const saveScheduleSchema = z.object({
   defaultDurationMinutes: z.enum(["60", "90", "120"]).transform(Number),
   defaultPriceInCents: z
     .number()
-    .min(100, "El precio debe ser mayor a S/ 1.00"),
+    .min(100, "El precio debe ser mayor a S/ 1.00")
+    .optional(),
 });
 
 const completeSetupSchema = z.object({
@@ -300,21 +301,23 @@ export const facilityRouter = {
         .delete(timeSlotTemplates)
         .where(eq(timeSlotTemplates.facilityId, facilityId));
 
-      // Create default time slot templates for each open day
-      const templates = hours
-        .filter((oh) => !oh.isClosed)
-        .map((oh) => ({
-          facilityId,
-          courtId: null,
-          dayOfWeek: oh.dayOfWeek,
-          startTime: oh.openTime,
-          endTime: oh.closeTime,
-          durationMinutes: defaultDurationMinutes,
-          priceInCents: defaultPriceInCents,
-        }));
+      // Create default time slot templates for each open day (only if price provided)
+      if (defaultPriceInCents) {
+        const templates = hours
+          .filter((oh) => !oh.isClosed)
+          .map((oh) => ({
+            facilityId,
+            courtId: null,
+            dayOfWeek: oh.dayOfWeek,
+            startTime: oh.openTime,
+            endTime: oh.closeTime,
+            durationMinutes: defaultDurationMinutes,
+            priceInCents: defaultPriceInCents,
+          }));
 
-      if (templates.length > 0) {
-        await ctx.db.insert(timeSlotTemplates).values(templates);
+        if (templates.length > 0) {
+          await ctx.db.insert(timeSlotTemplates).values(templates);
+        }
       }
 
       return { success: true };

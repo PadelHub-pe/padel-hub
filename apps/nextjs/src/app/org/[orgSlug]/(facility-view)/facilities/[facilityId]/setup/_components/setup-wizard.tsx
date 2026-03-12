@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -12,7 +12,6 @@ import { Card, CardContent } from "@wifo/ui/card";
 import { Form } from "@wifo/ui/form";
 
 import type {
-  CourtsFormValues,
   ScheduleFormValues,
   SetupStep,
 } from "~/components/facility-setup";
@@ -32,21 +31,7 @@ const SETUP_STEPS: SetupStep[] = [
   { number: 3, label: "Fotos" },
 ];
 
-// Step 1: Courts Schema
-const courtsSchema = z.object({
-  courts: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().min(1, "Nombre requerido"),
-        type: z.enum(["indoor", "outdoor"]),
-      }),
-    )
-    .min(1, "Debe agregar al menos una cancha")
-    .max(6, "Máximo 6 canchas"),
-});
-
-// Step 2: Schedule Schema
+// Step 2: Schedule Schema (no longer includes defaultPriceInSoles — pricing is per-court)
 const scheduleSchema = z.object({
   operatingHours: z.array(
     z.object({
@@ -57,13 +42,6 @@ const scheduleSchema = z.object({
     }),
   ),
   defaultDurationMinutes: z.enum(["60", "90", "120"]),
-  defaultPriceInSoles: z.string().refine(
-    (val) => {
-      const num = parseFloat(val);
-      return !isNaN(num) && num >= 1;
-    },
-    { message: "El precio debe ser al menos S/ 1.00" },
-  ),
 });
 
 interface SetupWizardProps {
@@ -81,24 +59,25 @@ export function SetupWizard({
   const trpc = useTRPC();
   const [currentStep, setCurrentStep] = useState(1);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [courtCount, setCourtCount] = useState(0);
 
-  // Form instances for each step
-  const courtsForm = useForm<CourtsFormValues>({
-    resolver: standardSchemaResolver(courtsSchema),
-    defaultValues: { courts: [] },
-  });
+  // Fetch current court count for "Siguiente" button gating
+  const { data: courts } = useQuery(
+    trpc.court.list.queryOptions({ facilityId }),
+  );
+
+  // Keep courtCount in sync with query data
+  const effectiveCourtCount = courts?.length ?? courtCount;
 
   const scheduleForm = useForm<ScheduleFormValues>({
     resolver: standardSchemaResolver(scheduleSchema),
     defaultValues: {
       operatingHours: createDefaultOperatingHours(),
       defaultDurationMinutes: "90",
-      defaultPriceInSoles: "",
     },
   });
 
   // tRPC mutations
-  const saveCourts = useMutation(trpc.facility.saveCourts.mutationOptions());
   const saveSchedule = useMutation(
     trpc.facility.saveSchedule.mutationOptions(),
   );
@@ -110,27 +89,15 @@ export function SetupWizard({
     }),
   );
 
-  const isLoading =
-    saveCourts.isPending || saveSchedule.isPending || completeSetup.isPending;
+  const isLoading = saveSchedule.isPending || completeSetup.isPending;
 
-  async function handleCourtsSubmit(values: CourtsFormValues) {
+  function handleCourtsNext() {
     setGeneralError(null);
-    try {
-      await saveCourts.mutateAsync({
-        facilityId,
-        courts: values.courts.map((c) => ({
-          name: c.name,
-          type: c.type,
-        })),
-      });
-      setCurrentStep(2);
-    } catch (error) {
-      setGeneralError(
-        error instanceof Error
-          ? error.message
-          : "Ocurrió un error. Intenta nuevamente.",
-      );
+    if (effectiveCourtCount < 1) {
+      setGeneralError("Debe agregar al menos una cancha para continuar.");
+      return;
     }
+    setCurrentStep(2);
   }
 
   async function handleScheduleSubmit(values: ScheduleFormValues) {
@@ -145,9 +112,6 @@ export function SetupWizard({
           isClosed: oh.isClosed,
         })),
         defaultDurationMinutes: values.defaultDurationMinutes,
-        defaultPriceInCents: Math.round(
-          parseFloat(values.defaultPriceInSoles) * 100,
-        ),
       });
       setCurrentStep(3);
     } catch (error) {
@@ -174,7 +138,7 @@ export function SetupWizard({
 
   async function handleNext() {
     if (currentStep === 1) {
-      await courtsForm.handleSubmit(handleCourtsSubmit)();
+      handleCourtsNext();
     } else if (currentStep === 2) {
       await scheduleForm.handleSubmit(handleScheduleSubmit)();
     } else if (currentStep === 3) {
@@ -192,6 +156,9 @@ export function SetupWizard({
   function handleSkip() {
     router.push(`/org/${orgSlug}/facilities`);
   }
+
+  const isNextDisabled =
+    isLoading || (currentStep === 1 && effectiveCourtCount < 1);
 
   return (
     <div className="space-y-8">
@@ -218,11 +185,10 @@ export function SetupWizard({
           )}
 
           {currentStep === 1 && (
-            <Form {...courtsForm}>
-              <form onSubmit={courtsForm.handleSubmit(handleCourtsSubmit)}>
-                <StepCourts control={courtsForm.control} />
-              </form>
-            </Form>
+            <StepCourts
+              facilityId={facilityId}
+              onCourtCountChange={setCourtCount}
+            />
           )}
           {currentStep === 2 && (
             <Form {...scheduleForm}>
@@ -263,7 +229,7 @@ export function SetupWizard({
         <Button
           type="button"
           onClick={handleNext}
-          disabled={isLoading}
+          disabled={isNextDisabled}
           className="bg-blue-600 hover:bg-blue-700"
         >
           {isLoading ? (

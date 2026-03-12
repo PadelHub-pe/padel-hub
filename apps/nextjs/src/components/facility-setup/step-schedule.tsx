@@ -6,13 +6,11 @@ import { useWatch } from "react-hook-form";
 import { Checkbox } from "@wifo/ui/checkbox";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@wifo/ui/form";
-import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 import { RadioGroup, RadioGroupItem } from "@wifo/ui/radio-group";
 import {
@@ -64,7 +62,6 @@ export interface OperatingHour {
 export interface ScheduleFormValues {
   operatingHours: OperatingHour[];
   defaultDurationMinutes: "60" | "90" | "120";
-  defaultPriceInSoles: string;
 }
 
 interface StepScheduleProps {
@@ -78,11 +75,10 @@ export function StepSchedule({ control }: StepScheduleProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">
-          Horarios y Precios
+          Horarios de Operación
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Configura los horarios de operación y precio por defecto de tus
-          canchas.
+          Configura los horarios de operación de tu local.
         </p>
       </div>
 
@@ -231,40 +227,6 @@ export function StepSchedule({ control }: StepScheduleProps) {
               </RadioGroup>
             </FormControl>
             <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Default Price */}
-      <FormField
-        control={control}
-        name="defaultPriceInSoles"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>
-              Precio por turno (en Soles){" "}
-              <span className="text-red-500">*</span>
-            </FormLabel>
-            <div className="relative max-w-xs">
-              <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
-                S/
-              </span>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="80"
-                  className="pl-9"
-                  {...field}
-                />
-              </FormControl>
-            </div>
-            <FormMessage />
-            <FormDescription>
-              Podrás configurar precios por horario más tarde desde tu panel de
-              control.
-            </FormDescription>
           </FormItem>
         )}
       />
