@@ -17,3 +17,9 @@ export {
 } from "./facility-context";
 
 export { logBookingActivity } from "./booking-activity";
+
+export {
+  generateUniqueFacilitySlug,
+  generateUniqueOrgSlug,
+  slugify,
+} from "./slugify";

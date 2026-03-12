@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation } from "@tanstack/react-query";
@@ -29,6 +29,15 @@ import { Input } from "@wifo/ui/input";
 import { AddressMapPreview } from "~/components/address-map-preview";
 import { DistrictSelector } from "~/components/district-selector";
 import { useTRPC } from "~/trpc/react";
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 const quickCreateSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
@@ -112,8 +121,10 @@ export function QuickCreateForm({
   }, []);
 
   const isLoading = createFacility.isPending;
+  const watchedName = form.watch("name");
   const watchedAddress = form.watch("address");
   const watchedDistrict = form.watch("district");
+  const slugPreview = useMemo(() => slugify(watchedName), [watchedName]);
 
   return (
     <>
@@ -136,6 +147,11 @@ export function QuickCreateForm({
                   />
                 </FormControl>
                 <FormMessage />
+                {slugPreview && (
+                  <p className="text-muted-foreground text-xs">
+                    URL: {slugPreview}
+                  </p>
+                )}
               </FormItem>
             )}
           />

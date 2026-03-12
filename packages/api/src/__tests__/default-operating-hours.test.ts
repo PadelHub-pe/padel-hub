@@ -86,6 +86,9 @@ describe("org.createFacility – default operating hours", () => {
         organizationMembers: {
           findFirst: vi.fn().mockResolvedValue(makeMembership("org_admin")),
         },
+        facilities: {
+          findFirst: vi.fn().mockResolvedValue(undefined), // no slug collision
+        },
       },
       insert: vi.fn().mockImplementation(() => {
         insertCallCount++;

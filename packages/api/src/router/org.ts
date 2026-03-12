@@ -16,6 +16,7 @@ import {
 import { sendOrganizationInvite } from "@wifo/email";
 
 import { insertDefaultOperatingHours } from "../lib/default-operating-hours";
+import { generateUniqueFacilitySlug } from "../lib/slugify";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -543,12 +544,20 @@ export const orgRouter = {
         });
       }
 
+      // Generate unique slug from facility name
+      const slug = await generateUniqueFacilitySlug(
+        ctx.db,
+        organizationId,
+        name,
+      );
+
       // Create facility with minimal fields
       const [facility] = await ctx.db
         .insert(facilities)
         .values({
           organizationId,
           name,
+          slug,
           address,
           district,
           city: "Lima", // Default city for MVP

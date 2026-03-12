@@ -13,16 +13,11 @@ import {
 import { sendAccessRequestApproval } from "@wifo/email";
 
 import { insertDefaultOperatingHours } from "../lib/default-operating-hours";
+import {
+  generateUniqueFacilitySlug,
+  generateUniqueOrgSlug,
+} from "../lib/slugify";
 import { adminProcedure, createTRPCRouter } from "../trpc";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove accents
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
 
 export const adminRouter = createTRPCRouter({
   /**
@@ -158,27 +153,8 @@ export const adminRouter = createTRPCRouter({
             ),
           );
 
-        // Generate unique slug with retry on constraint violation
-        let slug = slugify(input.organizationName);
-        let attempt = 0;
-        const MAX_SLUG_ATTEMPTS = 100;
-        while (attempt < MAX_SLUG_ATTEMPTS) {
-          const candidate = attempt === 0 ? slug : `${slug}-${attempt}`;
-          const existing = await tx.query.organizations.findFirst({
-            where: eq(organizations.slug, candidate),
-          });
-          if (!existing) {
-            slug = candidate;
-            break;
-          }
-          attempt++;
-        }
-        if (attempt >= MAX_SLUG_ATTEMPTS) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "No se pudo generar un slug único",
-          });
-        }
+        // Generate unique slug for organization
+        const slug = await generateUniqueOrgSlug(tx, input.organizationName);
 
         // 1. Create organization
         const [org] = await tx
@@ -200,11 +176,17 @@ export const adminRouter = createTRPCRouter({
         }
 
         // 2. Create facility shell (inactive, needs setup)
+        const facilitySlug = await generateUniqueFacilitySlug(
+          tx,
+          org.id,
+          input.facilityName,
+        );
         const [facility] = await tx
           .insert(facilities)
           .values({
             organizationId: org.id,
             name: input.facilityName,
+            slug: facilitySlug,
             address: "Por configurar",
             district: request.district ?? "Lima",
             city: "Lima",
