@@ -26,59 +26,8 @@ Last admin protection, facility manager invite scoping, `usePermission` hook, ro
 
 Schema migration (slug + geocoding), setup progress API, default operating hours, district autocomplete + geocoding, courts wizard redesign (individual CRUD + pricing), schedule wizard enhancement ("Aplicar a todos"), photos & amenities step, completion screen + activation gate, setup banner with progress, resume from correct step, slug auto-generation. 52 tests (setup: 37, slugify: 15).
 
+### Flow 6: Schedule & Pricing (9 tasks)
+
+Zone calculation utility, facility default pricing schema, enhanced operating hours editor (30-min increments, "Aplicar a todos", validation), peak period full CRUD (create/edit/delete with overlap detection, day shortcuts, max 5 limit), editable rate cards with facility defaults, court default/custom pricing system, revenue calculator (slider + monthly toggle), block time slots UI. 120 tests (schedule-utils: 48, schedule: 30, pricing: 42).
+
 ---
-
-## Flow 6: Schedule & Pricing (9 tasks)
-
-> **Technical plan:** `docs/TECHNICAL_PLAN.md`
-> **Spec:** `what-needs-to-be-build/⏰ Flow 6 Schedule & Pricing — Engineering Task...md`
->
-> Most infrastructure exists (DB schema, tRPC routers, basic UI pages). These tasks close the gaps between current MVP and full spec.
-
-### Phase 0: Infrastructure
-
-- [x] **TASK-6.01** — Shared zone calculation utility `[feature]`
-  Create `packages/api/src/utils/schedule.ts` with `getTimeZone()` and `getRateForSlot()` functions.
-  Write tests in `packages/api/src/__tests__/schedule-utils.test.ts`.
-  Pure logic, no DB dependencies. Consumed by Flows 6, 7, and 8.
-
-- [x] **TASK-6.02** — Schema migration: facility default pricing `[config]`
-  Add `defaultPriceInCents` and `defaultPeakPriceInCents` (nullable int) to `facilities` table.
-  Update schema exports. Run `pnpm db:push`.
-
-### Phase 1: Schedule Page Enhancements (Sub-flows 6.1, 6.2, 6.3)
-
-- [x] **TASK-6.03** — Enhance operating hours editor `[feature]`
-  30-min time increments, "Aplicar a todos" button, dirty state tracking (save disabled until changes),
-  close > open validation, at least 1 day open validation.
-  File: `.../schedule/_components/operating-hours-section.tsx`
-
-- [x] **TASK-6.04** — Add `schedule.updatePeakPeriod` mutation `[feature]`
-  New mutation with same validation as create. Input: periodId + partial fields.
-  Write tests. File: `packages/api/src/router/schedule.ts`
-
-- [x] **TASK-6.05** — Enhance peak period CRUD (edit, validation, UX) `[feature]` — depends on TASK-6.04
-  Convert dialog to create/edit dual-mode. Add edit button to cards. Delete confirmation.
-  Quick day shortcuts (Lun-Vie, Sáb-Dom, Todos). Overlap detection. Max 5 limit. Markup S/ preview.
-  Apply to both schedule and pricing page peak period components.
-
-### Phase 2: Pricing Page Enhancements (Sub-flows 6.4, 6.5)
-
-- [x] **TASK-6.06** — Editable rate cards with facility default pricing `[feature]` — depends on TASK-6.02
-  Add `pricing.updateDefaultRates` mutation. Make rate card prices editable with save.
-  Use facility defaults instead of median in `getOverview`. Fix permission to `pricing:write`.
-
-- [x] **TASK-6.07** — Court pricing: default/custom system `[feature]` — depends on TASK-6.06
-  "Por defecto (S/ X)" vs custom badge. Edit dialog with both regular + peak prices.
-  "Restablecer" resets to default. Null court prices fall back to facility defaults.
-
-### Phase 3: P1 Features (Sub-flows 6.6, 6.7)
-
-- [x] **TASK-6.08** — Revenue calculator enhancements `[feature]` — depends on TASK-6.02
-  Slider input alongside presets. Monthly projection toggle (×4.33).
-  Update calculation to use facility defaults for courts without custom pricing.
-
-- [x] **TASK-6.09** — Block time slots UI `[feature]`
-  "Bloquear Horario" button + modal (court multi-select, date, time, reason, notes).
-  Conflict check with booking warning. Blocked slots list. Delete/unblock.
-  New files: `block-time-dialog.tsx`, `blocked-slots-section.tsx`

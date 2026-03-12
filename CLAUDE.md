@@ -100,7 +100,7 @@ pnpm test             # Run all tests with Vitest
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current coverage**: `packages/api` (access-control, invite, team, setup, slugify, default-operating-hours, last-admin), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
+- **Current coverage**: `packages/api` (access-control, invite, team, setup, slugify, default-operating-hours, last-admin, schedule-utils, schedule, pricing), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
@@ -302,8 +302,8 @@ apps/nextjs/src/app/
 - `/org/padel-group-lima/facilities/abc123/courts` - Courts management
 - `/org/padel-group-lima/facilities/abc123/bookings` - Bookings list
 - `/org/padel-group-lima/facilities/abc123/bookings/calendar` - Calendar view
-- `/org/padel-group-lima/facilities/abc123/schedule` - Operating hours
-- `/org/padel-group-lima/facilities/abc123/pricing` - Court pricing
+- `/org/padel-group-lima/facilities/abc123/schedule` - Operating hours, peak periods, blocked slots
+- `/org/padel-group-lima/facilities/abc123/pricing` - Default/court pricing, revenue calculator
 - `/org/padel-group-lima/facilities/abc123/settings` - Facility settings
 
 **Facility Onboarding Flow:**
@@ -560,8 +560,8 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 | `court`     | list, getById, create, update, delete                                                                                 | protected        |
 | `booking`   | list, getById, confirm, cancel, updateStatus, createManual, getStats                                                  | protected        |
 | `calendar`  | getSlots (calendar view data)                                                                                         | protected        |
-| `schedule`  | get, update (operating hours)                                                                                         | protected        |
-| `pricing`   | get, update (court pricing)                                                                                           | protected        |
+| `schedule`  | operating hours (get/update), peak periods (get/create/update/delete), blocked slots (get/list/checkConflicts/block/delete), getDayOverview | protected |
+| `pricing`   | getOverview, updateDefaultRates, updateCourtPricing, resetCourtPricing, calculateRevenue                              | protected        |
 | `dashboard` | getStats (facility dashboard)                                                                                         | protected        |
 | `account`   | getMyProfile, updateMyProfile                                                                                         | protected        |
 | `images`    | getUploadUrl, confirmUpload, delete, reorder                                                                          | protected        |
@@ -594,6 +594,21 @@ Centralized in `packages/api/src/lib/access-control.ts`. All facility-scoped rou
 - `usePermission(role)` — Returns `canManageOrg`, `canConfigureFacility`, `canInviteStaff`, `canManageBookings`, `canViewReports`
 - `useFacilityContext()` — Returns `orgSlug`, `facilityId`, `basePath` for facility-scoped pages
 
+### Schedule & Pricing Utilities
+
+Shared zone calculation in `packages/api/src/utils/schedule.ts` — pure functions, no DB dependencies:
+
+- `getTimeZone(time, dayOfWeek, date, config)` → `'closed' | 'regular' | 'peak' | 'blocked'`
+- `getTimeZoneWithMarkup(...)` → zone + `markupPercent`
+- `getRateForSlot(court, zone, facilityDefaults)` → cents (fallback chain: court → facility defaults → 0)
+- `parseTimeToMinutes(time)` → minutes since midnight
+
+**Pricing model:**
+
+- Facility has `defaultPriceInCents` and `defaultPeakPriceInCents` (nullable)
+- Courts with `priceInCents IS NOT NULL` are "custom" — courts with `NULL` use facility defaults
+- Peak pricing is **markup-based**: `markupPercent` on `peak_periods` table (0–200%)
+
 ### Workspace Packages
 
 - All internal packages use `workspace:*` specifier
@@ -625,9 +640,9 @@ Optional:
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current suites**: `access-control` (104), `invite` (24), `team` (27), `setup` (37), `slugify` (15), `default-operating-hours` (2), `last-admin` (8), `images` (21), `validators` (1) — 239 total
+- **Current suites**: `access-control` (104), `invite` (24), `team` (27), `setup` (37), `slugify` (15), `default-operating-hours` (2), `last-admin` (8), `schedule-utils` (48), `schedule` (30), `pricing` (42), `images` (21), `validators` (1) — 310 total
 - **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
-- **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()` — return typed objects with optional overrides
+- **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()`, `makePeakPeriod()`, `makeOperatingHour()` — return typed objects with optional overrides
 - **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)
 - **Error assertions**: `expect(...).rejects.toThrow("Spanish error message")`
 - **ESLint overrides**: Tests use `/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */` at file top for mock compatibility
