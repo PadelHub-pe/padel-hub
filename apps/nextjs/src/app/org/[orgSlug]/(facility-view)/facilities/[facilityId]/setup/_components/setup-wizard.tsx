@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -31,7 +31,7 @@ const SETUP_STEPS: SetupStep[] = [
   { number: 3, label: "Fotos" },
 ];
 
-// Step 2: Schedule Schema (no longer includes defaultPriceInSoles — pricing is per-court)
+// Step 2: Schedule Schema (no duration — kept as default 90 min)
 const scheduleSchema = z.object({
   operatingHours: z.array(
     z.object({
@@ -41,7 +41,6 @@ const scheduleSchema = z.object({
       isClosed: z.boolean(),
     }),
   ),
-  defaultDurationMinutes: z.enum(["60", "90", "120"]),
 });
 
 interface SetupWizardProps {
@@ -66,6 +65,11 @@ export function SetupWizard({
     trpc.court.list.queryOptions({ facilityId }),
   );
 
+  // Fetch existing operating hours to pre-fill form
+  const { data: existingHours } = useQuery(
+    trpc.schedule.getOperatingHours.queryOptions({ facilityId }),
+  );
+
   // Keep courtCount in sync with query data
   const effectiveCourtCount = courts?.length ?? courtCount;
 
@@ -73,13 +77,26 @@ export function SetupWizard({
     resolver: standardSchemaResolver(scheduleSchema),
     defaultValues: {
       operatingHours: createDefaultOperatingHours(),
-      defaultDurationMinutes: "90",
     },
   });
 
+  // Pre-fill form with existing operating hours when fetched
+  useEffect(() => {
+    if (existingHours) {
+      scheduleForm.reset({
+        operatingHours: existingHours.map((h) => ({
+          dayOfWeek: h.dayOfWeek,
+          openTime: h.openTime,
+          closeTime: h.closeTime,
+          isClosed: h.isClosed,
+        })),
+      });
+    }
+  }, [existingHours, scheduleForm]);
+
   // tRPC mutations
-  const saveSchedule = useMutation(
-    trpc.facility.saveSchedule.mutationOptions(),
+  const updateOperatingHours = useMutation(
+    trpc.schedule.updateOperatingHours.mutationOptions(),
   );
   const completeSetup = useMutation(
     trpc.facility.completeSetup.mutationOptions({
@@ -89,7 +106,7 @@ export function SetupWizard({
     }),
   );
 
-  const isLoading = saveSchedule.isPending || completeSetup.isPending;
+  const isLoading = updateOperatingHours.isPending || completeSetup.isPending;
 
   function handleCourtsNext() {
     setGeneralError(null);
@@ -102,16 +119,30 @@ export function SetupWizard({
 
   async function handleScheduleSubmit(values: ScheduleFormValues) {
     setGeneralError(null);
+
+    // Validate close > open for all open days
+    const invalidDay = values.operatingHours.find(
+      (h) => !h.isClosed && h.closeTime <= h.openTime,
+    );
+    if (invalidDay) {
+      const dayName =
+        DAYS_OF_WEEK.find((d) => d.value === invalidDay.dayOfWeek)?.label ??
+        "un día";
+      setGeneralError(
+        `La hora de cierre debe ser posterior a la de apertura (${dayName}).`,
+      );
+      return;
+    }
+
     try {
-      await saveSchedule.mutateAsync({
+      await updateOperatingHours.mutateAsync({
         facilityId,
-        operatingHours: values.operatingHours.map((oh) => ({
+        hours: values.operatingHours.map((oh) => ({
           dayOfWeek: oh.dayOfWeek,
           openTime: oh.openTime,
           closeTime: oh.closeTime,
           isClosed: oh.isClosed,
         })),
-        defaultDurationMinutes: values.defaultDurationMinutes,
       });
       setCurrentStep(3);
     } catch (error) {
@@ -193,7 +224,10 @@ export function SetupWizard({
           {currentStep === 2 && (
             <Form {...scheduleForm}>
               <form onSubmit={scheduleForm.handleSubmit(handleScheduleSubmit)}>
-                <StepSchedule control={scheduleForm.control} />
+                <StepSchedule
+                  control={scheduleForm.control}
+                  facilityId={facilityId}
+                />
               </form>
             </Form>
           )}
@@ -250,6 +284,17 @@ export function SetupWizard({
     </div>
   );
 }
+
+// Helper for day labels in validation error messages
+const DAYS_OF_WEEK = [
+  { value: 0, label: "Domingo" },
+  { value: 1, label: "Lunes" },
+  { value: 2, label: "Martes" },
+  { value: 3, label: "Miércoles" },
+  { value: 4, label: "Jueves" },
+  { value: 5, label: "Viernes" },
+  { value: 6, label: "Sábado" },
+];
 
 function ChevronLeftIcon({ className }: { className?: string }) {
   return (
