@@ -53,6 +53,8 @@ const createFacilitySchema = z.object({
     .min(6, "El teléfono debe tener al menos 6 caracteres")
     .max(20),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 const updateOrgProfileSchema = z.object({
@@ -520,7 +522,16 @@ export const orgRouter = {
   createFacility: protectedProcedure
     .input(createFacilitySchema)
     .mutation(async ({ ctx, input }) => {
-      const { organizationId, name, address, district, phone, email } = input;
+      const {
+        organizationId,
+        name,
+        address,
+        district,
+        phone,
+        email,
+        latitude,
+        longitude,
+      } = input;
 
       // Verify user is org_admin
       const membership = await verifyOrgMembership(ctx, organizationId);
@@ -543,6 +554,8 @@ export const orgRouter = {
           city: "Lima", // Default city for MVP
           phone,
           email: email ?? null,
+          latitude: latitude?.toString() ?? null,
+          longitude: longitude?.toString() ?? null,
           isActive: false, // Inactive until setup is complete
         })
         .returning();

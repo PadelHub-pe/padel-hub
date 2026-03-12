@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation } from "@tanstack/react-query";
@@ -26,6 +26,8 @@ import {
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
 
+import { AddressMapPreview } from "~/components/address-map-preview";
+import { DistrictSelector } from "~/components/district-selector";
 import { useTRPC } from "~/trpc/react";
 
 const quickCreateSchema = z.object({
@@ -53,6 +55,10 @@ export function QuickCreateForm({
   const [createdFacility, setCreatedFacility] = useState<{
     id: string;
     name: string;
+  } | null>(null);
+  const [coordinates, setCoordinates] = useState<{
+    lat: number;
+    lng: number;
   } | null>(null);
 
   const form = useForm<QuickCreateFormValues>({
@@ -86,6 +92,8 @@ export function QuickCreateForm({
       district: values.district,
       phone: values.phone,
       email: values.email ? values.email : undefined,
+      latitude: coordinates?.lat,
+      longitude: coordinates?.lng,
     });
   }
 
@@ -99,7 +107,13 @@ export function QuickCreateForm({
     router.push(`/org/${orgSlug}/facilities`);
   }
 
+  const handleGeocode = useCallback((lat: number, lng: number) => {
+    setCoordinates({ lat, lng });
+  }, []);
+
   const isLoading = createFacility.isPending;
+  const watchedAddress = form.watch("address");
+  const watchedDistrict = form.watch("district");
 
   return (
     <>
@@ -157,11 +171,23 @@ export function QuickCreateForm({
                   Distrito <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="San Isidro" {...field} />
+                  <DistrictSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    disabled={isLoading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
+          />
+
+          {/* Map Preview */}
+          <AddressMapPreview
+            address={watchedAddress}
+            district={watchedDistrict}
+            onGeocode={handleGeocode}
           />
 
           {/* Phone */}
