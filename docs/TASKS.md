@@ -78,7 +78,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
   Slider input alongside presets. Monthly projection toggle (×4.33).
   Update calculation to use facility defaults for courts without custom pricing.
 
-- [ ] **TASK-6.09** — Block time slots UI `[feature]`
+- [x] **TASK-6.09** — Block time slots UI `[feature]`
   "Bloquear Horario" button + modal (court multi-select, date, time, reason, notes).
   Conflict check with booking warning. Blocked slots list. Delete/unblock.
   New files: `block-time-dialog.tsx`, `blocked-slots-section.tsx`

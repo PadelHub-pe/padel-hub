@@ -13,6 +13,8 @@ const FACILITY_ID = "20000000-0000-4000-8000-000000000001";
 const PERIOD_ID = "20000000-0000-4000-8000-000000000010";
 const USER_ID = "20000000-0000-4000-8000-000000000020";
 const ORG_ID = "20000000-0000-4000-8000-000000000030";
+const COURT_ID = "20000000-0000-4000-8000-000000000040";
+const BLOCKED_SLOT_ID = "20000000-0000-4000-8000-000000000050";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -151,6 +153,301 @@ function authedCaller(db: MockDb) {
 
 // ===========================================================================
 // Tests
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Blocked Slots Mock DB builder
+// ---------------------------------------------------------------------------
+
+function makeBooking(
+  overrides?: Partial<{
+    id: string;
+    code: string;
+    courtId: string;
+    startTime: string;
+    endTime: string;
+    customerName: string;
+    status: string;
+  }>,
+) {
+  return {
+    id: overrides?.id ?? "booking-1",
+    code: overrides?.code ?? "BK-001",
+    facilityId: FACILITY_ID,
+    courtId: overrides?.courtId ?? COURT_ID,
+    date: new Date("2026-03-15"),
+    startTime: overrides?.startTime ?? "10:00",
+    endTime: overrides?.endTime ?? "11:00",
+    customerName: overrides?.customerName ?? "Juan",
+    status: overrides?.status ?? "confirmed",
+    court: { name: "Cancha 1" },
+  };
+}
+
+function makeBlockedSlot(
+  overrides?: Partial<{
+    id: string;
+    courtId: string | null;
+    reason: string;
+    notes: string | null;
+  }>,
+) {
+  const courtId =
+    overrides && "courtId" in overrides ? overrides.courtId : COURT_ID;
+  return {
+    id: overrides?.id ?? BLOCKED_SLOT_ID,
+    facilityId: FACILITY_ID,
+    courtId,
+    date: new Date("2026-03-15"),
+    startTime: "10:00",
+    endTime: "12:00",
+    reason: overrides?.reason ?? "maintenance",
+    notes: overrides?.notes ?? null,
+    court: courtId === null ? null : { name: "Cancha 1" },
+    creator: { name: "Admin" },
+    createdAt: new Date(),
+  };
+}
+
+interface BlockMockDbOpts {
+  bookings?: ReturnType<typeof makeBooking>[];
+  blockedSlots?: ReturnType<typeof makeBlockedSlot>[];
+  existingSlot?: ReturnType<typeof makeBlockedSlot> | null;
+  courts?: {
+    id: string;
+    facilityId: string;
+    name: string;
+    isActive: boolean;
+  }[];
+}
+
+function createBlockMockDb(opts?: BlockMockDbOpts) {
+  const callerMembership = makeCallerMembership();
+  const existingSlot =
+    opts?.existingSlot !== undefined ? opts.existingSlot : makeBlockedSlot();
+
+  const insertReturningFn = vi.fn().mockResolvedValue([makeBlockedSlot()]);
+  const insertValuesFn = vi
+    .fn()
+    .mockReturnValue({ returning: insertReturningFn });
+
+  const deleteFn = vi.fn().mockReturnValue({
+    where: vi.fn().mockResolvedValue(undefined),
+  });
+
+  return {
+    query: {
+      organizationMembers: {
+        findFirst: vi.fn().mockResolvedValue(callerMembership),
+      },
+      facilities: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: FACILITY_ID,
+          organizationId: ORG_ID,
+        }),
+      },
+      bookings: {
+        findMany: vi.fn().mockResolvedValue(opts?.bookings ?? []),
+      },
+      blockedSlots: {
+        findMany: vi.fn().mockResolvedValue(opts?.blockedSlots ?? []),
+        findFirst: vi.fn().mockResolvedValue(existingSlot),
+      },
+      courts: {
+        findFirst: vi.fn().mockResolvedValue(
+          opts?.courts?.[0] ?? {
+            id: COURT_ID,
+            facilityId: FACILITY_ID,
+            name: "Cancha 1",
+            isActive: true,
+          },
+        ),
+      },
+    },
+    insert: vi.fn().mockReturnValue({ values: insertValuesFn }),
+    delete: deleteFn,
+    _insertReturningFn: insertReturningFn,
+  };
+}
+
+type BlockMockDb = ReturnType<typeof createBlockMockDb>;
+
+function blockAuthedCaller(db: BlockMockDb) {
+  return createCaller({
+    db: db as any,
+    session: { user: { id: USER_ID, email: "test@test.com" } } as any,
+    authApi: {} as any,
+  });
+}
+
+// ===========================================================================
+// Tests: checkBlockConflicts
+// ===========================================================================
+
+describe("schedule.checkBlockConflicts", () => {
+  it("returns empty when no conflicting bookings", async () => {
+    const db = createBlockMockDb({ bookings: [] });
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.checkBlockConflicts({
+      facilityId: FACILITY_ID,
+      courtIds: [COURT_ID],
+      date: new Date("2026-03-15"),
+      startTime: "10:00",
+      endTime: "12:00",
+    });
+
+    expect(result.count).toBe(0);
+    expect(result.bookings).toHaveLength(0);
+  });
+
+  it("returns conflicting bookings", async () => {
+    const conflicting = [
+      makeBooking({ startTime: "10:00", endTime: "11:00" }),
+      makeBooking({
+        id: "booking-2",
+        code: "BK-002",
+        startTime: "11:00",
+        endTime: "12:00",
+      }),
+    ];
+    const db = createBlockMockDb({ bookings: conflicting });
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.checkBlockConflicts({
+      facilityId: FACILITY_ID,
+      courtIds: [COURT_ID],
+      date: new Date("2026-03-15"),
+      startTime: "10:00",
+      endTime: "12:00",
+    });
+
+    expect(result.count).toBe(2);
+    expect(result.bookings).toHaveLength(2);
+    expect(result.bookings[0]?.code).toBe("BK-001");
+  });
+});
+
+// ===========================================================================
+// Tests: listBlockedSlots
+// ===========================================================================
+
+describe("schedule.listBlockedSlots", () => {
+  it("returns all blocked slots for a facility", async () => {
+    const slots = [
+      makeBlockedSlot({ id: "slot-1" }),
+      makeBlockedSlot({ id: "slot-2", courtId: null }),
+    ];
+    const db = createBlockMockDb({ blockedSlots: slots });
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.listBlockedSlots({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result).toHaveLength(2);
+    expect(result[0]?.id).toBe("slot-1");
+    expect(result[1]?.courtId).toBeNull();
+  });
+
+  it("returns empty array when no blocked slots exist", async () => {
+    const db = createBlockMockDb({ blockedSlots: [] });
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.listBlockedSlots({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result).toHaveLength(0);
+  });
+});
+
+// ===========================================================================
+// Tests: blockTimeSlot
+// ===========================================================================
+
+describe("schedule.blockTimeSlot", () => {
+  it("creates a blocked slot for a specific court", async () => {
+    const db = createBlockMockDb();
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.blockTimeSlot({
+      facilityId: FACILITY_ID,
+      courtId: COURT_ID,
+      date: new Date("2026-03-15"),
+      startTime: "10:00",
+      endTime: "12:00",
+      reason: "maintenance",
+      notes: "Reparación de red",
+    });
+
+    expect(result).toBeDefined();
+    expect(db.insert).toHaveBeenCalled();
+  });
+
+  it("creates a blocked slot for all courts (null courtId)", async () => {
+    const db = createBlockMockDb();
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.blockTimeSlot({
+      facilityId: FACILITY_ID,
+      courtId: null,
+      date: new Date("2026-03-15"),
+      startTime: "10:00",
+      endTime: "12:00",
+      reason: "weather",
+    });
+
+    expect(result).toBeDefined();
+  });
+
+  it("throws NOT_FOUND when court does not belong to facility", async () => {
+    const db = createBlockMockDb();
+    db.query.courts.findFirst.mockResolvedValue(null);
+    const caller = blockAuthedCaller(db);
+
+    await expect(
+      caller.schedule.blockTimeSlot({
+        facilityId: FACILITY_ID,
+        courtId: COURT_ID,
+        date: new Date("2026-03-15"),
+        startTime: "10:00",
+        endTime: "12:00",
+        reason: "maintenance",
+      }),
+    ).rejects.toThrow("Cancha no encontrada en este local");
+  });
+});
+
+// ===========================================================================
+// Tests: deleteBlockedSlot
+// ===========================================================================
+
+describe("schedule.deleteBlockedSlot", () => {
+  it("deletes a blocked slot", async () => {
+    const db = createBlockMockDb();
+    const caller = blockAuthedCaller(db);
+
+    const result = await caller.schedule.deleteBlockedSlot({
+      id: BLOCKED_SLOT_ID,
+    });
+
+    expect(result.success).toBe(true);
+    expect(db.delete).toHaveBeenCalled();
+  });
+
+  it("throws NOT_FOUND when slot does not exist", async () => {
+    const db = createBlockMockDb({ existingSlot: null });
+    const caller = blockAuthedCaller(db);
+
+    await expect(
+      caller.schedule.deleteBlockedSlot({ id: BLOCKED_SLOT_ID }),
+    ).rejects.toThrow("Bloqueo no encontrado");
+  });
+});
+
+// ===========================================================================
+// Tests: updatePeakPeriod
 // ===========================================================================
 
 describe("schedule.updatePeakPeriod", () => {

@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "~/trpc/react";
+import { BlockTimeDialog } from "./block-time-dialog";
+import { BlockedSlotsSection } from "./blocked-slots-section";
 import { OperatingHoursSection } from "./operating-hours-section";
 import { PeakPeriodsSection } from "./peak-periods-section";
 import { ScheduleHeader } from "./schedule-header";
@@ -12,6 +15,7 @@ export function ScheduleView() {
   const params = useParams();
   const facilityId = params.facilityId as string;
   const trpc = useTRPC();
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
 
   // Fetch data
   const {
@@ -57,12 +61,22 @@ export function ScheduleView() {
 
   return (
     <div className="p-8">
-      <ScheduleHeader />
+      <ScheduleHeader onBlockTime={() => setBlockDialogOpen(true)} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <OperatingHoursSection facilityId={facilityId} hours={operatingHours} />
         <PeakPeriodsSection facilityId={facilityId} periods={peakPeriods} />
+        <BlockedSlotsSection
+          facilityId={facilityId}
+          onBlockTime={() => setBlockDialogOpen(true)}
+        />
       </div>
+
+      <BlockTimeDialog
+        open={blockDialogOpen}
+        onClose={() => setBlockDialogOpen(false)}
+        facilityId={facilityId}
+      />
     </div>
   );
 }

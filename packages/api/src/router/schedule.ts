@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { addDays, startOfDay } from "date-fns";
-import { and, asc, eq, gte, lt } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import {
@@ -88,6 +88,14 @@ const blockTimeSlotSchema = z.object({
 
 const deleteBlockedSlotSchema = z.object({
   id: z.string().uuid(),
+});
+
+const checkBlockConflictsSchema = z.object({
+  facilityId: z.string().uuid(),
+  courtIds: z.array(z.string().uuid()).min(1),
+  date: z.date(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
 });
 
 const getDayOverviewSchema = z.object({
@@ -448,6 +456,84 @@ export const scheduleRouter = {
         notes: s.notes,
         createdBy: s.creator?.name ?? null,
       }));
+    }),
+
+  /**
+   * List all blocked slots for a facility (upcoming and recent)
+   */
+  listBlockedSlots: protectedProcedure
+    .input(facilityIdSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
+
+      const slots = await ctx.db.query.blockedSlots.findMany({
+        where: eq(blockedSlots.facilityId, facilityId),
+        with: {
+          court: true,
+          creator: true,
+        },
+        orderBy: [asc(blockedSlots.date), asc(blockedSlots.startTime)],
+      });
+
+      return slots.map((s) => ({
+        id: s.id,
+        courtId: s.courtId,
+        courtName: s.court?.name ?? null,
+        date: s.date,
+        startTime: s.startTime.substring(0, 5),
+        endTime: s.endTime.substring(0, 5),
+        reason: s.reason,
+        notes: s.notes,
+        createdBy: s.creator?.name ?? null,
+        createdAt: s.createdAt,
+      }));
+    }),
+
+  /**
+   * Check for booking conflicts before blocking a time slot
+   */
+  checkBlockConflicts: protectedProcedure
+    .input(checkBlockConflictsSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, courtIds, date, startTime, endTime } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
+
+      const dayStart = startOfDay(date);
+      const dayEnd = addDays(dayStart, 1);
+
+      // Find active bookings that overlap with the proposed block
+      const conflicting = await ctx.db.query.bookings.findMany({
+        where: and(
+          eq(bookings.facilityId, facilityId),
+          inArray(bookings.courtId, courtIds),
+          gte(bookings.date, dayStart),
+          lt(bookings.date, dayEnd),
+          inArray(bookings.status, ["pending", "confirmed"]),
+          // Overlap: booking.start < block.end AND booking.end > block.start
+          lt(bookings.startTime, endTime),
+          gte(bookings.endTime, startTime),
+        ),
+        with: {
+          court: true,
+        },
+        orderBy: [asc(bookings.startTime)],
+      });
+
+      return {
+        count: conflicting.length,
+        bookings: conflicting.map((b) => ({
+          id: b.id,
+          code: b.code,
+          courtName: b.court.name,
+          startTime: b.startTime.substring(0, 5),
+          endTime: b.endTime.substring(0, 5),
+          customerName: b.customerName,
+          status: b.status,
+        })),
+      };
     }),
 
   /**
