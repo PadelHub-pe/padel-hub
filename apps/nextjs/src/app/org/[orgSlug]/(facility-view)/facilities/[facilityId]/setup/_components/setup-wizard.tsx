@@ -48,22 +48,58 @@ interface SetupWizardProps {
   facilityId: string;
   facilityName: string;
   orgSlug: string;
+  requestedStep?: number;
+}
+
+/**
+ * Compute the first incomplete step based on setup progress.
+ * Step 1 = Courts + Pricing, Step 2 = Schedule, Step 3 = Photos (optional).
+ */
+function getInitialStep(
+  setupStatus: {
+    hasCourts: boolean;
+    hasPricing: boolean;
+    hasSchedule: boolean;
+  },
+  requestedStep?: number,
+): number {
+  // Determine the first incomplete step
+  let autoStep = 1;
+  if (setupStatus.hasCourts && setupStatus.hasPricing) {
+    autoStep = setupStatus.hasSchedule ? 3 : 2;
+  }
+
+  // If a step was requested (e.g. from banner ?step=N), use it only if reachable
+  if (requestedStep && requestedStep >= 1 && requestedStep <= 3) {
+    // Can navigate to any step up to the auto-detected one
+    if (requestedStep <= autoStep) {
+      return requestedStep;
+    }
+  }
+
+  return autoStep;
 }
 
 export function SetupWizard({
   facilityId,
   facilityName,
   orgSlug,
+  requestedStep,
 }: SetupWizardProps) {
   const router = useRouter();
   const trpc = useTRPC();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<number | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [courtCount, setCourtCount] = useState(0);
   const [setupResult, setSetupResult] = useState<{
     courtCount: number;
     warnings: { type: string; message: string }[];
   } | null>(null);
+
+  // Fetch setup status to determine initial step
+  const { data: setupStatus } = useQuery(
+    trpc.facility.getSetupStatus.queryOptions({ facilityId }),
+  );
 
   // Fetch current court count for "Siguiente" button gating
   const { data: courts } = useQuery(
@@ -74,6 +110,13 @@ export function SetupWizard({
   const { data: existingHours } = useQuery(
     trpc.schedule.getOperatingHours.queryOptions({ facilityId }),
   );
+
+  // Set initial step once setup status is loaded
+  useEffect(() => {
+    if (setupStatus && currentStep === null) {
+      setCurrentStep(getInitialStep(setupStatus, requestedStep));
+    }
+  }, [setupStatus, currentStep, requestedStep]);
 
   // Keep courtCount in sync with query data
   const effectiveCourtCount = courts?.length ?? courtCount;
@@ -197,7 +240,7 @@ export function SetupWizard({
 
   function handleBack() {
     setGeneralError(null);
-    if (currentStep > 1) {
+    if (currentStep !== null && currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   }
@@ -206,10 +249,32 @@ export function SetupWizard({
     router.push(`/org/${orgSlug}/facilities`);
   }
 
+  function handleStepClick(step: number) {
+    setGeneralError(null);
+    setCurrentStep(step);
+  }
+
   const isNextDisabled =
     isLoading || (currentStep === 1 && effectiveCourtCount < 1);
 
   const basePath = `/org/${orgSlug}/facilities/${facilityId}`;
+
+  // Show loading state while determining initial step
+  if (currentStep === null) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Configurar {facilityName}
+          </h1>
+          <p className="mt-1 text-gray-500">Cargando progreso...</p>
+        </div>
+        <div className="flex justify-center py-12">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   // Show completion screen after successful setup
   if (setupResult) {
@@ -238,7 +303,11 @@ export function SetupWizard({
       </div>
 
       {/* Step Indicator */}
-      <StepIndicator steps={SETUP_STEPS} currentStep={currentStep} />
+      <StepIndicator
+        steps={SETUP_STEPS}
+        currentStep={currentStep}
+        onStepClick={handleStepClick}
+      />
 
       {/* Step Content */}
       <Card>

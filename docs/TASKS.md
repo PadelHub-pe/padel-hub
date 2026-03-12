@@ -276,11 +276,11 @@ Auto-detect which step the user should be on when visiting the setup wizard.
   - "Continuar Configuracion" from banner (TASK-4.07) passes `?step=N` query param
 
 **Acceptance criteria:**
-- [ ] Visit `/setup` with Step 1 done → opens on Step 2
-- [ ] Visit `/setup` with Steps 1-2 done → opens on Step 3
-- [ ] Visit `/setup` when all done → redirect to dashboard
-- [ ] Can click completed steps to review
-- [ ] Data from completed steps preserved and editable
+- [x] Visit `/setup` with Step 1 done → opens on Step 2
+- [x] Visit `/setup` with Steps 1-2 done → opens on Step 3
+- [x] Visit `/setup` when all done → redirect to dashboard
+- [x] Can click completed steps to review
+- [x] Data from completed steps preserved and editable
 
 ---
 
