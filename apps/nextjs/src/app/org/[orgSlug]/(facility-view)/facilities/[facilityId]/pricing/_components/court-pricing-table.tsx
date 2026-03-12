@@ -13,13 +13,15 @@ interface Court {
   type: "indoor" | "outdoor";
   status: string;
   priceInCents: number | null;
+  peakPriceInCents: number | null;
   isActive: boolean;
 }
 
 interface CourtPricingTableProps {
   courts: Court[];
   facilityId: string;
-  avgMarkupPercent: number;
+  defaultRegularCents: number;
+  defaultPeakCents: number;
 }
 
 const COURT_COLORS = [
@@ -35,15 +37,15 @@ const COURT_COLORS = [
   "bg-pink-500",
 ];
 
-function formatPrice(cents: number | null): string | null {
-  if (cents === null || cents === 0) return null;
+function formatPrice(cents: number): string {
   return `S/ ${(cents / 100).toFixed(0)}`;
 }
 
 export function CourtPricingTable({
   courts,
   facilityId,
-  avgMarkupPercent,
+  defaultRegularCents,
+  defaultPeakCents,
 }: CourtPricingTableProps) {
   const [editingCourt, setEditingCourt] = useState<Court | null>(null);
 
@@ -52,7 +54,8 @@ export function CourtPricingTable({
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-semibold text-gray-900">Tarifas por Cancha</h3>
         <span className="text-xs text-gray-500">
-          La tarifa pico se calcula automaticamente con el % de incremento
+          Las canchas sin precio personalizado usan la tarifa por defecto del
+          local
         </span>
       </div>
 
@@ -82,23 +85,16 @@ export function CourtPricingTable({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {courts.map((court, index) => {
-              const hasPrice =
-                court.priceInCents !== null && court.priceInCents > 0;
-              const regularPrice = formatPrice(court.priceInCents);
-              const computedPeakCents =
-                hasPrice && avgMarkupPercent > 0
-                  ? Math.round(
-                      (court.priceInCents ?? 0) * (1 + avgMarkupPercent / 100),
-                    )
-                  : null;
-              const peakPrice = formatPrice(computedPeakCents);
+              const hasCustomPrice = court.priceInCents !== null;
+              const regularCents = court.priceInCents ?? defaultRegularCents;
+              const peakCents = court.peakPriceInCents ?? defaultPeakCents;
 
               return (
                 <tr
                   key={court.id}
                   className={cn(
                     "hover:bg-gray-50",
-                    hasPrice && "bg-blue-50/30",
+                    hasCustomPrice && "bg-blue-50/30",
                   )}
                 >
                   <td className="px-4 py-3">
@@ -124,38 +120,41 @@ export function CourtPricingTable({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {regularPrice ? (
-                      <span className="font-bold text-emerald-600">
-                        {regularPrice}
+                    {regularCents > 0 ? (
+                      <span
+                        className={cn(
+                          "font-bold",
+                          hasCustomPrice ? "text-emerald-600" : "text-gray-500",
+                        )}
+                      >
+                        {formatPrice(regularCents)}
                       </span>
                     ) : (
                       <span className="text-sm text-gray-400">Sin precio</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {peakPrice ? (
-                      <span className="font-bold text-amber-600">
-                        {peakPrice}
-                        <span className="ml-1 text-xs font-normal text-amber-400">
-                          (+{avgMarkupPercent}%)
-                        </span>
-                      </span>
-                    ) : hasPrice ? (
-                      <span className="text-sm text-gray-400">
-                        Sin periodo pico
+                    {peakCents > 0 ? (
+                      <span
+                        className={cn(
+                          "font-bold",
+                          hasCustomPrice ? "text-amber-600" : "text-gray-500",
+                        )}
+                      >
+                        {formatPrice(peakCents)}
                       </span>
                     ) : (
                       <span className="text-sm text-gray-400">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {hasPrice ? (
+                    {hasCustomPrice ? (
                       <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                        Configurado
+                        Personalizado
                       </span>
                     ) : (
                       <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                        Sin configurar
+                        Por defecto
                       </span>
                     )}
                   </td>
@@ -182,7 +181,8 @@ export function CourtPricingTable({
           onClose={() => setEditingCourt(null)}
           facilityId={facilityId}
           court={editingCourt}
-          avgMarkupPercent={avgMarkupPercent}
+          defaultRegularCents={defaultRegularCents}
+          defaultPeakCents={defaultPeakCents}
         />
       )}
     </div>

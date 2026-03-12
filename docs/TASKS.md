@@ -68,7 +68,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
   Add `pricing.updateDefaultRates` mutation. Make rate card prices editable with save.
   Use facility defaults instead of median in `getOverview`. Fix permission to `pricing:write`.
 
-- [ ] **TASK-6.07** — Court pricing: default/custom system `[feature]` — depends on TASK-6.06
+- [x] **TASK-6.07** — Court pricing: default/custom system `[feature]` — depends on TASK-6.06
   "Por defecto (S/ X)" vs custom badge. Edit dialog with both regular + peak prices.
   "Restablecer" resets to default. Null court prices fall back to facility defaults.
 

@@ -32,6 +32,18 @@ const updateDefaultRatesSchema = z.object({
   peakRateCents: z.number().int().min(1),
 });
 
+const updateCourtPricingSchema = z.object({
+  facilityId: z.string().uuid(),
+  courtId: z.string().uuid(),
+  regularPriceCents: z.number().int().min(1),
+  peakPriceCents: z.number().int().min(1),
+});
+
+const resetCourtPricingSchema = z.object({
+  facilityId: z.string().uuid(),
+  courtId: z.string().uuid(),
+});
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -263,6 +275,93 @@ export const pricingRouter = {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Local no encontrado",
+        });
+      }
+
+      return updated;
+    }),
+
+  /**
+   * Set custom regular + peak prices on a single court
+   */
+  updateCourtPricing: protectedProcedure
+    .input(updateCourtPricingSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, courtId, regularPriceCents, peakPriceCents } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "pricing:write");
+
+      if (peakPriceCents < regularPriceCents) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "La tarifa pico debe ser igual o mayor a la tarifa regular",
+        });
+      }
+
+      const court = await ctx.db.query.courts.findFirst({
+        where: and(eq(courts.id, courtId), eq(courts.facilityId, facilityId)),
+      });
+
+      if (!court) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Cancha no encontrada",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(courts)
+        .set({
+          priceInCents: regularPriceCents,
+          peakPriceInCents: peakPriceCents,
+        })
+        .where(eq(courts.id, courtId))
+        .returning();
+
+      if (!updated) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error al actualizar la cancha",
+        });
+      }
+
+      return updated;
+    }),
+
+  /**
+   * Reset court prices to null (fall back to facility defaults)
+   */
+  resetCourtPricing: protectedProcedure
+    .input(resetCourtPricingSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, courtId } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "pricing:write");
+
+      const court = await ctx.db.query.courts.findFirst({
+        where: and(eq(courts.id, courtId), eq(courts.facilityId, facilityId)),
+      });
+
+      if (!court) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Cancha no encontrada",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(courts)
+        .set({
+          priceInCents: null,
+          peakPriceInCents: null,
+        })
+        .where(eq(courts.id, courtId))
+        .returning();
+
+      if (!updated) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error al actualizar la cancha",
         });
       }
 

@@ -12,6 +12,8 @@ import { createCallerFactory, createTRPCRouter } from "../trpc";
 const FACILITY_ID = "30000000-0000-4000-8000-000000000001";
 const USER_ID = "30000000-0000-4000-8000-000000000020";
 const ORG_ID = "30000000-0000-4000-8000-000000000030";
+const COURT_ID = "30000000-0000-4000-8000-000000000040";
+const NONEXISTENT_COURT_ID = "30000000-0000-4000-8000-000000000099";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,7 +59,7 @@ function makeFacility(overrides?: Record<string, unknown>) {
 
 function makeCourt(overrides?: Record<string, unknown>) {
   return {
-    id: "court-1",
+    id: COURT_ID,
     facilityId: FACILITY_ID,
     name: "Cancha 1",
     type: "indoor",
@@ -570,5 +572,186 @@ describe("pricing.calculateRevenue", () => {
     });
 
     expect(result.occupancyPercent).toBe(42);
+  });
+});
+
+// ===========================================================================
+// Tests: pricing.updateCourtPricing
+// ===========================================================================
+
+describe("pricing.updateCourtPricing", () => {
+  it("sets custom regular and peak prices on a court", async () => {
+    const court = makeCourt({ priceInCents: null, peakPriceInCents: null });
+    const db = createMockDb({ courts: [court] });
+    db.query.courts = {
+      ...db.query.courts,
+      findFirst: vi.fn().mockResolvedValue(court),
+    } as any;
+    db._updateReturningFn.mockResolvedValue([
+      { ...court, priceInCents: 7000, peakPriceInCents: 9000 },
+    ]);
+
+    const caller = authedCaller(db);
+    const result = await caller.pricing.updateCourtPricing({
+      facilityId: FACILITY_ID,
+      courtId: court.id,
+      regularPriceCents: 7000,
+      peakPriceCents: 9000,
+    });
+
+    expect(result.priceInCents).toBe(7000);
+    expect(result.peakPriceInCents).toBe(9000);
+  });
+
+  it("validates peak price must be >= regular price", async () => {
+    const court = makeCourt();
+    const db = createMockDb({ courts: [court] });
+    db.query.courts = {
+      ...db.query.courts,
+      findFirst: vi.fn().mockResolvedValue(court),
+    } as any;
+
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.pricing.updateCourtPricing({
+        facilityId: FACILITY_ID,
+        courtId: court.id,
+        regularPriceCents: 9000,
+        peakPriceCents: 5000,
+      }),
+    ).rejects.toThrow(
+      "La tarifa pico debe ser igual o mayor a la tarifa regular",
+    );
+  });
+
+  it("allows peak price equal to regular price", async () => {
+    const court = makeCourt();
+    const db = createMockDb({ courts: [court] });
+    db.query.courts = {
+      ...db.query.courts,
+      findFirst: vi.fn().mockResolvedValue(court),
+    } as any;
+    db._updateReturningFn.mockResolvedValue([
+      { ...court, priceInCents: 6000, peakPriceInCents: 6000 },
+    ]);
+
+    const caller = authedCaller(db);
+    const result = await caller.pricing.updateCourtPricing({
+      facilityId: FACILITY_ID,
+      courtId: court.id,
+      regularPriceCents: 6000,
+      peakPriceCents: 6000,
+    });
+
+    expect(result.priceInCents).toBe(6000);
+    expect(result.peakPriceInCents).toBe(6000);
+  });
+
+  it("validates regular price must be positive", async () => {
+    const court = makeCourt();
+    const db = createMockDb({ courts: [court] });
+
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.pricing.updateCourtPricing({
+        facilityId: FACILITY_ID,
+        courtId: court.id,
+        regularPriceCents: 0,
+        peakPriceCents: 5000,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects when court does not exist", async () => {
+    const db = createMockDb();
+    db.query.courts = {
+      ...db.query.courts,
+      findFirst: vi.fn().mockResolvedValue(null),
+    } as any;
+
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.pricing.updateCourtPricing({
+        facilityId: FACILITY_ID,
+        courtId: NONEXISTENT_COURT_ID,
+        regularPriceCents: 5000,
+        peakPriceCents: 7000,
+      }),
+    ).rejects.toThrow("Cancha no encontrada");
+  });
+
+  it("rejects staff role (no pricing:write permission)", async () => {
+    const db = createMockDb({ role: "staff" });
+
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.pricing.updateCourtPricing({
+        facilityId: FACILITY_ID,
+        courtId: COURT_ID,
+        regularPriceCents: 5000,
+        peakPriceCents: 7000,
+      }),
+    ).rejects.toThrow("No tienes permisos para realizar esta acción");
+  });
+});
+
+// ===========================================================================
+// Tests: pricing.resetCourtPricing
+// ===========================================================================
+
+describe("pricing.resetCourtPricing", () => {
+  it("resets court prices to null (facility defaults)", async () => {
+    const court = makeCourt({ priceInCents: 7000, peakPriceInCents: 9000 });
+    const db = createMockDb({ courts: [court] });
+    db.query.courts = {
+      ...db.query.courts,
+      findFirst: vi.fn().mockResolvedValue(court),
+    } as any;
+    db._updateReturningFn.mockResolvedValue([
+      { ...court, priceInCents: null, peakPriceInCents: null },
+    ]);
+
+    const caller = authedCaller(db);
+    const result = await caller.pricing.resetCourtPricing({
+      facilityId: FACILITY_ID,
+      courtId: court.id,
+    });
+
+    expect(result.priceInCents).toBeNull();
+    expect(result.peakPriceInCents).toBeNull();
+  });
+
+  it("rejects when court does not exist", async () => {
+    const db = createMockDb();
+    db.query.courts = {
+      ...db.query.courts,
+      findFirst: vi.fn().mockResolvedValue(null),
+    } as any;
+
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.pricing.resetCourtPricing({
+        facilityId: FACILITY_ID,
+        courtId: NONEXISTENT_COURT_ID,
+      }),
+    ).rejects.toThrow("Cancha no encontrada");
+  });
+
+  it("rejects staff role (no pricing:write permission)", async () => {
+    const db = createMockDb({ role: "staff" });
+
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.pricing.resetCourtPricing({
+        facilityId: FACILITY_ID,
+        courtId: COURT_ID,
+      }),
+    ).rejects.toThrow("No tienes permisos para realizar esta acción");
   });
 });

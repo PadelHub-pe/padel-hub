@@ -36,7 +36,8 @@ export function PricingView() {
         <CourtPricingTable
           courts={data.courts}
           facilityId={facilityId}
-          avgMarkupPercent={data.stats.markupPercent}
+          defaultRegularCents={data.stats.defaultRegularCents}
+          defaultPeakCents={data.stats.defaultPeakCents}
         />
 
         <RevenueCalculator />
