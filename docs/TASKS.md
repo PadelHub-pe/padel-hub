@@ -128,7 +128,7 @@ Upgrade list query to match spec: multi-status filter, date range, sorting.
 
 ---
 
-### TASK-7.04 — Fix cancel `cancelled_by` and booking validations (bug-fix)
+### TASK-7.04 — Fix cancel `cancelled_by` and booking validations (bug-fix) ✅
 
 Minor fixes to cancel and status transition logic.
 
@@ -140,10 +140,10 @@ Minor fixes to cancel and status transition logic.
 - Write tests for cancel and status transition edge cases
 
 **Acceptance criteria:**
-- [ ] Cancel sets appropriate `cancelled_by` value
-- [ ] Cannot cancel completed or already-cancelled bookings
-- [ ] Status transitions follow state machine (no backward moves)
-- [ ] Tests pass
+- [x] Cancel sets appropriate `cancelled_by` value
+- [x] Cannot cancel completed or already-cancelled bookings
+- [x] Status transitions follow state machine (no backward moves)
+- [x] Tests pass
 
 **Depends on:** nothing
 

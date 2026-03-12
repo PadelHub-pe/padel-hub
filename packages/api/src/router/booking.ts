@@ -198,6 +198,18 @@ function calculateBookingPrice(
   return { priceInCents: totalPrice, isPeakRate: hasPeak, slots };
 }
 
+/**
+ * Valid booking status transitions (state machine).
+ * Key = current status, Value = set of allowed next statuses.
+ */
+const VALID_STATUS_TRANSITIONS: Record<string, readonly string[]> = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  open_match: ["confirmed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
 // =============================================================================
 // Router
 // =============================================================================
@@ -483,6 +495,15 @@ export const bookingRouter = {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Reserva no encontrada",
+        });
+      }
+
+      // Validate state machine transition
+      const allowedTransitions = VALID_STATUS_TRANSITIONS[booking.status] ?? [];
+      if (!allowedTransitions.includes(status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Transición de estado no permitida: ${booking.status} → ${status}`,
         });
       }
 
