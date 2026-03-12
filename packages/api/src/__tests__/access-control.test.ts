@@ -55,6 +55,8 @@ function makeFacility(id: string, organizationId: string | null = ORG_ID) {
     longitude: null,
     amenities: [],
     photos: [],
+    defaultPriceInCents: null,
+    defaultPeakPriceInCents: null,
     isActive: true,
     onboardingCompletedAt: null,
     createdAt: new Date(),

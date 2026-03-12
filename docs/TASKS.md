@@ -42,7 +42,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
   Write tests in `packages/api/src/__tests__/schedule-utils.test.ts`.
   Pure logic, no DB dependencies. Consumed by Flows 6, 7, and 8.
 
-- [ ] **TASK-6.02** — Schema migration: facility default pricing `[config]`
+- [x] **TASK-6.02** — Schema migration: facility default pricing `[config]`
   Add `defaultPriceInCents` and `defaultPeakPriceInCents` (nullable int) to `facilities` table.
   Update schema exports. Run `pnpm db:push`.
 

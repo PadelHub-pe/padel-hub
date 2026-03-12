@@ -188,6 +188,9 @@ export const facilities = pgTable(
     longitude: numeric("longitude"),
     amenities: jsonb("amenities").$type<string[]>().default([]),
     photos: jsonb("photos").$type<string[]>().default([]),
+    // Facility-level default pricing (nullable; courts with NULL prices fall back to these)
+    defaultPriceInCents: integer("default_price_in_cents"),
+    defaultPeakPriceInCents: integer("default_peak_price_in_cents"),
     isActive: boolean("is_active").default(false).notNull(),
     // Onboarding tracking (migrated from ownerAccounts)
     onboardingCompletedAt: timestamp("onboarding_completed_at"),
