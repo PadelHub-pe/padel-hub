@@ -129,13 +129,13 @@ Replace the free-text district input with a searchable combobox, and add address
   - Save to facilities row on creation
 
 **Acceptance criteria:**
-- [ ] District combobox shows Lima districts filtered by search
-- [ ] Can select from list or enter custom district
-- [ ] Geocoding triggers on address+district blur
-- [ ] Map preview shows pin for geocoded location
-- [ ] Lat/lng saved to facilities table
-- [ ] Geocoding failure doesn't block form submission (lat/lng remain null)
-- [ ] Nominatim rate limit respected (1 req/sec throttle)
+- [x] District combobox shows Lima districts filtered by search
+- [x] Can select from list or enter custom district
+- [x] Geocoding triggers on address+district blur
+- [x] Map preview shows pin for geocoded location
+- [x] Lat/lng saved to facilities table
+- [x] Geocoding failure doesn't block form submission (lat/lng remain null)
+- [x] Nominatim rate limit respected (1 req/sec throttle)
 
 ---
 
@@ -162,14 +162,14 @@ Redesign the courts step to use individual court CRUD (persists immediately), ca
   - "Siguiente" button enabled when court.list.length >= 1
 
 **Acceptance criteria:**
-- [ ] Courts saved to DB on each add (not batched)
-- [ ] Court cards show name, type, price
-- [ ] Can edit court → card updates
-- [ ] Can delete court → card removed (confirmation if last)
-- [ ] Max 10 courts enforced
-- [ ] Price input in Soles, stored as cents
-- [ ] "Siguiente" disabled until >= 1 court
-- [ ] Progress survives page close/reopen
+- [x] Courts saved to DB on each add (not batched)
+- [x] Court cards show name, type, price
+- [x] Can edit court → card updates
+- [x] Can delete court → card removed (confirmation if last)
+- [x] Max 10 courts enforced
+- [x] Price input in Soles, stored as cents
+- [x] "Siguiente" disabled until >= 1 court
+- [x] Progress survives page close/reopen
 
 ---
 
@@ -194,12 +194,12 @@ Enhance the schedule step with "Aplicar a todos" button and optional peak period
 - `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/setup/_components/setup-wizard.tsx` — update Step 2 to use `schedule.updateOperatingHours` instead of `facility.saveSchedule`
 
 **Acceptance criteria:**
-- [ ] "Aplicar a todos" copies one day's hours to all open days
-- [ ] Peak periods optional — can skip
-- [ ] Peak time validated within operating hours
-- [ ] Can add/delete multiple peak periods
-- [ ] Close time must be after open time
-- [ ] "Anterior" returns to Step 1 without losing data
+- [x] "Aplicar a todos" copies one day's hours to all open days
+- [x] Peak periods optional — can skip
+- [x] Peak time validated within operating hours
+- [x] Can add/delete multiple peak periods
+- [x] Close time must be after open time
+- [x] "Anterior" returns to Step 1 without losing data
 
 ---
 
@@ -249,12 +249,12 @@ Enhance the existing setup banner with progress bar, step completion status, and
 - Banner hides when `isComplete === true`
 
 **Acceptance criteria:**
-- [ ] Progress bar reflects completed steps
-- [ ] Shows per-step completion status
-- [ ] "Continuar Configuracion" routes to correct wizard step
-- [ ] Only visible to org_admin and facility_manager
-- [ ] Dismissible per session, returns next visit
-- [ ] Hidden once facility is active + setup complete
+- [x] Progress bar reflects completed steps
+- [x] Shows per-step completion status
+- [x] "Continuar Configuración" routes to correct wizard step (query param consumed in TASK-4.08)
+- [x] Only visible to org_admin and facility_manager
+- [x] Dismissible per session, returns next visit
+- [x] Hidden once facility is active + setup complete
 
 ---
 

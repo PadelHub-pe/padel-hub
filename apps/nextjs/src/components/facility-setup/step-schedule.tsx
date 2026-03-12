@@ -244,7 +244,10 @@ export function StepSchedule({ control, facilityId }: StepScheduleProps) {
       />
 
       {/* Peak Periods */}
-      <PeakPeriodsSetup facilityId={facilityId} />
+      <PeakPeriodsSetup
+        facilityId={facilityId}
+        operatingHours={operatingHours}
+      />
     </div>
   );
 }
@@ -263,7 +266,13 @@ const peakPeriodFormSchema = z.object({
 
 type PeakPeriodFormValues = z.infer<typeof peakPeriodFormSchema>;
 
-function PeakPeriodsSetup({ facilityId }: { facilityId: string }) {
+function PeakPeriodsSetup({
+  facilityId,
+  operatingHours,
+}: {
+  facilityId: string;
+  operatingHours: OperatingHour[];
+}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [enabled, setEnabled] = useState(false);
@@ -325,6 +334,30 @@ function PeakPeriodsSetup({ facilityId }: { facilityId: string }) {
       });
       return;
     }
+
+    // Validate peak period falls within operating hours
+    for (const day of values.daysOfWeek) {
+      const dayHours = operatingHours.find((h) => h.dayOfWeek === day);
+      const dayLabel = DAY_LABELS[day] ?? `Día ${day}`;
+
+      if (!dayHours || dayHours.isClosed) {
+        form.setError("daysOfWeek", {
+          message: `${dayLabel} está cerrado — no se puede asignar periodo pico`,
+        });
+        return;
+      }
+
+      if (
+        values.startTime < dayHours.openTime ||
+        values.endTime > dayHours.closeTime
+      ) {
+        form.setError("startTime", {
+          message: `El periodo debe estar dentro del horario de ${dayLabel} (${dayHours.openTime} - ${dayHours.closeTime})`,
+        });
+        return;
+      }
+    }
+
     createMutation.mutate({ facilityId, ...values });
   }
 
@@ -443,21 +476,31 @@ function PeakPeriodsSetup({ facilityId }: { facilityId: string }) {
                       <FormItem>
                         <FormLabel>Días de la semana</FormLabel>
                         <div className="flex flex-wrap gap-2">
-                          {DAY_LABELS.map((label, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              onClick={() => toggleDay(index)}
-                              className={cn(
-                                "rounded-full px-3 py-1 text-sm font-medium transition-colors",
-                                field.value.includes(index)
-                                  ? "bg-amber-500 text-white"
-                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200",
-                              )}
-                            >
-                              {label}
-                            </button>
-                          ))}
+                          {DAY_LABELS.map((label, index) => {
+                            const dayHours = operatingHours.find(
+                              (h) => h.dayOfWeek === index,
+                            );
+                            const isClosed = !dayHours || dayHours.isClosed;
+
+                            return (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => !isClosed && toggleDay(index)}
+                                disabled={isClosed}
+                                className={cn(
+                                  "rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                                  isClosed
+                                    ? "cursor-not-allowed bg-gray-50 text-gray-300 line-through"
+                                    : field.value.includes(index)
+                                      ? "bg-amber-500 text-white"
+                                      : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                                )}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
                         </div>
                         <FormMessage />
                       </FormItem>
