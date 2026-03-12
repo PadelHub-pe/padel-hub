@@ -64,7 +64,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
 
 ### Phase 2: Pricing Page Enhancements (Sub-flows 6.4, 6.5)
 
-- [ ] **TASK-6.06** — Editable rate cards with facility default pricing `[feature]` — depends on TASK-6.02
+- [x] **TASK-6.06** — Editable rate cards with facility default pricing `[feature]` — depends on TASK-6.02
   Add `pricing.updateDefaultRates` mutation. Make rate card prices editable with save.
   Use facility defaults instead of median in `getOverview`. Fix permission to `pricing:write`.
 

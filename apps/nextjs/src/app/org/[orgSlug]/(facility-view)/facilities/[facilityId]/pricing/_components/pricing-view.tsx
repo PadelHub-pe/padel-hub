@@ -24,19 +24,19 @@ export function PricingView() {
       <PricingHeader />
 
       <div className="mt-6 space-y-6">
-        <RateCards stats={data.stats} />
+        <RateCards facilityId={facilityId} stats={data.stats} />
 
         <WeeklySchedule
           operatingHours={data.operatingHours}
           peakPeriods={data.peakPeriods}
-          medianRegularCents={data.stats.medianRegularCents}
-          medianPeakCents={data.stats.medianPeakCents}
+          medianRegularCents={data.stats.defaultRegularCents}
+          medianPeakCents={data.stats.defaultPeakCents}
         />
 
         <CourtPricingTable
           courts={data.courts}
           facilityId={facilityId}
-          avgMarkupPercent={data.stats.avgMarkupPercent}
+          avgMarkupPercent={data.stats.markupPercent}
         />
 
         <RevenueCalculator />

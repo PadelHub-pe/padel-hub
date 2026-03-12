@@ -27,6 +27,7 @@ export type Permission =
   | "court:write"
   | "schedule:read"
   | "schedule:write"
+  | "pricing:write"
   | "settings:read"
   | "settings:write";
 
@@ -77,6 +78,7 @@ const ROLE_PERMISSIONS: Record<OrgRole, Permission[] | "*"> = {
     "court:write",
     "schedule:read",
     "schedule:write",
+    "pricing:write",
     "settings:read",
     "settings:write",
   ],

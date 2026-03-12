@@ -1,139 +1,270 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { Button } from "@wifo/ui/button";
+import { Input } from "@wifo/ui/input";
+
+import { useTRPC } from "~/trpc/react";
+
 interface RateCardsProps {
+  facilityId: string;
   stats: {
-    medianRegularCents: number;
-    medianPeakCents: number;
-    avgMarkupPercent: number;
+    defaultRegularCents: number;
+    defaultPeakCents: number;
+    markupPercent: number;
     regularHoursPercent: number;
     peakHoursPercent: number;
   };
 }
 
-function formatCents(cents: number): string {
+function centsToPEN(cents: number): string {
   return (cents / 100).toFixed(0);
 }
 
-export function RateCards({ stats }: RateCardsProps) {
+export function RateCards({ facilityId, stats }: RateCardsProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [regularSoles, setRegularSoles] = useState(
+    centsToPEN(stats.defaultRegularCents),
+  );
+  const [peakSoles, setPeakSoles] = useState(
+    centsToPEN(stats.defaultPeakCents),
+  );
+
+  const regularCents = Math.round(Number(regularSoles) * 100);
+  const peakCents = Math.round(Number(peakSoles) * 100);
+  const computedMarkup =
+    regularCents > 0
+      ? Math.round(((peakCents - regularCents) / regularCents) * 100)
+      : 0;
+
+  const isValid =
+    regularCents > 0 && peakCents > 0 && peakCents >= regularCents;
+
+  const { mutate, isPending } = useMutation(
+    trpc.pricing.updateDefaultRates.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.pricing.getOverview.queryKey({ facilityId }),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.pricing.calculateRevenue.queryKey(),
+        });
+        setIsEditing(false);
+      },
+    }),
+  );
+
+  const handleSave = useCallback(() => {
+    if (!isValid) return;
+    mutate({
+      facilityId,
+      regularRateCents: regularCents,
+      peakRateCents: peakCents,
+    });
+  }, [facilityId, regularCents, peakCents, isValid, mutate]);
+
+  const handleCancel = useCallback(() => {
+    setRegularSoles(centsToPEN(stats.defaultRegularCents));
+    setPeakSoles(centsToPEN(stats.defaultPeakCents));
+    setIsEditing(false);
+  }, [stats.defaultRegularCents, stats.defaultPeakCents]);
+
+  const displayMarkup = isEditing ? computedMarkup : stats.markupPercent;
+
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {/* Regular Rate Card */}
-      <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-200 bg-white p-6">
-        <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-emerald-50" />
-        <div className="relative">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
-              <span className="text-2xl">&#9728;&#65039;</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">
-                Horario Regular
-              </h3>
-              <p className="text-sm text-gray-500">Tarifa estandar</p>
-            </div>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Tarifas por Defecto
+        </h3>
+        {!isEditing ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+          >
+            Editar
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!isValid || isPending}
+            >
+              {isPending ? "Guardando..." : "Guardar"}
+            </Button>
           </div>
-
-          <div className="mb-4 flex items-baseline gap-1">
-            <span className="text-sm text-gray-500">S/</span>
-            <span className="text-5xl font-extrabold text-gray-900">
-              {formatCents(stats.medianRegularCents)}
-            </span>
-            <span className="text-lg text-gray-500">/hora</span>
-          </div>
-
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-emerald-700">
-              <CheckIcon />
-              <span>Horarios fuera de hora pico</span>
-            </div>
-            <div className="flex items-center gap-2 text-emerald-700">
-              <CheckIcon />
-              <span>Tarifa base por cancha</span>
-            </div>
-          </div>
-
-          <div className="mt-4 border-t border-emerald-100 pt-4">
-            <p className="text-xs text-gray-500">
-              ~{stats.regularHoursPercent}% de horas semanales
-            </p>
-            <div className="mt-1 h-2 w-full rounded-full bg-emerald-100">
-              <div
-                className="h-2 rounded-full bg-emerald-500"
-                style={{ width: `${stats.regularHoursPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Peak Rate Card */}
-      <div className="relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-6">
-        <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-amber-100/50" />
-        <div className="absolute top-3 right-3">
-          <span className="rounded-full bg-amber-500 px-2 py-1 text-xs font-bold text-white">
-            PICO
-          </span>
-        </div>
-        <div className="relative">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-200">
-              <span className="text-2xl">&#9889;</span>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Regular Rate Card */}
+        <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-200 bg-white p-6">
+          <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-emerald-50" />
+          <div className="relative">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
+                <span className="text-2xl">&#9728;&#65039;</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Horario Regular
+                </h3>
+                <p className="text-sm text-gray-500">Tarifa estandar</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Hora Pico</h3>
-              <p className="text-sm text-amber-700">Tarifa alta demanda</p>
-            </div>
-          </div>
 
-          <div className="mb-2 flex items-baseline gap-1">
-            <span className="text-sm text-gray-500">S/</span>
-            <span className="text-5xl font-extrabold text-gray-900">
-              {formatCents(stats.medianPeakCents)}
-            </span>
-            <span className="text-lg text-gray-500">/hora</span>
-          </div>
-
-          {stats.avgMarkupPercent > 0 && (
-            <div className="mb-4 inline-flex items-center gap-1 rounded-lg bg-amber-200 px-2 py-1">
-              <svg
-                className="h-4 w-4 text-amber-700"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+            {isEditing ? (
+              <div className="mb-4">
+                <label className="mb-1 block text-sm text-gray-500">
+                  Precio por hora (S/)
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={regularSoles}
+                  onChange={(e) => setRegularSoles(e.target.value)}
+                  className="max-w-32 text-2xl font-bold"
                 />
-              </svg>
-              <span className="text-sm font-bold text-amber-800">
-                +{stats.avgMarkupPercent}% incremento
-              </span>
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="mb-4 flex items-baseline gap-1">
+                <span className="text-sm text-gray-500">S/</span>
+                <span className="text-5xl font-extrabold text-gray-900">
+                  {centsToPEN(stats.defaultRegularCents)}
+                </span>
+                <span className="text-lg text-gray-500">/hora</span>
+              </div>
+            )}
 
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-amber-800">
-              <CheckIcon />
-              <span>Periodos de alta demanda</span>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckIcon />
+                <span>Horarios fuera de hora pico</span>
+              </div>
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckIcon />
+                <span>Tarifa base por cancha</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-amber-800">
-              <CheckIcon />
-              <span>Fines de semana y noches</span>
+
+            <div className="mt-4 border-t border-emerald-100 pt-4">
+              <p className="text-xs text-gray-500">
+                ~{stats.regularHoursPercent}% de horas semanales
+              </p>
+              <div className="mt-1 h-2 w-full rounded-full bg-emerald-100">
+                <div
+                  className="h-2 rounded-full bg-emerald-500"
+                  style={{ width: `${stats.regularHoursPercent}%` }}
+                />
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="mt-4 border-t border-amber-200 pt-4">
-            <p className="text-xs text-gray-500">
-              ~{stats.peakHoursPercent}% de horas semanales
-            </p>
-            <div className="mt-1 h-2 w-full rounded-full bg-amber-100">
-              <div
-                className="h-2 rounded-full bg-amber-500"
-                style={{ width: `${stats.peakHoursPercent}%` }}
-              />
+        {/* Peak Rate Card */}
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-6">
+          <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-amber-100/50" />
+          <div className="absolute top-3 right-3">
+            <span className="rounded-full bg-amber-500 px-2 py-1 text-xs font-bold text-white">
+              PICO
+            </span>
+          </div>
+          <div className="relative">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-200">
+                <span className="text-2xl">&#9889;</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Hora Pico</h3>
+                <p className="text-sm text-amber-700">Tarifa alta demanda</p>
+              </div>
+            </div>
+
+            {isEditing ? (
+              <div className="mb-2">
+                <label className="mb-1 block text-sm text-gray-500">
+                  Precio por hora (S/)
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={peakSoles}
+                  onChange={(e) => setPeakSoles(e.target.value)}
+                  className="max-w-32 text-2xl font-bold"
+                />
+                {peakCents < regularCents && (
+                  <p className="mt-1 text-xs text-red-500">
+                    Debe ser igual o mayor a la tarifa regular
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="mb-2 flex items-baseline gap-1">
+                <span className="text-sm text-gray-500">S/</span>
+                <span className="text-5xl font-extrabold text-gray-900">
+                  {centsToPEN(stats.defaultPeakCents)}
+                </span>
+                <span className="text-lg text-gray-500">/hora</span>
+              </div>
+            )}
+
+            {displayMarkup > 0 && (
+              <div className="mb-4 inline-flex items-center gap-1 rounded-lg bg-amber-200 px-2 py-1">
+                <svg
+                  className="h-4 w-4 text-amber-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                  />
+                </svg>
+                <span className="text-sm font-bold text-amber-800">
+                  +{displayMarkup}% incremento
+                </span>
+              </div>
+            )}
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-amber-800">
+                <CheckIcon />
+                <span>Periodos de alta demanda</span>
+              </div>
+              <div className="flex items-center gap-2 text-amber-800">
+                <CheckIcon />
+                <span>Fines de semana y noches</span>
+              </div>
+            </div>
+
+            <div className="mt-4 border-t border-amber-200 pt-4">
+              <p className="text-xs text-gray-500">
+                ~{stats.peakHoursPercent}% de horas semanales
+              </p>
+              <div className="mt-1 h-2 w-full rounded-full bg-amber-100">
+                <div
+                  className="h-2 rounded-full bg-amber-500"
+                  style={{ width: `${stats.peakHoursPercent}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>

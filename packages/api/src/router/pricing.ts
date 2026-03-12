@@ -1,8 +1,9 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { courts, operatingHours, peakPeriods } from "@wifo/db/schema";
+import { courts, facilities, operatingHours, peakPeriods } from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
@@ -18,6 +19,12 @@ const facilityIdSchema = z.object({
 const calculateRevenueSchema = z.object({
   facilityId: z.string().uuid(),
   occupancyPercent: z.number().min(1).max(100).default(70),
+});
+
+const updateDefaultRatesSchema = z.object({
+  facilityId: z.string().uuid(),
+  regularRateCents: z.number().int().min(1),
+  peakRateCents: z.number().int().min(1),
 });
 
 // =============================================================================
@@ -97,7 +104,11 @@ export const pricingRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId } = input;
 
-      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
+      const { facility } = await verifyFacilityAccess(
+        ctx,
+        facilityId,
+        "schedule:read",
+      );
 
       const [courtsList, hoursList, periodsList] = await Promise.all([
         ctx.db.query.courts.findMany({
@@ -143,14 +154,16 @@ export const pricingRouter = {
         markupPercent: p.markupPercent,
       }));
 
-      // Compute stats: peak price is derived from regular + markup
+      // Use facility defaults if set, otherwise fall back to median of court prices
       const regularPrices = courtsList
         .map((c) => c.priceInCents)
         .filter((p): p is number => p !== null && p > 0);
 
       const medianRegular = median(regularPrices);
 
-      // Average markup from active peak periods
+      const defaultRegular = facility.defaultPriceInCents ?? medianRegular;
+
+      // Average markup from active peak periods (for fallback peak calculation)
       const avgMarkup =
         formattedPeriods.length > 0
           ? Math.round(
@@ -159,8 +172,15 @@ export const pricingRouter = {
             )
           : 0;
 
-      // Peak price = regular price * (1 + markup%)
-      const medianPeak = Math.round(medianRegular * (1 + avgMarkup / 100));
+      const defaultPeak =
+        facility.defaultPeakPriceInCents ??
+        Math.round(medianRegular * (1 + avgMarkup / 100));
+
+      // Compute markup % from default rates
+      const markupPercent =
+        defaultRegular > 0
+          ? Math.round(((defaultPeak - defaultRegular) / defaultRegular) * 100)
+          : 0;
 
       // Calculate regular vs peak hours breakdown
       let regularHours = 0;
@@ -198,14 +218,51 @@ export const pricingRouter = {
         operatingHours: hoursMap,
         peakPeriods: formattedPeriods,
         stats: {
-          medianRegularCents: medianRegular,
-          medianPeakCents: medianPeak,
-          avgMarkupPercent: avgMarkup,
+          defaultRegularCents: defaultRegular,
+          defaultPeakCents: defaultPeak,
+          markupPercent,
           regularHoursPercent: regularPercent,
           peakHoursPercent: peakPercent,
           totalWeeklyHours: totalHours,
         },
       };
+    }),
+
+  /**
+   * Update facility default regular and peak rates
+   */
+  updateDefaultRates: protectedProcedure
+    .input(updateDefaultRatesSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, regularRateCents, peakRateCents } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "pricing:write");
+
+      if (peakRateCents < regularRateCents) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "La tarifa pico debe ser igual o mayor a la tarifa regular",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(facilities)
+        .set({
+          defaultPriceInCents: regularRateCents,
+          defaultPeakPriceInCents: peakRateCents,
+        })
+        .where(eq(facilities.id, facilityId))
+        .returning();
+
+      if (!updated) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Local no encontrado",
+        });
+      }
+
+      return updated;
     }),
 
   /**
@@ -216,7 +273,11 @@ export const pricingRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId, occupancyPercent } = input;
 
-      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
+      const { facility } = await verifyFacilityAccess(
+        ctx,
+        facilityId,
+        "schedule:read",
+      );
 
       const [courtsList, hoursList, periodsList] = await Promise.all([
         ctx.db.query.courts.findMany({
@@ -258,14 +319,17 @@ export const pricingRouter = {
 
       const occupancy = occupancyPercent / 100;
 
-      // Sum revenue per court per day
-      // Peak rate = regular rate * (1 + markup%)
+      // Use facility defaults as fallback for courts without pricing
+      const facilityDefaultRegular = facility.defaultPriceInCents;
+      const facilityDefaultPeak = facility.defaultPeakPriceInCents;
+
       let regularRevenue = 0;
       let peakRevenue = 0;
       let peakMarkupBonus = 0;
 
       for (const court of courtsList) {
-        const regularRate = court.priceInCents ?? 0;
+        const regularRate =
+          court.priceInCents ?? facilityDefaultRegular ?? 0;
 
         for (const day of hoursMap) {
           if (day.isClosed) continue;
@@ -275,7 +339,10 @@ export const pricingRouter = {
           for (let h = open; h < close; h++) {
             const markup = getPeakMarkup(h, day.dayOfWeek, formattedPeriods);
             if (markup > 0) {
-              const peakRate = regularRate * (1 + markup / 100);
+              const peakRate =
+                court.peakPriceInCents ??
+                facilityDefaultPeak ??
+                regularRate * (1 + markup / 100);
               peakRevenue += peakRate * occupancy;
               peakMarkupBonus += (peakRate - regularRate) * occupancy;
             } else {
