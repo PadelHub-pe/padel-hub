@@ -37,7 +37,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
 
 ### Phase 0: Infrastructure
 
-- [ ] **TASK-6.01** — Shared zone calculation utility `[feature]`
+- [x] **TASK-6.01** — Shared zone calculation utility `[feature]`
   Create `packages/api/src/utils/schedule.ts` with `getTimeZone()` and `getRateForSlot()` functions.
   Write tests in `packages/api/src/__tests__/schedule-utils.test.ts`.
   Pure logic, no DB dependencies. Consumed by Flows 6, 7, and 8.
