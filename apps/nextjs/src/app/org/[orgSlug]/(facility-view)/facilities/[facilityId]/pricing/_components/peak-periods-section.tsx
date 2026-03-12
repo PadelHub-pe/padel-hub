@@ -5,24 +5,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@wifo/ui/tooltip";
 
+import type { PeakPeriod } from "../../schedule/_components/peak-period-dialog";
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
-import { AddPeakPeriodDialog } from "../../schedule/_components/add-peak-period-dialog";
+import { DeletePeakPeriodDialog } from "../../schedule/_components/delete-peak-period-dialog";
+import { PeakPeriodDialog } from "../../schedule/_components/peak-period-dialog";
 
-interface PeakPeriod {
-  id: string;
-  name: string;
-  daysOfWeek: number[];
-  startTime: string;
-  endTime: string;
-  markupPercent: number;
-}
-
-interface PeakPeriodsSectionProps {
-  peakPeriods: PeakPeriod[];
-}
-
+const MAX_PEAK_PERIODS = 5;
 const DAY_LABELS = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
 const WEEKEND_DAYS = [0, 6];
 
@@ -35,16 +31,29 @@ function formatTime(time: string): string {
   return `${h}:00 AM`;
 }
 
-export function PeakPeriodsSection({ peakPeriods }: PeakPeriodsSectionProps) {
+interface PeakPeriodsSectionProps {
+  peakPeriods: PeakPeriod[];
+  medianPriceCents?: number | null;
+}
+
+export function PeakPeriodsSection({
+  peakPeriods,
+  medianPriceCents,
+}: PeakPeriodsSectionProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { facilityId } = useFacilityContext();
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState<PeakPeriod | null>(null);
+  const [deletingPeriod, setDeletingPeriod] = useState<PeakPeriod | null>(null);
+
+  const atLimit = peakPeriods.length >= MAX_PEAK_PERIODS;
 
   const deleteMutation = useMutation(
     trpc.schedule.deletePeakPeriod.mutationOptions({
       onSuccess: () => {
-        toast.success("Periodo pico eliminado");
+        toast.success("Periodo eliminado");
+        setDeletingPeriod(null);
         void queryClient.invalidateQueries({
           queryKey: trpc.pricing.getOverview.queryKey(),
         });
@@ -70,31 +79,65 @@ export function PeakPeriodsSection({ peakPeriods }: PeakPeriodsSectionProps) {
     });
   };
 
+  const handleAdd = () => {
+    setEditingPeriod(null);
+    setShowDialog(true);
+  };
+
+  const handleEdit = (period: PeakPeriod) => {
+    setEditingPeriod(period);
+    setShowDialog(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deletingPeriod) {
+      deleteMutation.mutate({ facilityId, id: deletingPeriod.id });
+    }
+  };
+
+  const addButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleAdd}
+      disabled={atLimit}
+      className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+    >
+      <svg
+        className="mr-1 h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      Agregar Periodo
+    </Button>
+  );
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-semibold text-gray-900">Periodos Pico</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAddDialog(true)}
-          className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-        >
-          <svg
-            className="mr-1 h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Agregar Periodo
-        </Button>
+        {atLimit ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>{addButton}</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                Maximo 5 periodos de hora punta por instalacion
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          addButton
+        )}
       </div>
 
       {peakPeriods.length === 0 ? (
@@ -156,14 +199,14 @@ export function PeakPeriodsSection({ peakPeriods }: PeakPeriodsSectionProps) {
 
               <div className="mt-3 flex gap-2">
                 <button
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                  onClick={() => handleEdit(period)}
+                >
+                  Editar
+                </button>
+                <button
                   className="text-xs text-gray-500 hover:text-red-600"
-                  onClick={() =>
-                    deleteMutation.mutate({
-                      facilityId,
-                      id: period.id,
-                    })
-                  }
-                  disabled={deleteMutation.isPending}
+                  onClick={() => setDeletingPeriod(period)}
                 >
                   Eliminar
                 </button>
@@ -173,11 +216,22 @@ export function PeakPeriodsSection({ peakPeriods }: PeakPeriodsSectionProps) {
         </div>
       )}
 
-      <AddPeakPeriodDialog
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
+      <PeakPeriodDialog
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
         facilityId={facilityId}
+        editingPeriod={editingPeriod}
+        existingPeriods={peakPeriods}
+        medianPriceCents={medianPriceCents}
         onSuccess={invalidatePricingQueries}
+      />
+
+      <DeletePeakPeriodDialog
+        open={!!deletingPeriod}
+        onClose={() => setDeletingPeriod(null)}
+        onConfirm={handleDeleteConfirm}
+        periodName={deletingPeriod?.name ?? ""}
+        isDeleting={deleteMutation.isPending}
       />
     </div>
   );

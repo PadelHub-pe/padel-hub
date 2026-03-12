@@ -6,19 +6,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import { toast } from "@wifo/ui/toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@wifo/ui/tooltip";
 
+import type { PeakPeriod } from "./peak-period-dialog";
 import { useTRPC } from "~/trpc/react";
-import { AddPeakPeriodDialog } from "./add-peak-period-dialog";
+import { DeletePeakPeriodDialog } from "./delete-peak-period-dialog";
 import { PeakPeriodCard } from "./peak-period-card";
+import { PeakPeriodDialog } from "./peak-period-dialog";
 
-interface PeakPeriod {
-  id: string;
-  name: string;
-  daysOfWeek: number[];
-  startTime: string;
-  endTime: string;
-  markupPercent: number;
-}
+const MAX_PEAK_PERIODS = 5;
 
 interface PeakPeriodsSectionProps {
   facilityId: string;
@@ -32,11 +33,16 @@ export function PeakPeriodsSection({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState<PeakPeriod | null>(null);
+  const [deletingPeriod, setDeletingPeriod] = useState<PeakPeriod | null>(null);
+
+  const atLimit = periods.length >= MAX_PEAK_PERIODS;
 
   const deleteMutation = useMutation(
     trpc.schedule.deletePeakPeriod.mutationOptions({
       onSuccess: () => {
-        toast.success("Periodo pico eliminado");
+        toast.success("Periodo eliminado");
+        setDeletingPeriod(null);
         void queryClient.invalidateQueries({
           queryKey: trpc.schedule.getPeakPeriods.queryKey({ facilityId }),
         });
@@ -50,9 +56,28 @@ export function PeakPeriodsSection({
     }),
   );
 
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate({ facilityId, id });
+  const handleAdd = () => {
+    setEditingPeriod(null);
+    setDialogOpen(true);
   };
+
+  const handleEdit = (period: PeakPeriod) => {
+    setEditingPeriod(period);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deletingPeriod) {
+      deleteMutation.mutate({ facilityId, id: deletingPeriod.id });
+    }
+  };
+
+  const addButton = (
+    <Button variant="outline" size="sm" onClick={handleAdd} disabled={atLimit}>
+      <PlusIcon className="mr-2 h-4 w-4" />
+      Agregar
+    </Button>
+  );
 
   return (
     <>
@@ -61,14 +86,20 @@ export function PeakPeriodsSection({
           <CardTitle className="text-lg font-semibold text-gray-900">
             Periodos Pico
           </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDialogOpen(true)}
-          >
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Agregar
-          </Button>
+          {atLimit ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>{addButton}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Maximo 5 periodos de hora punta por instalacion
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            addButton
+          )}
         </CardHeader>
         <CardContent>
           {periods.length === 0 ? (
@@ -87,8 +118,9 @@ export function PeakPeriodsSection({
                 <PeakPeriodCard
                   key={period.id}
                   period={period}
-                  onDelete={() => handleDelete(period.id)}
-                  isDeleting={deleteMutation.isPending}
+                  onEdit={() => handleEdit(period)}
+                  onDelete={() => setDeletingPeriod(period)}
+                  isDeleting={false}
                 />
               ))}
             </div>
@@ -96,10 +128,20 @@ export function PeakPeriodsSection({
         </CardContent>
       </Card>
 
-      <AddPeakPeriodDialog
+      <PeakPeriodDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         facilityId={facilityId}
+        editingPeriod={editingPeriod}
+        existingPeriods={periods}
+      />
+
+      <DeletePeakPeriodDialog
+        open={!!deletingPeriod}
+        onClose={() => setDeletingPeriod(null)}
+        onConfirm={handleDeleteConfirm}
+        periodName={deletingPeriod?.name ?? ""}
+        isDeleting={deleteMutation.isPending}
       />
     </>
   );

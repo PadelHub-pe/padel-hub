@@ -2,17 +2,11 @@
 
 import { Button } from "@wifo/ui/button";
 
-interface PeakPeriod {
-  id: string;
-  name: string;
-  daysOfWeek: number[];
-  startTime: string;
-  endTime: string;
-  markupPercent: number;
-}
+import type { PeakPeriod } from "./peak-period-dialog";
 
 interface PeakPeriodCardProps {
   period: PeakPeriod;
+  onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
 }
@@ -21,6 +15,7 @@ const dayLabels = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
 
 export function PeakPeriodCard({
   period,
+  onEdit,
   onDelete,
   isDeleting,
 }: PeakPeriodCardProps) {
@@ -53,16 +48,44 @@ export function PeakPeriodCard({
           </div>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-gray-400 hover:text-red-500"
-        onClick={onDelete}
-        disabled={isDeleting}
-      >
-        <TrashIcon className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-400 hover:text-gray-700"
+          onClick={onEdit}
+        >
+          <PencilIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-400 hover:text-red-500"
+          onClick={onDelete}
+          disabled={isDeleting}
+        >
+          <TrashIcon className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
+  );
+}
+
+function PencilIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+      />
+    </svg>
   );
 }
 

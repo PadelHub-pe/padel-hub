@@ -41,7 +41,10 @@ export function PricingView() {
 
         <RevenueCalculator />
 
-        <PeakPeriodsSection peakPeriods={data.peakPeriods} />
+        <PeakPeriodsSection
+          peakPeriods={data.peakPeriods}
+          medianPriceCents={data.stats.medianRegularCents}
+        />
       </div>
     </div>
   );

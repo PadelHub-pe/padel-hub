@@ -57,7 +57,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
   New mutation with same validation as create. Input: periodId + partial fields.
   Write tests. File: `packages/api/src/router/schedule.ts`
 
-- [ ] **TASK-6.05** — Enhance peak period CRUD (edit, validation, UX) `[feature]` — depends on TASK-6.04
+- [x] **TASK-6.05** — Enhance peak period CRUD (edit, validation, UX) `[feature]` — depends on TASK-6.04
   Convert dialog to create/edit dual-mode. Add edit button to cards. Delete confirmation.
   Quick day shortcuts (Lun-Vie, Sáb-Dom, Todos). Overlap detection. Max 5 limit. Markup S/ preview.
   Apply to both schedule and pricing page peak period components.
