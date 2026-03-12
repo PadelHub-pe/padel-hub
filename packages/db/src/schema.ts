@@ -629,8 +629,6 @@ export const CreateManualBookingSchema = z.object({
   date: z.date(),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
-  priceInCents: z.number().int().min(0),
-  isPeakRate: z.boolean().default(false),
   paymentMethod: z.enum(["cash", "card", "app"]).optional(),
   customerName: z.string().min(1).max(100),
   customerPhone: z.string().max(20).optional(),

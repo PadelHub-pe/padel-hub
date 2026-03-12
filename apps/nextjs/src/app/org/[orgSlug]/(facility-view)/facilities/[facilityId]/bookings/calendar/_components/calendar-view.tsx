@@ -147,15 +147,6 @@ export function CalendarView() {
           utilizationPercent: weekData?.stats.avgUtilizationPercent ?? 0,
         };
 
-  // Get default price for quick booking
-  const getDefaultPrice = () => {
-    if (quickBookingSlot) {
-      const court = courts.find((c) => c.id === quickBookingSlot.courtId);
-      return court?.priceInCents ?? 5000; // Default 50 soles
-    }
-    return 5000;
-  };
-
   return (
     <div className="flex h-full">
       {/* Sidebar with mini calendar */}
@@ -246,8 +237,6 @@ export function CalendarView() {
           courtName={quickBookingSlot.courtName}
           date={quickBookingSlot.date}
           startTime={quickBookingSlot.startTime}
-          defaultPrice={getDefaultPrice()}
-          isPeakRate={false}
           onBookingCreated={handleBookingCreated}
         />
       )}

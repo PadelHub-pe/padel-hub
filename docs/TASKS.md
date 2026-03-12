@@ -88,12 +88,12 @@ Move price calculation from client to server in `booking.createManual`.
 - Write tests for price calculation in createManual
 
 **Acceptance criteria:**
-- [ ] Server calculates price using `getRateForSlot()` — no client-sent price
-- [ ] Peak rate correctly detected based on zone logic
-- [ ] Split-zone bookings (regular + peak) calculate blended price
-- [ ] Price preview updates live in create dialog
-- [ ] Existing bookings unaffected (they keep their stored price)
-- [ ] Tests pass
+- [x] Server calculates price using `getRateForSlot()` — no client-sent price
+- [x] Peak rate correctly detected based on zone logic
+- [x] Split-zone bookings (regular + peak) calculate blended price
+- [x] Price preview updates live in create dialog
+- [x] Existing bookings unaffected (they keep their stored price)
+- [x] Tests pass
 
 **Depends on:** nothing
 

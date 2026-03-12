@@ -24,14 +24,25 @@ import {
   bookings,
   courts,
   CreateManualBookingSchema,
+  facilities,
   operatingHours,
   peakPeriods,
   user,
 } from "@wifo/db/schema";
 
+import type {
+  ScheduleConfig,
+  SlotCourtPricing,
+  SlotFacilityDefaults,
+} from "../utils/schedule";
 import { verifyFacilityAccess } from "../lib/access-control";
 import { logBookingActivity } from "../lib/booking-activity";
 import { protectedProcedure } from "../trpc";
+import {
+  getRateForSlot,
+  getTimeZoneWithMarkup,
+  parseTimeToMinutes,
+} from "../utils/schedule";
 
 // =============================================================================
 // Input Schemas
@@ -121,6 +132,14 @@ const getSlotInfoSchema = z.object({
   date: z.date(),
 });
 
+const calculatePriceSchema = z.object({
+  facilityId: z.string().uuid(),
+  courtId: z.string().uuid(),
+  date: z.date(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+});
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -132,6 +151,51 @@ function generateBookingCode(): string {
   const year = new Date().getFullYear();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `PH-${year}-${random}`;
+}
+
+/**
+ * Calculate price for a booking time range using schedule zone logic.
+ * Iterates over 30-min slots and sums rates.
+ */
+function calculateBookingPrice(
+  startTime: string,
+  endTime: string,
+  dayOfWeek: number,
+  dateStr: string,
+  config: ScheduleConfig,
+  courtPricing: SlotCourtPricing,
+  facilityDefaults: SlotFacilityDefaults | null,
+): {
+  priceInCents: number;
+  isPeakRate: boolean;
+  slots: { time: string; zone: string; rateInCents: number }[];
+} {
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+
+  let totalPrice = 0;
+  let hasPeak = false;
+  const slots: { time: string; zone: string; rateInCents: number }[] = [];
+
+  for (let min = startMinutes; min < endMinutes; min += 30) {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    const slotTime = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+
+    const { zone } = getTimeZoneWithMarkup(
+      slotTime,
+      dayOfWeek,
+      dateStr,
+      config,
+    );
+    const rate = getRateForSlot(courtPricing, zone, facilityDefaults);
+
+    if (zone === "peak") hasPeak = true;
+    totalPrice += rate;
+    slots.push({ time: slotTime, zone, rateInCents: rate });
+  }
+
+  return { priceInCents: totalPrice, isPeakRate: hasPeak, slots };
 }
 
 // =============================================================================
@@ -498,6 +562,80 @@ export const bookingRouter = {
         });
       }
 
+      // --- Server-side price calculation ---
+      const dayOfWeek = input.date.getDay();
+      const dateStr = `${input.date.getFullYear()}-${(input.date.getMonth() + 1).toString().padStart(2, "0")}-${input.date.getDate().toString().padStart(2, "0")}`;
+
+      const [hoursList, periodsList, blockedSlotsList, facility] =
+        await Promise.all([
+          ctx.db.query.operatingHours.findMany({
+            where: eq(operatingHours.facilityId, facilityId),
+          }),
+          ctx.db.query.peakPeriods.findMany({
+            where: and(
+              eq(peakPeriods.facilityId, facilityId),
+              eq(peakPeriods.isActive, true),
+            ),
+          }),
+          ctx.db.query.blockedSlots.findMany({
+            where: and(
+              eq(blockedSlots.facilityId, facilityId),
+              gte(blockedSlots.date, dayStart),
+              lt(blockedSlots.date, dayEnd),
+            ),
+          }),
+          ctx.db.query.facilities.findFirst({
+            where: eq(facilities.id, facilityId),
+            columns: {
+              defaultPriceInCents: true,
+              defaultPeakPriceInCents: true,
+            },
+          }),
+        ]);
+
+      const scheduleConfig: ScheduleConfig = {
+        operatingHours: hoursList.map((h) => ({
+          dayOfWeek: h.dayOfWeek,
+          openTime: h.openTime.slice(0, 5),
+          closeTime: h.closeTime.slice(0, 5),
+          isClosed: h.isClosed,
+        })),
+        peakPeriods: periodsList.map((p) => ({
+          daysOfWeek: p.daysOfWeek,
+          startTime: p.startTime.slice(0, 5),
+          endTime: p.endTime.slice(0, 5),
+          markupPercent: p.markupPercent,
+        })),
+        blockedSlots: blockedSlotsList.map((b) => ({
+          date: dateStr,
+          startTime: b.startTime.slice(0, 5),
+          endTime: b.endTime.slice(0, 5),
+          courtId: b.courtId,
+        })),
+      };
+
+      const courtPricing: SlotCourtPricing = {
+        priceInCents: court.priceInCents,
+        peakPriceInCents: court.peakPriceInCents,
+      };
+
+      const facilityDefaults: SlotFacilityDefaults | null = facility
+        ? {
+            defaultPriceInCents: facility.defaultPriceInCents,
+            defaultPeakPriceInCents: facility.defaultPeakPriceInCents,
+          }
+        : null;
+
+      const { priceInCents, isPeakRate } = calculateBookingPrice(
+        input.startTime,
+        input.endTime,
+        dayOfWeek,
+        dateStr,
+        scheduleConfig,
+        courtPricing,
+        facilityDefaults,
+      );
+
       // Generate unique booking code
       let code = generateBookingCode();
       let attempts = 0;
@@ -519,8 +657,8 @@ export const bookingRouter = {
           date: input.date,
           startTime: input.startTime,
           endTime: input.endTime,
-          priceInCents: input.priceInCents,
-          isPeakRate: input.isPeakRate,
+          priceInCents,
+          isPeakRate,
           paymentMethod: input.paymentMethod ?? null,
           customerName: input.customerName,
           customerPhone: input.customerPhone ?? null,
@@ -955,5 +1093,102 @@ export const bookingRouter = {
           reason: b.reason,
         })),
       };
+    }),
+
+  /**
+   * Calculate price for a court+date+time selection (preview for create dialog)
+   */
+  calculatePrice: protectedProcedure
+    .input(calculatePriceSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, courtId, date, startTime, endTime } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "booking:read");
+
+      const court = await ctx.db.query.courts.findFirst({
+        where: and(eq(courts.id, courtId), eq(courts.facilityId, facilityId)),
+      });
+
+      if (!court) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Cancha no encontrada",
+        });
+      }
+
+      const dayStart = startOfDay(date);
+      const dayEnd = startOfDay(addDays(date, 1));
+      const dayOfWeek = date.getDay();
+      const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+
+      const [hoursList, periodsList, blockedSlotsList, facility] =
+        await Promise.all([
+          ctx.db.query.operatingHours.findMany({
+            where: eq(operatingHours.facilityId, facilityId),
+          }),
+          ctx.db.query.peakPeriods.findMany({
+            where: and(
+              eq(peakPeriods.facilityId, facilityId),
+              eq(peakPeriods.isActive, true),
+            ),
+          }),
+          ctx.db.query.blockedSlots.findMany({
+            where: and(
+              eq(blockedSlots.facilityId, facilityId),
+              gte(blockedSlots.date, dayStart),
+              lt(blockedSlots.date, dayEnd),
+            ),
+          }),
+          ctx.db.query.facilities.findFirst({
+            where: eq(facilities.id, facilityId),
+            columns: {
+              defaultPriceInCents: true,
+              defaultPeakPriceInCents: true,
+            },
+          }),
+        ]);
+
+      const scheduleConfig: ScheduleConfig = {
+        operatingHours: hoursList.map((h) => ({
+          dayOfWeek: h.dayOfWeek,
+          openTime: h.openTime.slice(0, 5),
+          closeTime: h.closeTime.slice(0, 5),
+          isClosed: h.isClosed,
+        })),
+        peakPeriods: periodsList.map((p) => ({
+          daysOfWeek: p.daysOfWeek,
+          startTime: p.startTime.slice(0, 5),
+          endTime: p.endTime.slice(0, 5),
+          markupPercent: p.markupPercent,
+        })),
+        blockedSlots: blockedSlotsList.map((b) => ({
+          date: dateStr,
+          startTime: b.startTime.slice(0, 5),
+          endTime: b.endTime.slice(0, 5),
+          courtId: b.courtId,
+        })),
+      };
+
+      const courtPricing: SlotCourtPricing = {
+        priceInCents: court.priceInCents,
+        peakPriceInCents: court.peakPriceInCents,
+      };
+
+      const facilityDefaults: SlotFacilityDefaults | null = facility
+        ? {
+            defaultPriceInCents: facility.defaultPriceInCents,
+            defaultPeakPriceInCents: facility.defaultPeakPriceInCents,
+          }
+        : null;
+
+      return calculateBookingPrice(
+        startTime,
+        endTime,
+        dayOfWeek,
+        dateStr,
+        scheduleConfig,
+        courtPricing,
+        facilityDefaults,
+      );
     }),
 } satisfies TRPCRouterRecord;

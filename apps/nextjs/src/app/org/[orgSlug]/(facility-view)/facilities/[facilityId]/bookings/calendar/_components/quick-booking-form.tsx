@@ -1,7 +1,7 @@
 "use client";
 
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useForm } from "react-hook-form";
@@ -46,8 +46,6 @@ const quickBookingSchema = z.object({
     .optional()
     .or(z.literal("")),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato inválido (HH:mm)"),
-  priceInCents: z.number().int().min(0, "El precio debe ser positivo"),
-  isPeakRate: z.boolean(),
   paymentMethod: z.enum(["cash", "card", "app"]).optional(),
   notes: z.string().max(500).optional(),
 });
@@ -62,8 +60,6 @@ interface QuickBookingFormProps {
   courtName: string;
   date: Date;
   startTime: string;
-  defaultPrice: number;
-  isPeakRate: boolean;
   onBookingCreated: () => void;
 }
 
@@ -75,8 +71,6 @@ export function QuickBookingForm({
   courtName,
   date,
   startTime,
-  defaultPrice,
-  isPeakRate,
   onBookingCreated,
 }: QuickBookingFormProps) {
   const trpc = useTRPC();
@@ -89,11 +83,25 @@ export function QuickBookingForm({
       customerPhone: "",
       customerEmail: "",
       endTime: calculateEndTime(startTime),
-      priceInCents: defaultPrice,
-      isPeakRate: isPeakRate,
       paymentMethod: undefined,
       notes: "",
     },
+  });
+
+  const watchEndTime = form.watch("endTime");
+
+  // Server-side price preview
+  const canCalculatePrice =
+    !!courtId && !!startTime && /^\d{2}:\d{2}$/.test(watchEndTime);
+  const { data: pricePreview } = useQuery({
+    ...trpc.booking.calculatePrice.queryOptions({
+      facilityId,
+      courtId,
+      date,
+      startTime,
+      endTime: watchEndTime,
+    }),
+    enabled: canCalculatePrice,
   });
 
   const createMutation = useMutation(
@@ -118,8 +126,6 @@ export function QuickBookingForm({
       date,
       startTime,
       endTime: values.endTime,
-      priceInCents: values.priceInCents,
-      isPeakRate: values.isPeakRate,
       paymentMethod: values.paymentMethod,
       customerName: values.customerName,
       customerPhone: values.customerPhone ?? undefined,
@@ -218,30 +224,14 @@ export function QuickBookingForm({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="priceInCents"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio (S/) *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={1}
-                        {...field}
-                        value={field.value / 100}
-                        onChange={(e) =>
-                          field.onChange(
-                            Math.round(parseFloat(e.target.value) * 100),
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <span className="text-sm font-medium">Precio</span>
+                <div className="bg-muted flex h-9 items-center rounded-md border px-3 text-sm">
+                  {canCalculatePrice && pricePreview
+                    ? `S/ ${(pricePreview.priceInCents / 100).toFixed(2)}`
+                    : "—"}
+                </div>
+              </div>
 
               <FormField
                 control={form.control}

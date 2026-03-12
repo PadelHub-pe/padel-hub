@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
@@ -93,20 +93,6 @@ function normalizeTime(time: string): string {
   return time.slice(0, 5);
 }
 
-/** Check if a given time (HH:mm) falls within any peak period */
-function isTimeInPeakPeriod(
-  startTime: string,
-  endTime: string,
-  peakPeriods: { startTime: string; endTime: string }[],
-): boolean {
-  return peakPeriods.some((peak) => {
-    const peakStart = normalizeTime(peak.startTime);
-    const peakEnd = normalizeTime(peak.endTime);
-    // Overlap: booking starts before peak ends AND booking ends after peak starts
-    return startTime < peakEnd && endTime > peakStart;
-  });
-}
-
 // --- Schema ---
 
 const createBookingSchema = z.object({
@@ -121,8 +107,6 @@ const createBookingSchema = z.object({
     .email("Email inválido")
     .optional()
     .or(z.literal("")),
-  priceInCents: z.number().int().min(0, "El precio debe ser positivo"),
-  isPeakRate: z.boolean(),
   paymentMethod: z.enum(["cash", "card", "app"]).optional(),
   notes: z.string().max(500).optional(),
   players: z
@@ -167,8 +151,6 @@ export function CreateBookingDialog({
       customerName: "",
       customerPhone: "",
       customerEmail: "",
-      priceInCents: 0,
-      isPeakRate: false,
       paymentMethod: undefined,
       notes: "",
       players: [],
@@ -235,37 +217,21 @@ export function CreateBookingDialog({
     );
   }, [slotInfo?.operatingHours]);
 
-  // Detect peak rate and auto-calculate price
-  const isPeak = useMemo(() => {
-    if (!watchStartTime || !endTime || !slotInfo?.peakPeriods.length) {
-      return false;
-    }
-    return isTimeInPeakPeriod(watchStartTime, endTime, slotInfo.peakPeriods);
-  }, [watchStartTime, endTime, slotInfo?.peakPeriods]);
+  // Server-side price calculation preview
+  const canCalculatePrice =
+    !!watchCourtId && !!watchStartTime && !!endTime && !!parsedDate;
+  const { data: pricePreview } = useQuery({
+    ...trpc.booking.calculatePrice.queryOptions({
+      facilityId,
+      courtId: watchCourtId,
+      date: parsedDate ?? new Date(),
+      startTime: watchStartTime,
+      endTime: endTime ?? "00:00",
+    }),
+    enabled: canCalculatePrice,
+  });
 
-  // Track whether user has manually edited the price
-  const userEditedPriceRef = useRef(false);
-
-  // Auto-fill price and peak rate when court/time/peak changes
-  useEffect(() => {
-    if (!watchCourtId) return;
-    const selectedCourt = courts.find((c) => c.id === watchCourtId);
-    if (!selectedCourt) return;
-
-    form.setValue("isPeakRate", isPeak, { shouldDirty: false });
-
-    if (!userEditedPriceRef.current) {
-      const autoPrice = isPeak
-        ? (selectedCourt.peakPriceInCents ?? selectedCourt.priceInCents ?? 0)
-        : (selectedCourt.priceInCents ?? 0);
-      form.setValue("priceInCents", autoPrice, { shouldDirty: false });
-    }
-  }, [watchCourtId, isPeak, courts, form]);
-
-  // Reset manual price edit flag when court changes
-  useEffect(() => {
-    userEditedPriceRef.current = false;
-  }, [watchCourtId]);
+  const isPeak = pricePreview?.isPeakRate ?? false;
 
   // Detect booking conflict
   const conflict = useMemo(() => {
@@ -304,7 +270,6 @@ export function CreateBookingDialog({
         onBookingCreated();
         onClose();
         form.reset();
-        userEditedPriceRef.current = false;
       },
       onError: (error) => {
         form.setError("root", { message: error.message });
@@ -323,8 +288,6 @@ export function CreateBookingDialog({
       date: parse(values.date, "yyyy-MM-dd", new Date()),
       startTime: values.startTime,
       endTime: computedEndTime,
-      priceInCents: values.priceInCents,
-      isPeakRate: values.isPeakRate,
       paymentMethod: values.paymentMethod,
       customerName: values.customerName,
       customerPhone: values.customerPhone ?? undefined,
@@ -338,7 +301,6 @@ export function CreateBookingDialog({
     if (!isOpen) {
       onClose();
       form.reset();
-      userEditedPriceRef.current = false;
     }
   };
 
@@ -608,32 +570,16 @@ export function CreateBookingDialog({
               )}
             </div>
 
-            {/* Price + Payment method */}
+            {/* Price preview + Payment method */}
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="priceInCents"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio (S/) *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={field.value / 100}
-                        onChange={(e) => {
-                          userEditedPriceRef.current = true;
-                          field.onChange(
-                            Math.round(parseFloat(e.target.value) * 100),
-                          );
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <span className="text-sm font-medium">Precio</span>
+                <div className="bg-muted flex h-9 items-center rounded-md border px-3 text-sm">
+                  {canCalculatePrice && pricePreview
+                    ? `S/ ${(pricePreview.priceInCents / 100).toFixed(2)}`
+                    : "—"}
+                </div>
+              </div>
 
               <FormField
                 control={form.control}
