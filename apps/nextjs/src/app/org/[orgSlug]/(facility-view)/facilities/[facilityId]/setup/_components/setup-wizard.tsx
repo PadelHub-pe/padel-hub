@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -88,7 +88,7 @@ export function SetupWizard({
 }: SetupWizardProps) {
   const router = useRouter();
   const trpc = useTRPC();
-  const [currentStep, setCurrentStep] = useState<number | null>(null);
+  const [userStep, setUserStep] = useState<number | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [courtCount, setCourtCount] = useState(0);
   const [setupResult, setSetupResult] = useState<{
@@ -111,12 +111,15 @@ export function SetupWizard({
     trpc.schedule.getOperatingHours.queryOptions({ facilityId }),
   );
 
-  // Set initial step once setup status is loaded
-  useEffect(() => {
-    if (setupStatus && currentStep === null) {
-      setCurrentStep(getInitialStep(setupStatus, requestedStep));
-    }
-  }, [setupStatus, currentStep, requestedStep]);
+  // Derive initial step from setup status (computed, not set via effect)
+  const initialStep = useMemo(
+    () => (setupStatus ? getInitialStep(setupStatus, requestedStep) : null),
+    [setupStatus, requestedStep],
+  );
+
+  // Current step: user-driven overrides the derived initial
+  const currentStep = userStep ?? initialStep;
+  const setCurrentStep = setUserStep;
 
   // Keep courtCount in sync with query data
   const effectiveCourtCount = courts?.length ?? courtCount;

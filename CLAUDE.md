@@ -100,7 +100,7 @@ pnpm test             # Run all tests with Vitest
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current coverage**: `packages/api` (access-control, invite, team, setup, default-operating-hours, last-admin), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
+- **Current coverage**: `packages/api` (access-control, invite, team, setup, slugify, default-operating-hours, last-admin), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
@@ -276,8 +276,11 @@ apps/nextjs/src/app/
 │                   └─ [facilityId]/
 │                       ├─ layout.tsx     # Renders FacilitySidebar
 │                       ├─ page.tsx       # Facility dashboard (default)
-│                       ├─ courts/        # Courts management
-│                       ├─ bookings/      # Bookings list & calendar
+│                       ├─ courts/        # Courts management (list, new, [courtId]/edit)
+│                       ├─ bookings/      # Bookings list, [bookingId] detail, calendar/
+│                       ├─ schedule/      # Operating hours management
+│                       ├─ pricing/       # Court pricing management
+│                       ├─ setup/         # Onboarding wizard (3 steps)
 │                       ├─ settings/      # Facility settings
 │                       └─ ...
 ```
@@ -305,11 +308,14 @@ apps/nextjs/src/app/
 
 **Facility Onboarding Flow:**
 
-1. Quick Create (`/facilities/new`) - Creates inactive facility with minimal fields
-2. Setup Wizard (`/facilities/[id]/setup`) - Configure courts and schedule
-3. Complete Setup - Activates facility (sets `onboardingCompletedAt`, `isActive=true`)
+1. Quick Create (`/facilities/new`) - Creates inactive facility with minimal fields (name, address, district, slug auto-generated)
+2. Setup Wizard (`/facilities/[id]/setup`) - 3-step wizard:
+   - Step 1: Courts (individual CRUD, each court persisted immediately with pricing)
+   - Step 2: Schedule (operating hours per day, "Aplicar a todos" bulk action)
+   - Step 3: Photos & Amenities (optional, not blocking activation)
+3. Complete Setup - Validates courts + schedule + pricing → activates facility (`onboardingCompletedAt`, `isActive=true`)
 
-Incomplete facilities show "Pendiente" badge on cards and setup banner on dashboard.
+Incomplete facilities show "Pendiente" badge on cards and setup banner on dashboard. Wizard auto-resumes from the correct step based on progress.
 
 ### Brand Assets (`/assets`)
 
@@ -511,10 +517,11 @@ Cloudflare Images integration for direct browser uploads and server-side managem
 Reusable setup wizard components in `apps/nextjs/src/components/facility-setup/`:
 
 - `StepIndicator` - Progress indicator with configurable step labels
-- `StepCourts` - Court creation form (add/remove courts with name + type)
-- `StepSchedule` - Operating hours per day + default pricing
-- `StepPhotos` - Facility photo upload (Cloudflare Images integration)
+- `StepCourts` - Court CRUD with individual persist (name, type, pricing per court)
+- `StepSchedule` - Operating hours per day with "Aplicar a todos" bulk action
+- `StepPhotos` - Facility photo upload (Cloudflare Images gallery mode, up to 10)
 - `AmenityChips` - Amenity selection with chip-style toggles
+- `SetupComplete` - Completion screen with summary, warnings, and navigation
 
 ```typescript
 import { StepIndicator, StepCourts, StepSchedule, StepPhotos, AmenityChips } from "~/components/facility-setup";
@@ -618,7 +625,7 @@ Optional:
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current suites**: `access-control` (24), `invite` (24), `team` (27), `setup` (27), `default-operating-hours` (2), `last-admin` (8), `images` (21), `validators` (1) — 192 total
+- **Current suites**: `access-control` (104), `invite` (24), `team` (27), `setup` (37), `slugify` (15), `default-operating-hours` (2), `last-admin` (8), `images` (21), `validators` (1) — 239 total
 - **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
 - **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()` — return typed objects with optional overrides
 - **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)

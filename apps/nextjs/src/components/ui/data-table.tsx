@@ -42,6 +42,7 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table v8 API is not compatible with react-hooks lint plugin
   const table = useReactTable({
     data,
     columns,
