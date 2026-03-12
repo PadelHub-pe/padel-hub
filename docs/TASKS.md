@@ -99,7 +99,7 @@ Move price calculation from client to server in `booking.createManual`.
 
 ---
 
-### TASK-7.03 — Enhance booking.list API (feature)
+### TASK-7.03 — Enhance booking.list API (feature) ✅
 
 Upgrade list query to match spec: multi-status filter, date range, sorting.
 
@@ -117,12 +117,12 @@ Upgrade list query to match spec: multi-status filter, date range, sorting.
 - Write tests for list query with various filter combinations
 
 **Acceptance criteria:**
-- [ ] Multi-status filtering works (select Pendiente + Confirmada)
-- [ ] Date range filtering works with presets
-- [ ] Sorting by all columns works
-- [ ] Filters persist in URL query params
-- [ ] Empty state shows appropriate message based on active filters
-- [ ] Tests pass
+- [x] Multi-status filtering works (select Pendiente + Confirmada)
+- [x] Date range filtering works with presets
+- [x] Sorting by all columns works
+- [x] Filters persist in URL query params
+- [x] Empty state shows appropriate message based on active filters
+- [x] Tests pass
 
 **Depends on:** nothing
 

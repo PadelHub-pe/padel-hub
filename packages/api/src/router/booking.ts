@@ -10,6 +10,7 @@ import {
   gt,
   gte,
   ilike,
+  inArray,
   lt,
   ne,
   or,
@@ -49,8 +50,11 @@ const listBookingsSchema = z.object({
   facilityId: z.string().uuid(),
   search: z.string().optional(),
   courtId: z.string().uuid().optional(),
-  status: z.enum(bookingStatusValues).optional(),
+  status: z.array(z.enum(bookingStatusValues)).optional(),
   date: z.date().optional(),
+  dateRange: z.object({ start: z.date(), end: z.date() }).optional(),
+  sortBy: z.enum(["date", "time", "court", "price", "status"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
 });
@@ -141,7 +145,18 @@ export const bookingRouter = {
   list: protectedProcedure
     .input(listBookingsSchema)
     .query(async ({ ctx, input }) => {
-      const { facilityId, search, courtId, status, date, page, limit } = input;
+      const {
+        facilityId,
+        search,
+        courtId,
+        status,
+        date,
+        dateRange,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      } = input;
       const offset = (page - 1) * limit;
 
       // Verify access with booking:read permission
@@ -154,11 +169,18 @@ export const bookingRouter = {
         conditions.push(eq(bookings.courtId, courtId));
       }
 
-      if (status) {
-        conditions.push(eq(bookings.status, status));
+      // Multi-status filter: use inArray when array has items
+      if (status && status.length > 0) {
+        conditions.push(inArray(bookings.status, status));
       }
 
-      if (date) {
+      // Date range filter takes precedence over single date
+      if (dateRange) {
+        const rangeStart = startOfDay(dateRange.start);
+        const rangeEnd = startOfDay(addDays(dateRange.end, 1));
+        conditions.push(gte(bookings.date, rangeStart));
+        conditions.push(lt(bookings.date, rangeEnd));
+      } else if (date) {
         const dayStart = startOfDay(date);
         const dayEnd = startOfDay(addDays(date, 1));
         conditions.push(gte(bookings.date, dayStart));
@@ -187,6 +209,20 @@ export const bookingRouter = {
         .where(whereClause);
       const total = totalResult?.count ?? 0;
 
+      // Build dynamic order by
+      const direction = sortOrder === "asc" ? asc : desc;
+      const sortColumnMap = {
+        date: bookings.date,
+        time: bookings.startTime,
+        court: bookings.courtId,
+        price: bookings.priceInCents,
+        status: bookings.status,
+      };
+
+      const orderBy = sortBy
+        ? [direction(sortColumnMap[sortBy]), desc(bookings.createdAt)]
+        : [desc(bookings.date), desc(bookings.createdAt)];
+
       // Get bookings with court info and players
       const bookingsList = await ctx.db.query.bookings.findMany({
         where: whereClause,
@@ -195,7 +231,7 @@ export const bookingRouter = {
           user: true,
           players: true,
         },
-        orderBy: [desc(bookings.date), desc(bookings.createdAt)],
+        orderBy,
         limit,
         offset,
       });

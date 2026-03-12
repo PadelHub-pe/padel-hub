@@ -11,6 +11,7 @@ interface BookingsTableProps {
   onBookingClick: (bookingId: string) => void;
   onBookingUpdated: () => void;
   basePath: string;
+  hasActiveFilters?: boolean;
 }
 
 export function BookingsTable({
@@ -18,6 +19,7 @@ export function BookingsTable({
   onBookingClick,
   onBookingUpdated,
   basePath,
+  hasActiveFilters = false,
 }: BookingsTableProps) {
   // Create a map of court IDs to their index for consistent coloring
   const courtIndexMap = useMemo(() => {
@@ -45,7 +47,9 @@ export function BookingsTable({
             No hay reservas
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            No se encontraron reservas con los filtros seleccionados.
+            {hasActiveFilters
+              ? "No se encontraron reservas con los filtros seleccionados. Intenta ajustar los filtros."
+              : "Aún no hay reservas registradas para este local."}
           </p>
         </div>
       </div>
