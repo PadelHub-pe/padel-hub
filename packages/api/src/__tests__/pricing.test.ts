@@ -74,20 +74,40 @@ function makeCourt(overrides?: Record<string, unknown>) {
 // Mock DB builder
 // ---------------------------------------------------------------------------
 
+interface MockOperatingHour {
+  dayOfWeek: number;
+  openTime: string;
+  closeTime: string;
+  isClosed: boolean;
+}
+
+interface MockPeakPeriod {
+  id: string;
+  name: string;
+  daysOfWeek: number[];
+  startTime: string;
+  endTime: string;
+  markupPercent: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
 interface MockDbOpts {
   facility?: ReturnType<typeof makeFacility>;
   courts?: ReturnType<typeof makeCourt>[];
+  operatingHours?: MockOperatingHour[];
+  peakPeriods?: MockPeakPeriod[];
   role?: string;
 }
 
 function createMockDb(opts?: MockDbOpts) {
   const facility = opts?.facility ?? makeFacility();
   const courtsList = opts?.courts ?? [makeCourt()];
+  const hoursList = opts?.operatingHours ?? [];
+  const periodsList = opts?.peakPeriods ?? [];
   const role = opts?.role ?? "org_admin";
 
-  const updateReturningFn = vi
-    .fn()
-    .mockResolvedValue([{ ...facility }]);
+  const updateReturningFn = vi.fn().mockResolvedValue([{ ...facility }]);
   const updateWhereFn = vi
     .fn()
     .mockReturnValue({ returning: updateReturningFn });
@@ -105,10 +125,10 @@ function createMockDb(opts?: MockDbOpts) {
         findMany: vi.fn().mockResolvedValue(courtsList),
       },
       operatingHours: {
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi.fn().mockResolvedValue(hoursList),
       },
       peakPeriods: {
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi.fn().mockResolvedValue(periodsList),
       },
     },
     update: vi.fn().mockReturnValue({ set: updateSetFn }),
@@ -310,5 +330,245 @@ describe("pricing.getOverview", () => {
     });
 
     expect(result.stats.markupPercent).toBe(0);
+  });
+});
+
+// ===========================================================================
+// Helpers for calculateRevenue tests
+// ===========================================================================
+
+function makeOperatingHour(
+  dayOfWeek: number,
+  openTime = "08:00",
+  closeTime = "22:00",
+  isClosed = false,
+): MockOperatingHour {
+  return { dayOfWeek, openTime, closeTime, isClosed };
+}
+
+function makePeakPeriod(overrides?: Partial<MockPeakPeriod>): MockPeakPeriod {
+  return {
+    id: "peak-1",
+    name: "Hora Punta",
+    daysOfWeek: [1, 2, 3, 4, 5],
+    startTime: "18:00",
+    endTime: "21:00",
+    markupPercent: 30,
+    isActive: true,
+    createdAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ===========================================================================
+// Tests: pricing.calculateRevenue
+// ===========================================================================
+
+describe("pricing.calculateRevenue", () => {
+  it("calculates revenue using court custom pricing", async () => {
+    // 1 court at S/50, 1 day open 08:00-10:00 = 2 hours, 100% occupancy
+    const db = createMockDb({
+      courts: [makeCourt({ priceInCents: 5000 })],
+      operatingHours: [
+        makeOperatingHour(0, "08:00", "10:00"),
+        ...Array.from({ length: 6 }, (_, i) =>
+          makeOperatingHour(i + 1, "08:00", "08:00", true),
+        ),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 100,
+    });
+
+    // 1 court × 2 hours × S/50 = S/100 = 10000 cents
+    expect(result.totalWeekly).toBe(10000);
+    expect(result.regularRevenue).toBe(10000);
+    expect(result.peakRevenue).toBe(0);
+    expect(result.courtCount).toBe(1);
+  });
+
+  it("uses facility defaults when court has no custom pricing", async () => {
+    const facility = makeFacility({
+      defaultPriceInCents: 6000,
+      defaultPeakPriceInCents: 8000,
+    });
+    // Court with null pricing → should use facility defaults
+    const db = createMockDb({
+      facility,
+      courts: [makeCourt({ priceInCents: null, peakPriceInCents: null })],
+      operatingHours: [
+        makeOperatingHour(0, "08:00", "10:00"),
+        ...Array.from({ length: 6 }, (_, i) =>
+          makeOperatingHour(i + 1, "08:00", "08:00", true),
+        ),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 100,
+    });
+
+    // 1 court × 2 hours × S/60 = 12000 cents (using facility default)
+    expect(result.totalWeekly).toBe(12000);
+    expect(result.regularRevenue).toBe(12000);
+  });
+
+  it("applies occupancy percentage correctly", async () => {
+    const db = createMockDb({
+      courts: [makeCourt({ priceInCents: 10000 })],
+      operatingHours: [
+        makeOperatingHour(0, "08:00", "09:00"), // 1 hour
+        ...Array.from({ length: 6 }, (_, i) =>
+          makeOperatingHour(i + 1, "08:00", "08:00", true),
+        ),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 50,
+    });
+
+    // 1 court × 1 hour × S/100 × 50% = 5000 cents
+    expect(result.totalWeekly).toBe(5000);
+  });
+
+  it("separates regular and peak revenue correctly", async () => {
+    // Monday open 08:00-21:00 with peak 18:00-21:00 (3 peak hours, 10 regular)
+    const db = createMockDb({
+      courts: [makeCourt({ priceInCents: 5000, peakPriceInCents: 7000 })],
+      operatingHours: [
+        makeOperatingHour(1, "08:00", "21:00"), // Monday
+        makeOperatingHour(0, "08:00", "08:00", true),
+        ...Array.from({ length: 5 }, (_, i) =>
+          makeOperatingHour(i + 2, "08:00", "08:00", true),
+        ),
+      ],
+      peakPeriods: [
+        makePeakPeriod({
+          daysOfWeek: [1],
+          startTime: "18:00",
+          endTime: "21:00",
+          markupPercent: 40,
+        }),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 100,
+    });
+
+    // Regular: 10 hours × 5000 = 50000
+    // Peak: 3 hours × 7000 = 21000
+    expect(result.regularRevenue).toBe(50000);
+    expect(result.peakRevenue).toBe(21000);
+    expect(result.totalWeekly).toBe(71000);
+    // Peak markup bonus: 3 × (7000 - 5000) = 6000
+    expect(result.peakMarkupBonus).toBe(6000);
+  });
+
+  it("falls back to computed peak rate when no peak price set", async () => {
+    // Court has regular price but no peak price, no facility defaults
+    // Should compute peak from regular × (1 + markup/100)
+    const db = createMockDb({
+      courts: [makeCourt({ priceInCents: 5000, peakPriceInCents: null })],
+      operatingHours: [
+        makeOperatingHour(1, "18:00", "21:00"), // 3 peak hours only
+        makeOperatingHour(0, "08:00", "08:00", true),
+        ...Array.from({ length: 5 }, (_, i) =>
+          makeOperatingHour(i + 2, "08:00", "08:00", true),
+        ),
+      ],
+      peakPeriods: [
+        makePeakPeriod({
+          daysOfWeek: [1],
+          startTime: "18:00",
+          endTime: "21:00",
+          markupPercent: 20,
+        }),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 100,
+    });
+
+    // Peak rate = 5000 × (1 + 20/100) = 6000
+    // 3 hours × 6000 = 18000
+    expect(result.peakRevenue).toBe(18000);
+    // Markup bonus: 3 × (6000 - 5000) = 3000
+    expect(result.peakMarkupBonus).toBe(3000);
+  });
+
+  it("handles multiple courts with mixed pricing", async () => {
+    const facility = makeFacility({ defaultPriceInCents: 4000 });
+    const db = createMockDb({
+      facility,
+      courts: [
+        makeCourt({ id: "c1", priceInCents: 5000 }), // custom
+        makeCourt({ id: "c2", priceInCents: null }), // uses facility default (4000)
+      ],
+      operatingHours: [
+        makeOperatingHour(0, "08:00", "09:00"), // 1 hour
+        ...Array.from({ length: 6 }, (_, i) =>
+          makeOperatingHour(i + 1, "08:00", "08:00", true),
+        ),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 100,
+    });
+
+    // Court 1: 1 hour × 5000 = 5000
+    // Court 2: 1 hour × 4000 = 4000
+    expect(result.totalWeekly).toBe(9000);
+    expect(result.courtCount).toBe(2);
+  });
+
+  it("skips closed days", async () => {
+    const db = createMockDb({
+      courts: [makeCourt({ priceInCents: 5000 })],
+      operatingHours: [
+        makeOperatingHour(0, "08:00", "10:00", true), // Sunday closed
+        makeOperatingHour(1, "08:00", "10:00"), // Monday open
+        ...Array.from({ length: 5 }, (_, i) =>
+          makeOperatingHour(i + 2, "08:00", "08:00", true),
+        ),
+      ],
+    });
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 100,
+    });
+
+    // Only Monday: 2 hours × 5000 = 10000
+    expect(result.totalWeekly).toBe(10000);
+  });
+
+  it("echoes the occupancy percent in response", async () => {
+    const db = createMockDb();
+    const caller = authedCaller(db);
+
+    const result = await caller.pricing.calculateRevenue({
+      facilityId: FACILITY_ID,
+      occupancyPercent: 42,
+    });
+
+    expect(result.occupancyPercent).toBe(42);
   });
 });

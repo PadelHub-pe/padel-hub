@@ -43,7 +43,7 @@ export function PricingView() {
 
         <PeakPeriodsSection
           peakPeriods={data.peakPeriods}
-          medianPriceCents={data.stats.medianRegularCents}
+          medianPriceCents={data.stats.defaultRegularCents}
         />
       </div>
     </div>

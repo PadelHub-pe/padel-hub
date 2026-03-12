@@ -74,7 +74,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
 
 ### Phase 3: P1 Features (Sub-flows 6.6, 6.7)
 
-- [ ] **TASK-6.08** — Revenue calculator enhancements `[feature]` — depends on TASK-6.02
+- [x] **TASK-6.08** — Revenue calculator enhancements `[feature]` — depends on TASK-6.02
   Slider input alongside presets. Monthly projection toggle (×4.33).
   Update calculation to use facility defaults for courts without custom pricing.
 

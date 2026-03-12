@@ -3,7 +3,12 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { courts, facilities, operatingHours, peakPeriods } from "@wifo/db/schema";
+import {
+  courts,
+  facilities,
+  operatingHours,
+  peakPeriods,
+} from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
@@ -241,8 +246,7 @@ export const pricingRouter = {
       if (peakRateCents < regularRateCents) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message:
-            "La tarifa pico debe ser igual o mayor a la tarifa regular",
+          message: "La tarifa pico debe ser igual o mayor a la tarifa regular",
         });
       }
 
@@ -328,8 +332,7 @@ export const pricingRouter = {
       let peakMarkupBonus = 0;
 
       for (const court of courtsList) {
-        const regularRate =
-          court.priceInCents ?? facilityDefaultRegular ?? 0;
+        const regularRate = court.priceInCents ?? facilityDefaultRegular ?? 0;
 
         for (const day of hoursMap) {
           if (day.isClosed) continue;
