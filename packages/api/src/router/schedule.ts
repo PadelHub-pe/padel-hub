@@ -44,6 +44,22 @@ const createPeakPeriodSchema = z.object({
   markupPercent: z.number().int().min(0).max(200),
 });
 
+const updatePeakPeriodSchema = z.object({
+  facilityId: z.string().uuid(),
+  id: z.string().uuid(),
+  name: z.string().min(1).max(100).optional(),
+  daysOfWeek: z.array(z.number().min(0).max(6)).min(1).optional(),
+  startTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
+  markupPercent: z.number().int().min(0).max(200).optional(),
+});
+
 const deletePeakPeriodSchema = z.object({
   facilityId: z.string().uuid(),
   id: z.string().uuid(),
@@ -261,6 +277,108 @@ export const scheduleRouter = {
         .returning();
 
       return created;
+    }),
+
+  /**
+   * Update a peak period (partial fields)
+   */
+  updatePeakPeriod: protectedProcedure
+    .input(updatePeakPeriodSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { facilityId, id, ...fields } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "schedule:write");
+
+      // Verify the period exists and belongs to this facility
+      const existing = await ctx.db.query.peakPeriods.findFirst({
+        where: and(
+          eq(peakPeriods.id, id),
+          eq(peakPeriods.facilityId, facilityId),
+        ),
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Periodo pico no encontrado",
+        });
+      }
+
+      // Merge provided fields with existing values for validation
+      const mergedStartTime =
+        fields.startTime ?? existing.startTime.substring(0, 5);
+      const mergedEndTime = fields.endTime ?? existing.endTime.substring(0, 5);
+      const mergedDaysOfWeek = fields.daysOfWeek ?? existing.daysOfWeek;
+
+      if (mergedEndTime <= mergedStartTime) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "La hora de fin debe ser posterior a la hora de inicio del periodo pico",
+        });
+      }
+
+      // Validate peak period falls within operating hours for each selected day
+      const facilityHours = await ctx.db.query.operatingHours.findMany({
+        where: eq(operatingHours.facilityId, facilityId),
+      });
+
+      for (const day of mergedDaysOfWeek) {
+        const dayHours = facilityHours.find((h) => h.dayOfWeek === day);
+        const dayLabel = [
+          "Domingo",
+          "Lunes",
+          "Martes",
+          "Miércoles",
+          "Jueves",
+          "Viernes",
+          "Sábado",
+        ][day];
+
+        if (!dayHours || dayHours.isClosed) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `No se puede crear periodo pico para ${dayLabel}: el local está cerrado ese día`,
+          });
+        }
+
+        const opOpen = dayHours.openTime.substring(0, 5);
+        const opClose = dayHours.closeTime.substring(0, 5);
+
+        if (mergedStartTime < opOpen || mergedEndTime > opClose) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `El periodo pico debe estar dentro del horario de operación de ${dayLabel} (${opOpen} - ${opClose})`,
+          });
+        }
+      }
+
+      // Build update object with only provided fields
+      const updateData: Record<string, unknown> = {};
+      if (fields.name !== undefined) updateData.name = fields.name;
+      if (fields.daysOfWeek !== undefined)
+        updateData.daysOfWeek = fields.daysOfWeek;
+      if (fields.startTime !== undefined)
+        updateData.startTime = fields.startTime;
+      if (fields.endTime !== undefined) updateData.endTime = fields.endTime;
+      if (fields.markupPercent !== undefined)
+        updateData.markupPercent = fields.markupPercent;
+
+      const [updated] = await ctx.db
+        .update(peakPeriods)
+        .set(updateData)
+        .where(eq(peakPeriods.id, id))
+        .returning();
+
+      // Should never happen since we verified existence above
+      if (!updated) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error al actualizar el periodo pico",
+        });
+      }
+
+      return updated;
     }),
 
   /**

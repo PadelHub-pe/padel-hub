@@ -53,7 +53,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
   close > open validation, at least 1 day open validation.
   File: `.../schedule/_components/operating-hours-section.tsx`
 
-- [ ] **TASK-6.04** — Add `schedule.updatePeakPeriod` mutation `[feature]`
+- [x] **TASK-6.04** — Add `schedule.updatePeakPeriod` mutation `[feature]`
   New mutation with same validation as create. Input: periodId + partial fields.
   Write tests. File: `packages/api/src/router/schedule.ts`
 
