@@ -120,6 +120,15 @@ function createMockDb(opts?: MockDbOpts) {
     players: [],
   }));
 
+  // db.update(table).set({}).where() chain for booking-status-persist
+  const updateWhereFn = vi.fn().mockResolvedValue([]);
+  const updateSetFn = vi.fn().mockReturnValue({ where: updateWhereFn });
+  const updateFn = vi.fn().mockReturnValue({ set: updateSetFn });
+
+  // db.insert(table).values({}) for booking-activity
+  const insertValuesFn = vi.fn().mockResolvedValue([]);
+  const insertFn = vi.fn().mockReturnValue({ values: insertValuesFn });
+
   return {
     query: {
       facilities: {
@@ -133,6 +142,8 @@ function createMockDb(opts?: MockDbOpts) {
       },
     },
     select: selectFn,
+    update: updateFn,
+    insert: insertFn,
     _selectFromFn: selectFromFn,
     _selectFromWhereFn: selectFromWhereFn,
   };

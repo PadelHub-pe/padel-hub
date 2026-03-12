@@ -37,6 +37,10 @@ import type {
 } from "../utils/schedule";
 import { verifyFacilityAccess } from "../lib/access-control";
 import { logBookingActivity } from "../lib/booking-activity";
+import {
+  resolveAndPersistBookingStatuses,
+  resolveAndPersistSingleBookingStatus,
+} from "../lib/booking-status-persist";
 import { protectedProcedure } from "../trpc";
 import {
   getRateForSlot,
@@ -312,9 +316,18 @@ export const bookingRouter = {
         offset,
       });
 
+      // Resolve time-based status transitions (confirmed → in_progress → completed)
+      const now = new Date();
+      const statusMap = await resolveAndPersistBookingStatuses(
+        ctx.db,
+        bookingsList,
+        now,
+      );
+
       return {
         bookings: bookingsList.map((b) => ({
           ...b,
+          status: statusMap.get(b.id) ?? b.status,
           playerCount: b.players.length,
         })),
         total,
@@ -360,8 +373,17 @@ export const bookingRouter = {
         });
       }
 
+      // Resolve time-based status transition
+      const now = new Date();
+      const newStatus = await resolveAndPersistSingleBookingStatus(
+        ctx.db,
+        booking,
+        now,
+      );
+
       return {
         ...booking,
+        status: newStatus ?? booking.status,
         playerCount: booking.players.length,
       };
     }),

@@ -39,7 +39,7 @@ Zone calculation utility, facility default pricing schema, enhanced operating ho
 > **Reference:** `what-needs-to-be-build/📖 Flow 7 Booking Management — Engineering Task.md`
 > **Technical Plan:** `docs/TECHNICAL_PLAN.md`
 
-### TASK-7.01 — On-access booking status resolver (feature)
+### TASK-7.01 — On-access booking status resolver (feature) ✅
 
 Create `resolveBookingStatus()` utility and integrate into `booking.list` + `booking.getById`.
 
@@ -57,12 +57,12 @@ Create `resolveBookingStatus()` utility and integrate into `booking.list` + `boo
 - Write tests for the pure resolver function (edge cases: exact boundary times, cancelled bookings unchanged, completed bookings unchanged)
 
 **Acceptance criteria:**
-- [ ] Status badges always reflect correct time-based state
-- [ ] `confirmed → in_progress` auto-triggers at booking start time
-- [ ] `in_progress → completed` auto-triggers at booking end time
-- [ ] Cancelled/completed bookings are never auto-transitioned
-- [ ] Activity log entries created for auto-transitions
-- [ ] Tests pass for resolver utility
+- [x] Status badges always reflect correct time-based state
+- [x] `confirmed → in_progress` auto-triggers at booking start time
+- [x] `in_progress → completed` auto-triggers at booking end time
+- [x] Cancelled/completed bookings are never auto-transitioned
+- [x] Activity log entries created for auto-transitions
+- [x] Tests pass for resolver utility
 
 **Depends on:** nothing
 
