@@ -342,12 +342,12 @@ Auto-generate URL-friendly slug from facility name on creation. Show preview on 
   - `generateUniqueSlug(db, orgId, name): Promise<string>` — slugify + uniqueness check + suffix
 
 **Acceptance criteria:**
-- [ ] Slug auto-generated from facility name on creation
-- [ ] Slug preview shown below name field as user types
-- [ ] Duplicate names in same org get deduplicated slugs (-2, -3)
-- [ ] Slugs handle accents, special chars, multiple spaces
-- [ ] Slug saved to facilities table
-- [ ] Existing facilities in seed data have slugs
+- [x] Slug auto-generated from facility name on creation
+- [x] Slug preview shown below name field as user types
+- [x] Duplicate names in same org get deduplicated slugs (-2, -3)
+- [x] Slugs handle accents, special chars, multiple spaces
+- [x] Slug saved to facilities table
+- [x] Existing facilities in seed data have slugs
 
 ---
 
