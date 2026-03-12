@@ -222,13 +222,13 @@ Enhance the activation gate with pricing validation and build a proper completio
 - `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/setup/_components/setup-wizard.tsx` — show completion screen after successful `completeSetup`
 
 **Acceptance criteria:**
-- [ ] Activation blocked if any court has priceInCents <= 0
-- [ ] Activation blocked if 0 courts or 0 open days
-- [ ] Clear error messages with links to fix (e.g., "go to Step 1")
-- [ ] Completion screen shows configured items summary
-- [ ] Warnings for missing photos/amenities with action links
-- [ ] "Ir al Dashboard" navigates to facility dashboard
-- [ ] Facility appears as "Activo" in org facilities overview
+- [x] Activation blocked if any court has priceInCents <= 0
+- [x] Activation blocked if 0 courts or 0 open days
+- [x] Clear error messages with links to fix (e.g., "go to Step 1")
+- [x] Completion screen shows configured items summary
+- [x] Warnings for missing photos/amenities with action links
+- [x] "Ir al Dashboard" navigates to facility dashboard
+- [x] Facility appears as "Activo" in org facilities overview
 
 ---
 

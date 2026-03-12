@@ -17,6 +17,7 @@ import type {
 } from "~/components/facility-setup";
 import {
   createDefaultOperatingHours,
+  SetupComplete,
   StepCourts,
   StepIndicator,
   StepPhotos,
@@ -59,6 +60,10 @@ export function SetupWizard({
   const [currentStep, setCurrentStep] = useState(1);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [courtCount, setCourtCount] = useState(0);
+  const [setupResult, setSetupResult] = useState<{
+    courtCount: number;
+    warnings: { type: string; message: string }[];
+  } | null>(null);
 
   // Fetch current court count for "Siguiente" button gating
   const { data: courts } = useQuery(
@@ -100,8 +105,11 @@ export function SetupWizard({
   );
   const completeSetup = useMutation(
     trpc.facility.completeSetup.mutationOptions({
-      onSuccess: () => {
-        router.push(`/org/${orgSlug}/facilities/${facilityId}`);
+      onSuccess: (data) => {
+        setSetupResult({
+          courtCount: data.courtCount,
+          warnings: data.warnings,
+        });
       },
     }),
   );
@@ -159,11 +167,21 @@ export function SetupWizard({
     try {
       await completeSetup.mutateAsync({ facilityId });
     } catch (error) {
-      setGeneralError(
+      const message =
         error instanceof Error
           ? error.message
-          : "Ocurrió un error. Intenta nuevamente.",
-      );
+          : "Ocurrió un error. Intenta nuevamente.";
+
+      // Route user to the relevant step based on the error
+      if (message.includes("cancha")) {
+        setCurrentStep(1);
+      } else if (message.includes("precio")) {
+        setCurrentStep(1);
+      } else if (message.includes("horarios")) {
+        setCurrentStep(2);
+      }
+
+      setGeneralError(message);
     }
   }
 
@@ -190,6 +208,22 @@ export function SetupWizard({
 
   const isNextDisabled =
     isLoading || (currentStep === 1 && effectiveCourtCount < 1);
+
+  const basePath = `/org/${orgSlug}/facilities/${facilityId}`;
+
+  // Show completion screen after successful setup
+  if (setupResult) {
+    return (
+      <SetupComplete
+        facilityName={facilityName}
+        courtCount={setupResult.courtCount}
+        warnings={setupResult.warnings}
+        dashboardUrl={basePath}
+        photosUrl={`${basePath}/settings`}
+        settingsUrl={`${basePath}/settings`}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">

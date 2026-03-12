@@ -552,3 +552,210 @@ describe("facility.getSetupStatus", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// facility.completeSetup
+// ---------------------------------------------------------------------------
+
+describe("facility.completeSetup", () => {
+  let mockUpdate: ReturnType<typeof vi.fn>;
+  let mockSet: ReturnType<typeof vi.fn>;
+  let mockWhere: ReturnType<typeof vi.fn>;
+
+  function buildCompleteSetupDb(opts?: { courts?: any[]; hours?: any[] }) {
+    mockWhere = vi.fn().mockResolvedValue(undefined);
+    mockSet = vi.fn().mockReturnValue({ where: mockWhere });
+    mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
+
+    return {
+      query: {
+        courts: {
+          findMany: vi.fn().mockResolvedValue(opts?.courts ?? []),
+        },
+        operatingHours: {
+          findMany: vi.fn().mockResolvedValue(opts?.hours ?? []),
+        },
+      },
+      update: mockUpdate,
+    };
+  }
+
+  it("throws when no courts exist", async () => {
+    mockFacility = makeFacility();
+    const db = buildCompleteSetupDb({ courts: [], hours: [{ id: "h1" }] });
+    const caller = buildCaller(db);
+
+    await expect(
+      caller.facility.completeSetup({ facilityId: FACILITY_ID }),
+    ).rejects.toThrow(
+      "Debe agregar al menos una cancha antes de completar la configuración",
+    );
+  });
+
+  it("throws when no operating hours exist", async () => {
+    mockFacility = makeFacility();
+    const db = buildCompleteSetupDb({
+      courts: [makeCourt({ id: "c1", priceInCents: 5000 })],
+      hours: [],
+    });
+    const caller = buildCaller(db);
+
+    await expect(
+      caller.facility.completeSetup({ facilityId: FACILITY_ID }),
+    ).rejects.toThrow(
+      "Debe configurar los horarios de operación antes de completar la configuración",
+    );
+  });
+
+  it("throws when any court has priceInCents <= 0", async () => {
+    mockFacility = makeFacility();
+    const db = buildCompleteSetupDb({
+      courts: [
+        makeCourt({ id: "c1", priceInCents: 5000 }),
+        makeCourt({ id: "c2", priceInCents: 0 }),
+      ],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    await expect(
+      caller.facility.completeSetup({ facilityId: FACILITY_ID }),
+    ).rejects.toThrow("Todas las canchas necesitan un precio por hora");
+  });
+
+  it("throws when any court has priceInCents = null", async () => {
+    mockFacility = makeFacility();
+    const db = buildCompleteSetupDb({
+      courts: [
+        makeCourt({ id: "c1", priceInCents: 5000 }),
+        makeCourt({ id: "c2", priceInCents: null }),
+      ],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    await expect(
+      caller.facility.completeSetup({ facilityId: FACILITY_ID }),
+    ).rejects.toThrow("Todas las canchas necesitan un precio por hora");
+  });
+
+  it("succeeds and returns warnings for missing photos", async () => {
+    mockFacility = makeFacility({ photos: [], amenities: ["wifi"] });
+    const db = buildCompleteSetupDb({
+      courts: [makeCourt({ id: "c1", priceInCents: 5000 })],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    const result = await caller.facility.completeSetup({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.warnings).toContainEqual(
+      expect.objectContaining({ type: "photos" }),
+    );
+    expect(result.warnings).not.toContainEqual(
+      expect.objectContaining({ type: "amenities" }),
+    );
+  });
+
+  it("succeeds and returns warnings for missing amenities", async () => {
+    mockFacility = makeFacility({ photos: ["img-1"], amenities: [] });
+    const db = buildCompleteSetupDb({
+      courts: [makeCourt({ id: "c1", priceInCents: 5000 })],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    const result = await caller.facility.completeSetup({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.warnings).toContainEqual(
+      expect.objectContaining({ type: "amenities" }),
+    );
+    expect(result.warnings).not.toContainEqual(
+      expect.objectContaining({ type: "photos" }),
+    );
+  });
+
+  it("succeeds with no warnings when photos and amenities exist", async () => {
+    mockFacility = makeFacility({
+      photos: ["img-1"],
+      amenities: ["wifi", "parking"],
+    });
+    const db = buildCompleteSetupDb({
+      courts: [makeCourt({ id: "c1", priceInCents: 5000 })],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    const result = await caller.facility.completeSetup({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it("succeeds with both warnings when nothing optional configured", async () => {
+    mockFacility = makeFacility({ photos: [], amenities: [] });
+    const db = buildCompleteSetupDb({
+      courts: [makeCourt({ id: "c1", priceInCents: 5000 })],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    const result = await caller.facility.completeSetup({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.warnings).toHaveLength(2);
+    expect(result.warnings).toContainEqual(
+      expect.objectContaining({ type: "photos" }),
+    );
+    expect(result.warnings).toContainEqual(
+      expect.objectContaining({ type: "amenities" }),
+    );
+  });
+
+  it("activates facility (sets onboardingCompletedAt and isActive)", async () => {
+    mockFacility = makeFacility({ photos: ["img-1"], amenities: ["wifi"] });
+    const db = buildCompleteSetupDb({
+      courts: [makeCourt({ id: "c1", priceInCents: 5000 })],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    await caller.facility.completeSetup({ facilityId: FACILITY_ID });
+
+    expect(db.update).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isActive: true,
+        onboardingCompletedAt: expect.any(Date),
+      }),
+    );
+  });
+
+  it("returns courtCount in result", async () => {
+    mockFacility = makeFacility({ photos: ["img-1"], amenities: ["wifi"] });
+    const db = buildCompleteSetupDb({
+      courts: [
+        makeCourt({ id: "c1", priceInCents: 5000 }),
+        makeCourt({ id: "c2", priceInCents: 8000 }),
+      ],
+      hours: [{ id: "h1" }],
+    });
+    const caller = buildCaller(db);
+
+    const result = await caller.facility.completeSetup({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.courtCount).toBe(2);
+  });
+});

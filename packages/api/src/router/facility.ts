@@ -325,7 +325,8 @@ export const facilityRouter = {
 
   /**
    * Complete facility setup
-   * Marks the facility as ready and activates it
+   * Validates requirements, marks facility as ready and activates it.
+   * Returns warnings for missing optional items (photos, amenities).
    */
   completeSetup: protectedProcedure
     .input(completeSetupSchema)
@@ -342,7 +343,7 @@ export const facilityRouter = {
       // Check that courts exist
       const facilityCourts = await ctx.db.query.courts.findMany({
         where: eq(courts.facilityId, facilityId),
-        columns: { id: true },
+        columns: { id: true, priceInCents: true },
       });
 
       if (facilityCourts.length === 0) {
@@ -350,6 +351,17 @@ export const facilityRouter = {
           code: "BAD_REQUEST",
           message:
             "Debe agregar al menos una cancha antes de completar la configuración",
+        });
+      }
+
+      // Check that all courts have pricing
+      const hasUnpricedCourts = facilityCourts.some(
+        (c) => c.priceInCents === null || c.priceInCents <= 0,
+      );
+      if (hasUnpricedCourts) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Todas las canchas necesitan un precio por hora",
         });
       }
 
@@ -376,6 +388,27 @@ export const facilityRouter = {
         })
         .where(eq(facilities.id, facilityId));
 
-      return { success: true, facilityId: facility.id };
+      // Build warnings for missing optional items
+      const warnings: { type: string; message: string }[] = [];
+      if ((facility.photos ?? []).length === 0) {
+        warnings.push({
+          type: "photos",
+          message: "Agrega fotos de tu local para atraer más jugadores",
+        });
+      }
+      if ((facility.amenities ?? []).length === 0) {
+        warnings.push({
+          type: "amenities",
+          message:
+            "Indica las comodidades de tu local (WiFi, estacionamiento, etc.)",
+        });
+      }
+
+      return {
+        success: true,
+        facilityId: facility.id,
+        courtCount: facilityCourts.length,
+        warnings,
+      };
     }),
 } satisfies TRPCRouterRecord;
