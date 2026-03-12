@@ -6,10 +6,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
+import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 import { Checkbox } from "@wifo/ui/checkbox";
-import { Form, FormControl, FormField, FormItem } from "@wifo/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@wifo/ui/form";
 import {
   Select,
   SelectContent,
@@ -37,27 +44,39 @@ const dayNames = [
   "Domingo",
   "Lunes",
   "Martes",
-  "Miercoles",
+  "Miércoles",
   "Jueves",
   "Viernes",
-  "Sabado",
+  "Sábado",
 ];
 
-// Generate time options from 05:00 to 23:00
-const timeOptions = Array.from({ length: 19 }, (_, i) => {
-  const hour = i + 5;
-  return `${hour.toString().padStart(2, "0")}:00`;
+// Generate 30-minute time options from 05:00 to 23:30
+const timeOptions = Array.from({ length: 38 }, (_, i) => {
+  const totalMinutes = 5 * 60 + i * 30;
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+});
+
+const daySchema = z.object({
+  dayOfWeek: z.number(),
+  openTime: z.string(),
+  closeTime: z.string(),
+  isClosed: z.boolean(),
 });
 
 const hoursSchema = z.object({
-  hours: z.array(
-    z.object({
-      dayOfWeek: z.number(),
-      openTime: z.string(),
-      closeTime: z.string(),
-      isClosed: z.boolean(),
-    }),
-  ),
+  hours: z
+    .array(daySchema)
+    .refine((hours) => hours.some((h) => !h.isClosed), {
+      message: "Debes tener al menos un día abierto",
+    })
+    .refine(
+      (hours) => hours.every((h) => h.isClosed || h.closeTime > h.openTime),
+      {
+        message: "La hora de cierre debe ser posterior a la hora de apertura",
+      },
+    ),
 });
 
 type HoursFormValues = z.infer<typeof hoursSchema>;
@@ -75,11 +94,15 @@ export function OperatingHoursSection({
     defaultValues: { hours },
   });
 
+  const watchedHours = useWatch({ control: form.control, name: "hours" });
+  const { isDirty } = form.formState;
+
   const updateMutation = useMutation(
     trpc.schedule.updateOperatingHours.mutationOptions({
       onSuccess: () => {
         toast.success("Horarios actualizados");
         setIsEditing(false);
+        form.reset({ hours: form.getValues("hours") });
         void queryClient.invalidateQueries({
           queryKey: trpc.schedule.getOperatingHours.queryKey({ facilityId }),
         });
@@ -105,14 +128,37 @@ export function OperatingHoursSection({
     setIsEditing(false);
   };
 
+  function handleApplyToAll(sourceFieldIndex: number) {
+    const source = watchedHours[sourceFieldIndex];
+    if (!source || source.isClosed) return;
+
+    const newHours = watchedHours.map((h, i) => {
+      if (i === sourceFieldIndex) return h;
+      if (h.isClosed) return h;
+      return {
+        ...h,
+        openTime: source.openTime,
+        closeTime: source.closeTime,
+      };
+    });
+    form.setValue("hours", newHours, { shouldDirty: true });
+    const dayName = dayNames[source.dayOfWeek] ?? "";
+    toast.success(`Horario de ${dayName} aplicado a todos los días abiertos`);
+  }
+
   // Re-order to start from Monday (index 1) instead of Sunday
   const orderedDays = [1, 2, 3, 4, 5, 6, 0]; // Mon-Sun
+
+  // Find which open days have time errors for inline display
+  const timeErrors = watchedHours.map(
+    (h) => !h.isClosed && h.closeTime <= h.openTime,
+  );
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-lg font-semibold text-gray-900">
-          Horarios de Operacion
+          Horarios de Operación
         </CardTitle>
         {!isEditing ? (
           <Button
@@ -131,7 +177,7 @@ export function OperatingHoursSection({
             <Button
               size="sm"
               onClick={form.handleSubmit(onSubmit)}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation.isPending || !isDirty}
             >
               {updateMutation.isPending ? "Guardando..." : "Guardar"}
             </Button>
@@ -156,10 +202,23 @@ export function OperatingHoursSection({
                     isEditing={isEditing}
                     hours={hours}
                     form={form}
+                    hasTimeError={timeErrors[fieldIndex] ?? false}
+                    onApplyToAll={() => handleApplyToAll(fieldIndex)}
                   />
                 );
               })}
             </div>
+            {isEditing && (
+              <FormField
+                control={form.control}
+                name="hours"
+                render={() => (
+                  <FormItem className="mt-2">
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </form>
         </Form>
       </CardContent>
@@ -173,18 +232,38 @@ interface DayRowProps {
   isEditing: boolean;
   hours: DayConfig[];
   form: ReturnType<typeof useForm<HoursFormValues>>;
+  hasTimeError: boolean;
+  onApplyToAll: () => void;
 }
 
-function DayRow({ dayIndex, fieldIndex, isEditing, hours, form }: DayRowProps) {
-  // Use useWatch at component level to avoid the form.watch inside render warning
+function DayRow({
+  dayIndex,
+  fieldIndex,
+  isEditing,
+  hours,
+  form,
+  hasTimeError,
+  onApplyToAll,
+}: DayRowProps) {
   const isClosed = useWatch({
     control: form.control,
     name: `hours.${fieldIndex}.isClosed`,
   });
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border px-4 py-3">
-      <span className="w-24 text-sm font-medium text-gray-700">
+    <div
+      className={cn(
+        "flex items-center gap-4 rounded-lg border px-4 py-3",
+        isEditing && isClosed && "border-gray-200 bg-gray-50 opacity-60",
+        isEditing && hasTimeError && "border-red-300 bg-red-50",
+      )}
+    >
+      <span
+        className={cn(
+          "w-24 text-sm font-medium",
+          isEditing && isClosed ? "text-gray-400" : "text-gray-700",
+        )}
+      >
         {dayNames[dayIndex]}
       </span>
 
@@ -203,7 +282,12 @@ function DayRow({ dayIndex, fieldIndex, isEditing, hours, form }: DayRowProps) {
                     }
                   />
                 </FormControl>
-                <span className="text-xs text-gray-500">
+                <span
+                  className={cn(
+                    "text-xs",
+                    field.value ? "text-gray-400" : "text-gray-500",
+                  )}
+                >
                   {field.value ? "Cerrado" : "Abierto"}
                 </span>
               </FormItem>
@@ -237,7 +321,9 @@ function DayRow({ dayIndex, fieldIndex, isEditing, hours, form }: DayRowProps) {
             )}
           />
 
-          <span className="text-gray-400">-</span>
+          <span className={isClosed ? "text-gray-300" : "text-gray-400"}>
+            -
+          </span>
 
           <FormField
             control={form.control}
@@ -265,6 +351,23 @@ function DayRow({ dayIndex, fieldIndex, isEditing, hours, form }: DayRowProps) {
               </FormItem>
             )}
           />
+
+          {!isClosed && (
+            <button
+              type="button"
+              onClick={onApplyToAll}
+              className="ml-auto shrink-0 rounded-md px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+              title={`Aplicar horario de ${dayNames[dayIndex]} a todos los días abiertos`}
+            >
+              Aplicar a todos
+            </button>
+          )}
+
+          {hasTimeError && (
+            <p className="ml-auto text-xs text-red-500">
+              Cierre debe ser posterior a apertura
+            </p>
+          )}
         </>
       ) : (
         <div className="flex flex-1 items-center gap-2">

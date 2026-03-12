@@ -48,7 +48,7 @@ Schema migration (slug + geocoding), setup progress API, default operating hours
 
 ### Phase 1: Schedule Page Enhancements (Sub-flows 6.1, 6.2, 6.3)
 
-- [ ] **TASK-6.03** — Enhance operating hours editor `[feature]`
+- [x] **TASK-6.03** — Enhance operating hours editor `[feature]`
   30-min time increments, "Aplicar a todos" button, dirty state tracking (save disabled until changes),
   close > open validation, at least 1 day open validation.
   File: `.../schedule/_components/operating-hours-section.tsx`

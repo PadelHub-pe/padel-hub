@@ -43,26 +43,13 @@ const DAYS_OF_WEEK = [
 
 const DAY_LABELS = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
 
-const TIME_OPTIONS = [
-  "06:00",
-  "07:00",
-  "08:00",
-  "09:00",
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-  "20:00",
-  "21:00",
-  "22:00",
-  "23:00",
-];
+// Generate 30-minute time options from 05:00 to 23:30
+const TIME_OPTIONS = Array.from({ length: 38 }, (_, i) => {
+  const totalMinutes = 5 * 60 + i * 30;
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+});
 
 export interface OperatingHour {
   dayOfWeek: number;
