@@ -87,9 +87,9 @@ export function BookingInfoPanel({ booking }: BookingInfoPanelProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Codigo */}
+            {/* Código */}
             <div className="space-y-1">
-              <p className="text-sm font-medium text-gray-500">Codigo</p>
+              <p className="text-sm font-medium text-gray-500">Código</p>
               <p className="font-mono text-sm font-semibold text-blue-600">
                 {booking.code}
               </p>
@@ -111,9 +111,9 @@ export function BookingInfoPanel({ booking }: BookingInfoPanelProps) {
               </p>
             </div>
 
-            {/* Duracion */}
+            {/* Duración */}
             <div className="space-y-1">
-              <p className="text-sm font-medium text-gray-500">Duracion</p>
+              <p className="text-sm font-medium text-gray-500">Duración</p>
               <p className="text-sm text-gray-900">{durationMinutes} minutos</p>
             </div>
 
@@ -174,7 +174,7 @@ export function BookingInfoPanel({ booking }: BookingInfoPanelProps) {
 
             <div className="flex flex-wrap items-center gap-2">
               {booking.isPeakRate && (
-                <Badge variant="warning">Tarifa peak</Badge>
+                <Badge variant="warning">Hora punta</Badge>
               )}
 
               {booking.paymentMethod && (
@@ -192,7 +192,7 @@ export function BookingInfoPanel({ booking }: BookingInfoPanelProps) {
       {booking.status === "cancelled" && (
         <div className="rounded-lg bg-red-50 p-4">
           <h3 className="text-sm font-medium text-red-800">
-            Informacion de cancelacion
+            Información de cancelación
           </h3>
           <div className="mt-2 space-y-1">
             {booking.cancelledBy && (

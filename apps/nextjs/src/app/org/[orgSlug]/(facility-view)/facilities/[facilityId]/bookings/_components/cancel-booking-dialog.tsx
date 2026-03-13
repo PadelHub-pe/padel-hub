@@ -4,14 +4,39 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@wifo/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@wifo/ui/select";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
 
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 
+const CANCELLATION_REASONS = [
+  "Solicitud del jugador",
+  "No-show",
+  "Mantenimiento de cancha",
+  "Evento privado",
+  "Error de reserva",
+  "Otro",
+] as const;
+
+export interface CancelBookingInfo {
+  code: string;
+  courtName: string;
+  date: string;
+  timeRange: string;
+  playerCount: number;
+}
+
 interface CancelBookingDialogProps {
   bookingId: string;
+  bookingInfo?: CancelBookingInfo;
   open: boolean;
   onClose: () => void;
   onCancelled: () => void;
@@ -19,13 +44,15 @@ interface CancelBookingDialogProps {
 
 export function CancelBookingDialog({
   bookingId,
+  bookingInfo,
   open,
   onClose,
   onCancelled,
 }: CancelBookingDialogProps) {
   const trpc = useTRPC();
   const { facilityId } = useFacilityContext();
-  const [reason, setReason] = useState("");
+  const [selectedReason, setSelectedReason] = useState("");
+  const [internalNote, setInternalNote] = useState("");
 
   const cancelMutation = useMutation(
     trpc.booking.cancel.mutationOptions({
@@ -33,7 +60,8 @@ export function CancelBookingDialog({
         toast.success("Reserva cancelada");
         onCancelled();
         onClose();
-        setReason("");
+        setSelectedReason("");
+        setInternalNote("");
       },
       onError: (error) => {
         toast.error(error.message);
@@ -42,19 +70,27 @@ export function CancelBookingDialog({
   );
 
   const handleCancel = () => {
+    const parts: string[] = [];
+    if (selectedReason) parts.push(selectedReason);
+    if (internalNote.trim()) parts.push(`Nota: ${internalNote.trim()}`);
+    const reason = parts.length > 0 ? parts.join(" — ") : undefined;
+
     cancelMutation.mutate({
       facilityId,
       id: bookingId,
-      reason: reason || undefined,
+      reason,
     });
   };
 
   const handleClose = () => {
-    setReason("");
+    setSelectedReason("");
+    setInternalNote("");
     onClose();
   };
 
   if (!open) return null;
+
+  const notifiedCount = bookingInfo ? bookingInfo.playerCount : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -64,23 +100,60 @@ export function CancelBookingDialog({
       {/* Dialog */}
       <div className="relative z-50 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <h2 className="text-lg font-semibold text-gray-900">
-          Cancelar reserva
+          {bookingInfo
+            ? `¿Cancelar reserva ${bookingInfo.code}?`
+            : "Cancelar reserva"}
         </h2>
-        <p className="mt-2 text-sm text-gray-500">
-          Esta accion no se puede deshacer. El cliente sera notificado de la
-          cancelacion.
-        </p>
 
+        {/* Booking summary */}
+        {bookingInfo && (
+          <p className="mt-2 text-sm text-gray-600">
+            {bookingInfo.courtName} &bull; {bookingInfo.date} &bull;{" "}
+            {bookingInfo.timeRange}
+          </p>
+        )}
+
+        {/* Player notification count */}
+        {notifiedCount > 0 && (
+          <p className="mt-2 text-sm text-amber-700">
+            {notifiedCount}{" "}
+            {notifiedCount === 1
+              ? "jugador será notificado"
+              : "jugadores serán notificados"}
+          </p>
+        )}
+
+        {/* Predefined reason dropdown */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700">
-            Motivo de cancelacion (opcional)
+            Motivo (opcional)
+          </label>
+          <Select value={selectedReason} onValueChange={setSelectedReason}>
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Seleccionar motivo" />
+            </SelectTrigger>
+            <SelectContent>
+              {CANCELLATION_REASONS.map((reason) => (
+                <SelectItem key={reason} value={reason}>
+                  {reason}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Internal note */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700">
+            Nota interna (opcional)
           </label>
           <Textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Ingresa el motivo de la cancelacion..."
+            value={internalNote}
+            onChange={(e) => setInternalNote(e.target.value)}
+            placeholder="Nota interna, no visible para el jugador..."
             className="mt-1"
             rows={3}
+            maxLength={500}
           />
         </div>
 

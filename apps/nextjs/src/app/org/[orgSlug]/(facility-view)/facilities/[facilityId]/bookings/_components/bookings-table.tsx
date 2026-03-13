@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { isToday } from "date-fns";
 
 import type { BookingRow } from "./bookings-columns";
 import { DataTable } from "~/components/ui/data-table";
@@ -38,6 +39,13 @@ export function BookingsTable({
     [courtIndexMap, onBookingUpdated, basePath],
   );
 
+  const getRowClassName = useCallback((row: BookingRow) => {
+    if (isToday(new Date(row.date))) {
+      return "border-l-4 border-l-blue-500 bg-blue-50/30";
+    }
+    return undefined;
+  }, []);
+
   if (bookings.length === 0) {
     return (
       <div className="rounded-lg border bg-white">
@@ -61,6 +69,7 @@ export function BookingsTable({
       columns={columns}
       data={bookings}
       onRowClick={(row) => onBookingClick(row.id)}
+      getRowClassName={getRowClassName}
     />
   );
 }

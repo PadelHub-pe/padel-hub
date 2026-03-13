@@ -9,6 +9,7 @@ import { es } from "date-fns/locale";
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
+import type { CancelBookingInfo } from "./cancel-booking-dialog";
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "./booking-status-badge";
@@ -181,13 +182,13 @@ export function BookingDetailDrawer({
 
               {/* Price */}
               <section>
-                <h3 className="text-sm font-medium text-gray-500">Monto</h3>
+                <h3 className="text-sm font-medium text-gray-500">Precio</h3>
                 <div className="mt-2">
                   <p className="text-xl font-semibold text-gray-900">
                     S/ {(booking.priceInCents / 100).toFixed(2)}
                   </p>
                   {booking.isPeakRate && (
-                    <p className="text-sm text-amber-600">Tarifa peak</p>
+                    <p className="text-sm text-amber-600">Hora punta</p>
                   )}
                   {booking.paymentMethod && (
                     <p className="text-sm text-gray-500">
@@ -209,7 +210,7 @@ export function BookingDetailDrawer({
               {booking.status === "cancelled" && (
                 <section className="rounded-lg bg-red-50 p-4">
                   <h3 className="text-sm font-medium text-red-800">
-                    Informacion de cancelacion
+                    Información de cancelación
                   </h3>
                   <div className="mt-2 space-y-1">
                     <p className="text-sm text-red-700">
@@ -281,6 +282,7 @@ export function BookingDetailDrawer({
       {bookingId && (
         <CancelBookingDialog
           bookingId={bookingId}
+          bookingInfo={booking ? buildCancelBookingInfo(booking) : undefined}
           open={showCancelDialog}
           onClose={() => setShowCancelDialog(false)}
           onCancelled={() => {
@@ -294,6 +296,23 @@ export function BookingDetailDrawer({
 }
 
 // Helper functions
+function buildCancelBookingInfo(booking: {
+  code: string;
+  court: { name: string };
+  date: Date;
+  startTime: string;
+  endTime: string;
+  playerCount: number;
+}): CancelBookingInfo {
+  return {
+    code: booking.code,
+    courtName: booking.court.name,
+    date: format(new Date(booking.date), "EEE d MMM", { locale: es }),
+    timeRange: `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`,
+    playerCount: booking.playerCount,
+  };
+}
+
 function formatDate(date: Date): string {
   return format(new Date(date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
 }

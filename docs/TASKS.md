@@ -180,7 +180,7 @@ Write full test suite for `packages/api/src/router/booking.ts`.
 
 ---
 
-### TASK-7.06 — UI polish and spec alignment (feature)
+### TASK-7.06 — UI polish and spec alignment (feature) ✅
 
 Verify and fix UI components against Flow 7 spec.
 
@@ -196,11 +196,11 @@ Verify and fix UI components against Flow 7 spec.
 - Run `pnpm lint && pnpm format && pnpm typecheck` to ensure quality
 
 **Acceptance criteria:**
-- [ ] All table columns match spec
-- [ ] Cancel modal has predefined reason dropdown + internal note
-- [ ] Detail page layout matches spec wireframe
-- [ ] Loading and empty states work correctly
-- [ ] All lint/format/typecheck pass
+- [x] All table columns match spec
+- [x] Cancel modal has predefined reason dropdown + internal note
+- [x] Detail page layout matches spec wireframe
+- [x] Loading and empty states work correctly
+- [x] All lint/format/typecheck pass
 
 **Depends on:** TASK-7.01, TASK-7.02, TASK-7.03
 

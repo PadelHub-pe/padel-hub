@@ -58,7 +58,7 @@ export function getBookingsColumns({
   return [
     {
       accessorKey: "code",
-      header: "RESERVA",
+      header: "CÓDIGO",
       cell: ({ row }) => {
         const isCancelled = row.original.status === "cancelled";
         return (
@@ -76,23 +76,42 @@ export function getBookingsColumns({
       },
     },
     {
-      accessorKey: "customer",
-      header: "CLIENTE",
+      accessorKey: "date",
+      header: "FECHA",
       cell: ({ row }) => {
         const booking = row.original;
-        const customerName = booking.user?.name ?? booking.customerName ?? "-";
-        const customerContact =
-          booking.user?.email ??
-          booking.customerEmail ??
-          booking.customerPhone ??
-          "";
+        const isCancelled = booking.status === "cancelled";
+        const isStartingSoon = checkStartingSoon(booking);
+        const dateFormatted = formatBookingDate(booking.date);
 
         return (
           <div>
-            <div className="font-medium text-gray-900">{customerName}</div>
-            {customerContact && (
-              <div className="text-sm text-gray-500">{customerContact}</div>
+            {isStartingSoon && !isCancelled && (
+              <div className="mb-0.5 text-xs font-medium text-amber-600">
+                Comienza pronto
+              </div>
             )}
+            <div className="text-gray-900">{dateFormatted}</div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "startTime",
+      header: "HORARIO",
+      cell: ({ row }) => {
+        const booking = row.original;
+        const timeRange = `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`;
+        const durationMin = calculateDurationMinutes(
+          booking.startTime,
+          booking.endTime,
+        );
+        const durationLabel = formatDuration(durationMin);
+
+        return (
+          <div>
+            <div className="text-gray-900">{timeRange}</div>
+            <div className="text-xs text-gray-500">{durationLabel}</div>
           </div>
         );
       },
@@ -111,31 +130,8 @@ export function getBookingsColumns({
       cell: ({ row }) => <PlayerCountBadge count={row.original.playerCount} />,
     },
     {
-      accessorKey: "date",
-      header: "FECHA Y HORA",
-      cell: ({ row }) => {
-        const booking = row.original;
-        const isCancelled = booking.status === "cancelled";
-        const isStartingSoon = checkStartingSoon(booking);
-        const dateFormatted = formatBookingDate(booking.date);
-        const timeRange = `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`;
-
-        return (
-          <div>
-            {isStartingSoon && !isCancelled && (
-              <div className="mb-0.5 text-xs font-medium text-amber-600">
-                Comienza pronto
-              </div>
-            )}
-            <div className="text-gray-900">{dateFormatted}</div>
-            <div className="text-sm text-gray-500">{timeRange}</div>
-          </div>
-        );
-      },
-    },
-    {
       accessorKey: "priceInCents",
-      header: "MONTO",
+      header: "PRECIO",
       cell: ({ row }) => {
         const booking = row.original;
         const price = `S/ ${(booking.priceInCents / 100).toFixed(0)}`;
@@ -144,7 +140,7 @@ export function getBookingsColumns({
           <div>
             <div className="font-medium text-gray-900">{price}</div>
             {booking.isPeakRate && (
-              <div className="text-xs text-gray-500">Peak rate</div>
+              <div className="text-xs text-amber-600">Hora punta</div>
             )}
           </div>
         );
@@ -197,9 +193,23 @@ function formatBookingDate(date: Date): string {
     return "Ayer";
   }
 
-  return format(bookingDate, "MMM d", { locale: es });
+  return format(bookingDate, "EEE d MMM", { locale: es });
 }
 
 function formatTime(time: string): string {
   return time.substring(0, 5);
+}
+
+function calculateDurationMinutes(startTime: string, endTime: string): number {
+  const [sh, sm] = startTime.split(":").map(Number);
+  const [eh, em] = endTime.split(":").map(Number);
+  return ((eh ?? 0) - (sh ?? 0)) * 60 + ((em ?? 0) - (sm ?? 0));
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${String(h)}h ${String(m)}m`;
+  if (h > 0) return `${String(h)}h`;
+  return `${String(m)}m`;
 }

@@ -8,10 +8,13 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
+import type { CancelBookingInfo } from "../../_components/cancel-booking-dialog";
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "../../_components/booking-status-badge";
@@ -144,12 +147,32 @@ export function BookingDetailView() {
       {/* Cancel dialog */}
       <CancelBookingDialog
         bookingId={bookingId}
+        bookingInfo={buildCancelInfo(booking)}
         open={showCancelDialog}
         onClose={() => setShowCancelDialog(false)}
         onCancelled={invalidateBooking}
       />
     </>
   );
+}
+
+function buildCancelInfo(booking: {
+  code: string;
+  court: { name: string };
+  date: Date;
+  startTime: string;
+  endTime: string;
+  playerCount: number;
+}): CancelBookingInfo {
+  const st = booking.startTime.substring(0, 5);
+  const et = booking.endTime.substring(0, 5);
+  return {
+    code: booking.code,
+    courtName: booking.court.name,
+    date: format(new Date(booking.date), "EEE d MMM", { locale: es }),
+    timeRange: `${st} - ${et}`,
+    playerCount: booking.playerCount,
+  };
 }
 
 function ChevronRightIcon({ className }: { className?: string }) {
