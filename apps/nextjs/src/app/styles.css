@@ -37,3 +37,13 @@
     rgb(255 237 213 / 0.5) 8px
   );
 }
+
+@utility bg-stripes-gray {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgb(156 163 175 / 0.15) 4px,
+    rgb(156 163 175 / 0.15) 8px
+  );
+}

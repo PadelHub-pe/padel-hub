@@ -88,14 +88,14 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 6. **Auto-scroll to current time** — On initial mount, scroll the grid container to center the current time line using `scrollIntoView`.
 
 **AC:**
-- [ ] Regular zone cells have green-50 background
-- [ ] Peak zone cells have amber gradient/stripe background
-- [ ] Blocked slots rendered as red-50 blocks with reason icon + label
-- [ ] Blocked/closed cells not clickable
-- [ ] Court headers show status dot + type icon
-- [ ] Empty cells show "+" on hover with blue highlight
-- [ ] Grid auto-scrolls to current time on mount
-- [ ] Typecheck and lint pass
+- [x] Regular zone cells have green-50 background
+- [x] Peak zone cells have amber gradient/stripe background
+- [x] Blocked slots rendered as red-50 blocks with reason icon + label
+- [x] Blocked/closed cells not clickable
+- [x] Court headers show status dot + type icon
+- [x] Empty cells show "+" on hover with blue highlight
+- [x] Grid auto-scrolls to current time on mount
+- [x] Typecheck and lint pass
 
 ---
 
