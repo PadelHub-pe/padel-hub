@@ -167,11 +167,11 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 4. **Week view stats** — Show weekly totals in stats bar when in week view.
 
 **AC:**
-- [ ] Legend shows zone colors (Regular, Pico, Reservado, Bloqueado)
-- [ ] Stats show booking count, revenue, utilization with correct formatting
-- [ ] Staff role sees simplified stats (no revenue, no utilization)
-- [ ] Stats update when navigating between days
-- [ ] Typecheck and lint pass
+- [x] Legend shows zone colors (Regular, Pico, Reservado, Bloqueado)
+- [x] Stats show booking count, revenue, utilization with correct formatting
+- [x] Staff role sees simplified stats (no revenue, no utilization)
+- [x] Stats update when navigating between days
+- [x] Typecheck and lint pass
 
 ---
 

@@ -41,7 +41,7 @@ export function CalendarView() {
   const trpc = useTRPC();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { facilityId } = useFacilityContext();
+  const { facilityId, orgSlug } = useFacilityContext();
 
   // Initialize state from URL search params
   const [currentDate, setCurrentDate] = useState(() =>
@@ -61,6 +61,13 @@ export function CalendarView() {
   const { data: courts } = useSuspenseQuery(
     trpc.court.list.queryOptions({ facilityId }),
   );
+
+  // Fetch user role for permission-based stats display
+  const { data: organizations } = useSuspenseQuery(
+    trpc.org.getMyOrganizations.queryOptions(),
+  );
+  const matchedOrg = organizations.find((o) => o.slug === orgSlug);
+  const userRole = matchedOrg?.role ?? "staff";
 
   // Fetch day or week data based on view mode
   const { data: dayData, refetch: refetchDay } = useQuery({
@@ -239,6 +246,39 @@ export function CalendarView() {
           utilizationPercent: weekData?.stats.avgUtilizationPercent ?? 0,
         };
 
+  // Compute next upcoming booking for staff view
+  const nextBooking = (() => {
+    const bookings =
+      viewMode === "day" ? dayData?.bookings : weekData?.bookings;
+    if (!bookings?.length) return null;
+
+    const now = new Date();
+    const nowTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:00`;
+
+    const upcoming = bookings
+      .filter(
+        (b) =>
+          b.status !== "cancelled" &&
+          b.status !== "completed" &&
+          b.startTime > nowTime,
+      )
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    const next = upcoming[0];
+    if (!next) return null;
+
+    const court =
+      viewMode === "day"
+        ? dayData?.courts.find((c) => c.id === next.courtId)
+        : weekData?.courts.find((c) => c.id === next.courtId);
+
+    return {
+      customerName: next.customerName,
+      startTime: next.startTime,
+      courtName: court?.name ?? "",
+    };
+  })();
+
   return (
     <div className="flex h-full">
       {/* Sidebar with mini calendar */}
@@ -283,7 +323,11 @@ export function CalendarView() {
         />
 
         <div className="mt-4">
-          <CalendarLegend stats={stats} />
+          <CalendarLegend
+            stats={stats}
+            userRole={userRole}
+            nextBooking={nextBooking}
+          />
         </div>
 
         <div className="mt-4 flex-1 overflow-auto">

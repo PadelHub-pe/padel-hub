@@ -38,6 +38,7 @@ export default async function FacilityCalendarPage({
     prefetch(trpc.calendar.getDayView.queryOptions({ facilityId, date }));
   }
   prefetch(trpc.court.list.queryOptions({ facilityId }));
+  prefetch(trpc.org.getMyOrganizations.queryOptions());
 
   return (
     <HydrateClient>
