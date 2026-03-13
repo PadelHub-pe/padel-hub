@@ -5,10 +5,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/trpc/react";
 import { StatCard } from "./stat-card";
 
-export function StatsGrid() {
+interface StatsGridProps {
+  facilityId: string;
+}
+
+export function StatsGrid({ facilityId }: StatsGridProps) {
   const trpc = useTRPC();
   const { data: stats } = useSuspenseQuery(
-    trpc.dashboard.getStats.queryOptions(),
+    trpc.dashboard.getStats.queryOptions({ facilityId }),
   );
 
   return (
@@ -29,12 +33,10 @@ export function StatsGrid() {
         icon={<CurrencyIcon className="h-5 w-5" />}
       />
       <StatCard
-        title={stats.occupancyRate.label}
-        value={stats.occupancyRate.value}
-        change={stats.occupancyRate.change}
+        title={stats.pendingBookings.label}
+        value={stats.pendingBookings.value}
         iconColor="amber"
-        suffix="%"
-        icon={<ChartIcon className="h-5 w-5" />}
+        icon={<ClockIcon className="h-5 w-5" />}
       />
       <StatCard
         title={stats.monthlyRevenue.label}
@@ -84,7 +86,7 @@ function CurrencyIcon({ className }: { className?: string }) {
   );
 }
 
-function ChartIcon({ className }: { className?: string }) {
+function ClockIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -96,7 +98,7 @@ function ChartIcon({ className }: { className?: string }) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
   );

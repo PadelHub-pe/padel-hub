@@ -16,29 +16,43 @@ import {
 
 import { useTRPC } from "~/trpc/react";
 
-const statusConfig = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "success" | "warning" | "secondary" | "destructive" | "default";
+  }
+> = {
   confirmed: {
     label: "Confirmado",
-    variant: "success" as const,
+    variant: "success",
   },
-  starting_soon: {
-    label: "Por iniciar",
-    variant: "warning" as const,
+  in_progress: {
+    label: "En curso",
+    variant: "warning",
   },
   pending: {
     label: "Pendiente",
-    variant: "secondary" as const,
+    variant: "secondary",
   },
-  cancelled: {
-    label: "Cancelado",
-    variant: "destructive" as const,
+  completed: {
+    label: "Completado",
+    variant: "default",
+  },
+  open_match: {
+    label: "Partido abierto",
+    variant: "secondary",
   },
 };
 
-export function ScheduleTable() {
+interface ScheduleTableProps {
+  facilityId: string;
+}
+
+export function ScheduleTable({ facilityId }: ScheduleTableProps) {
   const trpc = useTRPC();
   const { data: schedule } = useSuspenseQuery(
-    trpc.dashboard.getTodaySchedule.queryOptions(),
+    trpc.dashboard.getTodaySchedule.queryOptions({ facilityId }),
   );
 
   return (
@@ -59,7 +73,10 @@ export function ScheduleTable() {
           </TableHeader>
           <TableBody>
             {schedule.map((booking) => {
-              const status = statusConfig[booking.status];
+              const status = statusConfig[booking.status] ?? {
+                label: booking.status,
+                variant: "secondary" as const,
+              };
               const initials = booking.customer.name
                 .split(" ")
                 .map((n) => n[0])

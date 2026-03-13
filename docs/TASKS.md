@@ -206,7 +206,7 @@ Verify and fix UI components against Flow 7 spec.
 
 ---
 
-### TASK-7.07 — Dashboard stats with real data (feature)
+### TASK-7.07 — Dashboard stats with real data (feature) ✅
 
 Replace mock dashboard stats with real booking data.
 
@@ -218,10 +218,10 @@ Replace mock dashboard stats with real booking data.
 - Write tests for dashboard stats
 
 **Acceptance criteria:**
-- [ ] Dashboard shows real booking counts and revenue
-- [ ] Today's schedule shows actual bookings
-- [ ] Data is facility-scoped per user's access
-- [ ] Tests pass
+- [x] Dashboard shows real booking counts and revenue
+- [x] Today's schedule shows actual bookings
+- [x] Data is facility-scoped per user's access
+- [x] Tests pass
 
 **Depends on:** TASK-7.01
 

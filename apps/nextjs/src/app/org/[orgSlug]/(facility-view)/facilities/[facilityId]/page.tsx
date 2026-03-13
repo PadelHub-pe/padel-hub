@@ -26,9 +26,8 @@ export default async function FacilityDashboardPage({
 
   // Prefetch data for client components
   prefetch(trpc.facility.getSetupStatus.queryOptions({ facilityId }));
-  // TODO: Update to accept facilityId for facility-scoped data
-  prefetch(trpc.dashboard.getStats.queryOptions());
-  prefetch(trpc.dashboard.getTodaySchedule.queryOptions());
+  prefetch(trpc.dashboard.getStats.queryOptions({ facilityId }));
+  prefetch(trpc.dashboard.getTodaySchedule.queryOptions({ facilityId }));
 
   return (
     <HydrateClient>
@@ -48,12 +47,12 @@ export default async function FacilityDashboardPage({
         <div className="mt-8 space-y-8">
           {/* Stats Cards */}
           <Suspense fallback={<StatsGridSkeleton />}>
-            <StatsGrid />
+            <StatsGrid facilityId={facilityId} />
           </Suspense>
 
           {/* Schedule Table */}
           <Suspense fallback={<ScheduleTableSkeleton />}>
-            <ScheduleTable />
+            <ScheduleTable facilityId={facilityId} />
           </Suspense>
         </div>
       </div>
