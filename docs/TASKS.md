@@ -149,7 +149,7 @@ Minor fixes to cancel and status transition logic.
 
 ---
 
-### TASK-7.05 — Comprehensive booking router tests (testing)
+### TASK-7.05 — Comprehensive booking router tests (testing) ✅
 
 Write full test suite for `packages/api/src/router/booking.ts`.
 
@@ -171,10 +171,10 @@ Write full test suite for `packages/api/src/router/booking.ts`.
 **Target:** 40-60 tests (comparable to pricing: 42, schedule: 30)
 
 **Acceptance criteria:**
-- [ ] All test groups pass
-- [ ] Edge cases covered (conflict boundaries, status transitions, role permissions)
-- [ ] Factory helpers created for booking test data
-- [ ] `pnpm test` passes with all existing + new tests
+- [x] All test groups pass
+- [x] Edge cases covered (conflict boundaries, status transitions, role permissions)
+- [x] Factory helpers created for booking test data
+- [x] `pnpm test` passes with all existing + new tests
 
 **Depends on:** TASK-7.01, TASK-7.02, TASK-7.03, TASK-7.04
 
