@@ -7,7 +7,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@wifo/ui/popover";
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "../../_components/booking-status-badge";
-import { formatTime, getStatusColors } from "./calendar-utils";
+import {
+  formatDuration,
+  formatTime,
+  getDurationMinutes,
+} from "./calendar-utils";
 
 interface BookingTooltipProps {
   bookingId: string;
@@ -80,6 +84,7 @@ interface BookingData {
   court: {
     id: string;
     name: string;
+    type: string;
   };
 }
 
@@ -90,7 +95,6 @@ function BookingTooltipContent({
   booking: BookingData;
   onViewDetails: () => void;
 }) {
-  const colors = getStatusColors(booking.status);
   const customerName = booking.user?.name ?? booking.customerName ?? "Cliente";
   const initials = getInitials(customerName);
 
@@ -119,21 +123,33 @@ function BookingTooltipContent({
 
       {/* Details */}
       <div className="space-y-2 p-3">
-        {/* Time */}
+        {/* Time with duration */}
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <ClockIcon className="h-4 w-4 text-gray-400" />
           <span>
-            {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+            {formatTime(booking.startTime)} - {formatTime(booking.endTime)}{" "}
+            <span className="text-gray-400">
+              (
+              {formatDuration(
+                getDurationMinutes(booking.startTime, booking.endTime),
+              )}
+              )
+            </span>
           </span>
         </div>
 
-        {/* Court */}
+        {/* Court with type */}
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span
-            className={`h-2.5 w-2.5 rounded-full ${colors.bg.replace("bg-", "bg-").replace("/10", "")}`}
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ backgroundColor: getCourtDotColor(booking.court.name) }}
           />
-          <span>{booking.court.name}</span>
+          <span>
+            {booking.court.name}
+            <span className="ml-1 text-gray-400">
+              ({booking.court.type === "indoor" ? "Indoor" : "Outdoor"})
+            </span>
+          </span>
         </div>
 
         {/* Players */}
@@ -152,8 +168,8 @@ function BookingTooltipContent({
             S/ {(booking.priceInCents / 100).toFixed(2)}
           </span>
           {booking.isPeakRate && (
-            <span className="rounded bg-orange-100 px-1.5 py-0.5 text-xs font-medium text-orange-700">
-              Peak
+            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+              ⚡ Hora Pico
             </span>
           )}
         </div>

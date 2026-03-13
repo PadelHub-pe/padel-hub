@@ -118,12 +118,12 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 5. **Popover enhancements** — Show duration (e.g., "(1.5h)") after time range. Show court type (Indoor/Outdoor) after court name.
 
 **AC:**
-- [ ] Booking blocks match spec status table (border color, bg, text)
-- [ ] Cancelled bookings at 30% opacity with strikethrough + dashed border
-- [ ] Peak bookings show ⚡ amber badge
-- [ ] Tall blocks (>1.5h) show booking code
-- [ ] Popover shows duration after time range
-- [ ] Typecheck and lint pass
+- [x] Booking blocks match spec status table (border color, bg, text)
+- [x] Cancelled bookings at 30% opacity with strikethrough + dashed border
+- [x] Peak bookings show ⚡ amber badge
+- [x] Tall blocks (>1.5h) show booking code
+- [x] Popover shows duration after time range
+- [x] Typecheck and lint pass
 
 ---
 

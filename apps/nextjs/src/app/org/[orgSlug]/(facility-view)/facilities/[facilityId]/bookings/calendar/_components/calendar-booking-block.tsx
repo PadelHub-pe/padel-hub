@@ -2,7 +2,21 @@
 
 import { forwardRef } from "react";
 
-import { formatTime, getStatusColors } from "./calendar-utils";
+import {
+  formatTime,
+  getDurationMinutes,
+  getStatusColors,
+} from "./calendar-utils";
+
+const STATUS_LABELS: Record<string, string> = {
+  confirmed: "Confirmada",
+  in_progress: "En Progreso",
+  completed: "Completada",
+  cancelled: "Cancelada",
+  pending: "Pendiente",
+  open_match: "Abierto",
+  blocked: "Bloqueado",
+};
 
 interface CalendarBookingBlockProps {
   booking: {
@@ -35,14 +49,22 @@ export const CalendarBookingBlock = forwardRef<
     booking.user?.email ??
     "Sin nombre";
 
+  const durationMinutes = getDurationMinutes(
+    booking.startTime,
+    booking.endTime,
+  );
+  const isTall = durationMinutes > 90;
+
   // Determine if we have enough height to show full content
   const isCompact = heightPercent < 8;
+
+  const borderStyle = colors.dashed ? "border-dashed" : "";
 
   return (
     <button
       ref={ref}
       onClick={onClick}
-      className={`absolute inset-x-1 overflow-hidden rounded border-l-[3px] text-left transition-shadow hover:shadow-md ${colors.bg} ${colors.border}`}
+      className={`absolute inset-x-1 overflow-hidden rounded border-l-[3px] text-left transition-shadow hover:shadow-md ${colors.bg} ${colors.border} ${borderStyle} ${colors.opacity ? "opacity-60" : ""}`}
       style={{
         top: `${topPercent}%`,
         height: `calc(${heightPercent}% - 2px)`,
@@ -51,34 +73,50 @@ export const CalendarBookingBlock = forwardRef<
       <div className={`h-full p-1.5 ${colors.text}`}>
         {isCompact ? (
           <div className="flex items-center gap-1 truncate text-xs font-medium">
-            <span className="truncate">{displayName}</span>
+            <span
+              className={`truncate ${colors.strikethrough ? "line-through" : ""}`}
+            >
+              {displayName}
+            </span>
             <span className="shrink-0 rounded bg-white/60 px-1 text-[10px] font-medium">
               {booking.playerCount}/4
             </span>
             {booking.isPeakRate && (
-              <span className="shrink-0 rounded bg-orange-100 px-1 text-[10px] font-medium text-orange-700">
-                P
+              <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">
+                ⚡
               </span>
             )}
           </div>
         ) : (
           <>
             <div className="flex items-center gap-1">
-              <span className="truncate text-xs font-medium">
+              <span
+                className={`truncate text-xs font-medium ${colors.strikethrough ? "line-through" : ""}`}
+              >
                 {displayName}
               </span>
               <span className="shrink-0 rounded bg-white/60 px-1 text-[10px] font-medium">
                 {booking.playerCount}/4
               </span>
               {booking.isPeakRate && (
-                <span className="shrink-0 rounded bg-orange-100 px-1 text-[10px] font-medium text-orange-700">
-                  Peak
+                <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">
+                  ⚡
                 </span>
               )}
             </div>
-            <div className="mt-0.5 text-[10px] opacity-80">
-              {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+            <div className="mt-0.5 flex items-center gap-1">
+              <span className="text-[10px] opacity-80">
+                {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+              </span>
+              <span className="shrink-0 rounded bg-white/50 px-1 text-[9px] font-medium">
+                {STATUS_LABELS[booking.status] ?? booking.status}
+              </span>
             </div>
+            {isTall && (
+              <div className="mt-0.5 font-mono text-[10px] opacity-70">
+                {booking.code}
+              </div>
+            )}
           </>
         )}
       </div>

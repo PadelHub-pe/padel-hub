@@ -163,55 +163,106 @@ export function isTimeOutsideOperatingHours(
 }
 
 /**
- * Get status color classes for booking blocks
+ * Calculate duration in minutes between two time strings
  */
-export function getStatusColors(status: string): {
+export function getDurationMinutes(startTime: string, endTime: string): number {
+  return timeToMinutes(endTime) - timeToMinutes(startTime);
+}
+
+/**
+ * Format a duration in minutes as a human-readable string (e.g., "1.5h", "2h")
+ */
+export function formatDuration(minutes: number): string {
+  const hours = minutes / 60;
+  if (hours % 1 === 0) return `${hours}h`;
+  return `${hours.toFixed(1).replace(".0", "")}h`;
+}
+
+interface StatusColors {
   bg: string;
   border: string;
   text: string;
-} {
+  dashed: boolean;
+  strikethrough: boolean;
+  opacity: boolean;
+}
+
+/**
+ * Get status color classes for booking blocks
+ */
+export function getStatusColors(status: string): StatusColors {
   switch (status) {
     case "confirmed":
       return {
         bg: "bg-blue-50",
-        border: "border-l-blue-500",
+        border: "border-l-blue-400",
         text: "text-blue-900",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
     case "in_progress":
       return {
         bg: "bg-green-50",
-        border: "border-l-green-500",
+        border: "border-l-green-400",
         text: "text-green-900",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
     case "completed":
       return {
         bg: "bg-gray-50",
-        border: "border-l-gray-400",
+        border: "border-l-gray-300",
         text: "text-gray-600",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
     case "cancelled":
       return {
-        bg: "bg-red-50",
-        border: "border-l-red-500",
+        bg: "bg-red-50/30",
+        border: "border-l-red-300",
         text: "text-red-900",
+        dashed: true,
+        strikethrough: true,
+        opacity: true,
+      };
+    case "blocked":
+      return {
+        bg: "bg-red-50",
+        border: "border-l-red-300",
+        text: "text-red-900",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
     case "pending":
       return {
         bg: "bg-yellow-50",
         border: "border-l-yellow-500",
         text: "text-yellow-900",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
     case "open_match":
       return {
         bg: "bg-amber-50",
         border: "border-l-amber-500",
         text: "text-amber-900",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
     default:
       return {
         bg: "bg-gray-50",
         border: "border-l-gray-400",
         text: "text-gray-900",
+        dashed: false,
+        strikethrough: false,
+        opacity: false,
       };
   }
 }
