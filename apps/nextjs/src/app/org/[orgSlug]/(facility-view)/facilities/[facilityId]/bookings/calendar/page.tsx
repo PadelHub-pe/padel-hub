@@ -1,21 +1,42 @@
 import { Suspense } from "react";
+import { parse, startOfWeek } from "date-fns";
 
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { CalendarView } from "./_components/calendar-view";
 
 interface FacilityCalendarPageProps {
   params: Promise<{ orgSlug: string; facilityId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function parseDateParam(value: string | undefined): Date {
+  if (!value) return new Date();
+  const d = parse(value, "yyyy-MM-dd", new Date());
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
+function parseViewParam(value: string | undefined): "day" | "week" {
+  return value === "week" ? "week" : "day";
 }
 
 export default async function FacilityCalendarPage({
   params,
+  searchParams,
 }: FacilityCalendarPageProps) {
   const { facilityId } = await params;
+  const sp = await searchParams;
+  const dateStr = typeof sp.date === "string" ? sp.date : undefined;
+  const viewStr = typeof sp.view === "string" ? sp.view : undefined;
+  const date = parseDateParam(dateStr);
+  const view = parseViewParam(viewStr);
 
-  // Prefetch today's data for client components
-  prefetch(
-    trpc.calendar.getDayView.queryOptions({ facilityId, date: new Date() }),
-  );
+  // Prefetch based on URL searchParams
+  if (view === "week") {
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    prefetch(trpc.calendar.getWeekView.queryOptions({ facilityId, weekStart }));
+  } else {
+    prefetch(trpc.calendar.getDayView.queryOptions({ facilityId, date }));
+  }
   prefetch(trpc.court.list.queryOptions({ facilityId }));
 
   return (

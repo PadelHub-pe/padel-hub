@@ -190,8 +190,7 @@ export function CalendarHeader({
 
         {/* Add booking button */}
         <Button onClick={onAddBooking}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          Agregar Reserva
+          <PlusIcon className="mr-2 h-4 w-4" />+ Nueva Reserva
         </Button>
       </div>
     </div>

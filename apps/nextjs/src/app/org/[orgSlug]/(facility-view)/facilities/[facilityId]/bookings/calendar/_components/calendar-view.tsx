@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   keepPreviousData,
   useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { addDays, format, parse, subDays } from "date-fns";
 
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
@@ -25,13 +27,29 @@ interface QuickBookingSlot {
   startTime: string;
 }
 
+function parseDateParam(value: string | null): Date {
+  if (!value) return new Date();
+  const d = parse(value, "yyyy-MM-dd", new Date());
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
+function parseViewParam(value: string | null): "day" | "week" {
+  return value === "week" ? "week" : "day";
+}
+
 export function CalendarView() {
   const trpc = useTRPC();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { facilityId } = useFacilityContext();
 
-  // State
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<"day" | "week">("day");
+  // Initialize state from URL search params
+  const [currentDate, setCurrentDate] = useState(() =>
+    parseDateParam(searchParams.get("date")),
+  );
+  const [viewMode, setViewMode] = useState<"day" | "week">(() =>
+    parseViewParam(searchParams.get("view")),
+  );
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
     null,
   );
@@ -58,13 +76,32 @@ export function CalendarView() {
     placeholderData: keepPreviousData,
   });
 
-  const handleDateChange = (date: Date) => {
-    setCurrentDate(date);
-  };
+  // Sync state changes to URL
+  const updateUrl = useCallback(
+    (date: Date, view: "day" | "week") => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("date", format(date, "yyyy-MM-dd"));
+      params.set("view", view);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
-  const handleViewModeChange = (mode: "day" | "week") => {
-    setViewMode(mode);
-  };
+  const handleDateChange = useCallback(
+    (date: Date) => {
+      setCurrentDate(date);
+      updateUrl(date, viewMode);
+    },
+    [updateUrl, viewMode],
+  );
+
+  const handleViewModeChange = useCallback(
+    (mode: "day" | "week") => {
+      setViewMode(mode);
+      updateUrl(currentDate, mode);
+    },
+    [updateUrl, currentDate],
+  );
 
   const handleBookingClick = (bookingId: string) => {
     setSelectedBookingId(bookingId);
@@ -73,6 +110,57 @@ export function CalendarView() {
   const handleClosePopover = () => {
     setSelectedBookingId(null);
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when typing in inputs
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          setCurrentDate((prev) => {
+            const next =
+              viewMode === "day" ? subDays(prev, 1) : subDays(prev, 7);
+            updateUrl(next, viewMode);
+            return next;
+          });
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          setCurrentDate((prev) => {
+            const next =
+              viewMode === "day" ? addDays(prev, 1) : addDays(prev, 7);
+            updateUrl(next, viewMode);
+            return next;
+          });
+          break;
+        case "t":
+        case "T": {
+          e.preventDefault();
+          const today = new Date();
+          setCurrentDate(today);
+          updateUrl(today, viewMode);
+          break;
+        }
+        case "Escape":
+          setSelectedBookingId(null);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [viewMode, updateUrl]);
 
   const handleBookingUpdated = () => {
     if (viewMode === "day") {
@@ -128,10 +216,14 @@ export function CalendarView() {
     }
   };
 
-  const handleDayClickInWeekView = (date: Date) => {
-    setCurrentDate(date);
-    setViewMode("day");
-  };
+  const handleDayClickInWeekView = useCallback(
+    (date: Date) => {
+      setCurrentDate(date);
+      setViewMode("day");
+      updateUrl(date, "day");
+    },
+    [updateUrl],
+  );
 
   // Get current stats
   const stats =

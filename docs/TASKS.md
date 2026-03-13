@@ -141,12 +141,12 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 3. **Button wording** — Change "Agregar Reserva" to "+ Nueva Reserva" per spec.
 
 **AC:**
-- [ ] URL updates when navigating dates or switching views
-- [ ] Loading a URL with `?date=2026-03-12&view=week` opens that date in week view
-- [ ] Page.tsx prefetches based on URL searchParams (not just today)
-- [ ] Left/Right arrows navigate, T jumps to today
-- [ ] Escape closes open popover
-- [ ] Typecheck and lint pass
+- [x] URL updates when navigating dates or switching views
+- [x] Loading a URL with `?date=2026-03-12&view=week` opens that date in week view
+- [x] Page.tsx prefetches based on URL searchParams (not just today)
+- [x] Left/Right arrows navigate, T jumps to today
+- [x] Escape closes open popover
+- [x] Typecheck and lint pass
 
 ---
 
