@@ -8,6 +8,7 @@ import { CalendarTimeIndicator } from "./calendar-time-indicator";
 import {
   calculateBookingPosition,
   generateTimeSlots,
+  isTimeBlocked,
   isTimeInPeakPeriod,
 } from "./calendar-utils";
 
@@ -33,6 +34,13 @@ interface Booking {
   user: { name: string | null; email: string } | null;
 }
 
+interface BlockedSlot {
+  courtId: string | null;
+  startTime: string;
+  endTime: string;
+  reason: string;
+}
+
 interface CalendarDayGridProps {
   currentDate: Date;
   courts: Court[];
@@ -43,6 +51,7 @@ interface CalendarDayGridProps {
     isClosed: boolean;
   };
   peakPeriods: { startTime: string; endTime: string }[];
+  blockedSlots: BlockedSlot[];
   onBookingClick: (bookingId: string) => void;
   onEmptySlotClick: (courtId: string, startTime: string) => void;
 }
@@ -53,6 +62,7 @@ export function CalendarDayGrid({
   bookings,
   operatingHours,
   peakPeriods,
+  blockedSlots,
   onBookingClick,
   onEmptySlotClick,
 }: CalendarDayGridProps) {
@@ -134,17 +144,30 @@ export function CalendarDayGrid({
               </div>
 
               {/* Court columns */}
-              {courts.map((court) => (
-                <div
-                  key={court.id}
-                  className={`relative h-16 min-w-[150px] flex-1 cursor-pointer border-r transition-colors last:border-r-0 hover:bg-gray-50 ${
-                    isPeak ? "bg-stripes-orange" : ""
-                  }`}
-                  onClick={() => onEmptySlotClick(court.id, time)}
-                >
-                  {/* Empty slot - booking blocks are rendered as overlay */}
-                </div>
-              ))}
+              {courts.map((court) => {
+                const blocked = isTimeBlocked(time, court.id, blockedSlots);
+                const isClickable = !blocked;
+
+                return (
+                  <div
+                    key={court.id}
+                    className={`relative h-16 min-w-[150px] flex-1 border-r transition-colors last:border-r-0 ${
+                      blocked
+                        ? "cursor-not-allowed bg-red-50"
+                        : isPeak
+                          ? "bg-stripes-orange cursor-pointer hover:bg-blue-50"
+                          : "cursor-pointer hover:bg-blue-50"
+                    }`}
+                    onClick={
+                      isClickable
+                        ? () => onEmptySlotClick(court.id, time)
+                        : undefined
+                    }
+                  >
+                    {/* Empty slot - booking blocks are rendered as overlay */}
+                  </div>
+                );
+              })}
             </div>
           );
         })}

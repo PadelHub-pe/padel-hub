@@ -295,6 +295,7 @@ export function CalendarView() {
                   bookings={dayData.bookings}
                   operatingHours={dayData.operatingHours}
                   peakPeriods={dayData.peakPeriods}
+                  blockedSlots={dayData.blockedSlots}
                   onBookingClick={handleBookingClick}
                   onEmptySlotClick={handleEmptySlotClick}
                 />

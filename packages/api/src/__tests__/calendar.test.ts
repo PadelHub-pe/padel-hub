@@ -211,6 +211,15 @@ function createMockDb(opts?: MockDbOpts) {
   const updateSetFn = vi.fn().mockReturnValue({ where: updateWhereFn });
   const updateFn = vi.fn().mockReturnValue({ set: updateSetFn });
 
+  // selectDistinct().from().where() chain for getMonthBookingDates
+  const selectDistinctFromWhereFn = vi.fn().mockResolvedValue([]);
+  const selectDistinctFromFn = vi
+    .fn()
+    .mockReturnValue({ where: selectDistinctFromWhereFn });
+  const selectDistinctFn = vi
+    .fn()
+    .mockReturnValue({ from: selectDistinctFromFn });
+
   return {
     query: {
       organizationMembers: {
@@ -236,6 +245,7 @@ function createMockDb(opts?: MockDbOpts) {
       },
     },
     select: selectFn,
+    selectDistinct: selectDistinctFn,
     update: updateFn,
   };
 }
@@ -772,6 +782,77 @@ describe("calendar.getDayStats", () => {
       caller.calendar.getDayStats({
         facilityId: FACILITY_ID,
         date: TEST_DATE,
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+// =============================================================================
+// getMonthBookingDates
+// =============================================================================
+
+describe("calendar.getMonthBookingDates", () => {
+  it("returns dates that have non-cancelled bookings", async () => {
+    const db = createMockDb();
+    // Mock the select chain for getMonthBookingDates
+    const mockRows = [
+      { date: new Date("2026-03-10") },
+      { date: new Date("2026-03-15") },
+      { date: new Date("2026-03-20") },
+    ];
+    db.selectDistinct = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(mockRows),
+      }),
+    }) as any;
+
+    const caller = authedCaller(db);
+
+    const result = await caller.calendar.getMonthBookingDates({
+      facilityId: FACILITY_ID,
+      month: new Date("2026-03-01"),
+    });
+
+    expect(result.dates).toHaveLength(3);
+    expect(result.dates.map((d: Date) => d.toISOString().slice(0, 10))).toEqual(
+      ["2026-03-10", "2026-03-15", "2026-03-20"],
+    );
+  });
+
+  it("returns empty array when no bookings exist", async () => {
+    const db = createMockDb();
+    db.selectDistinct = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    }) as any;
+
+    const caller = authedCaller(db);
+
+    const result = await caller.calendar.getMonthBookingDates({
+      facilityId: FACILITY_ID,
+      month: new Date("2026-03-01"),
+    });
+
+    expect(result.dates).toHaveLength(0);
+  });
+
+  it("denies access for staff without facility access", async () => {
+    const db = createMockDb({
+      role: "staff",
+      facilityIds: [],
+    });
+    db.selectDistinct = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    }) as any;
+    const caller = authedCaller(db);
+
+    await expect(
+      caller.calendar.getMonthBookingDates({
+        facilityId: FACILITY_ID,
+        month: new Date("2026-03-01"),
       }),
     ).rejects.toThrow();
   });

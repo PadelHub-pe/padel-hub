@@ -1,5 +1,11 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { addDays, startOfDay, startOfWeek } from "date-fns";
+import {
+  addDays,
+  endOfMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { and, asc, count, eq, gte, lt, ne, sum } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -32,6 +38,11 @@ const getWeekViewSchema = z.object({
 const getDayStatsSchema = z.object({
   facilityId: z.string().uuid(),
   date: z.date(),
+});
+
+const getMonthBookingDatesSchema = z.object({
+  facilityId: z.string().uuid(),
+  month: z.date(),
 });
 
 // =============================================================================
@@ -500,6 +511,36 @@ export const calendarRouter = {
         bookingCount: filteredBookings.length,
         revenueInCents: Number(statsResult[0]?.totalRevenue ?? 0),
         utilizationPercent: utilization,
+      };
+    }),
+
+  /**
+   * Get dates in a month that have bookings (for mini calendar dots)
+   */
+  getMonthBookingDates: protectedProcedure
+    .input(getMonthBookingDatesSchema)
+    .query(async ({ ctx, input }) => {
+      const { facilityId, month } = input;
+
+      await verifyFacilityAccess(ctx, facilityId, "schedule:read");
+
+      const monthStart = startOfMonth(month);
+      const monthEnd = startOfDay(addDays(endOfMonth(month), 1));
+
+      const rows = await ctx.db
+        .selectDistinct({ date: bookings.date })
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.facilityId, facilityId),
+            gte(bookings.date, monthStart),
+            lt(bookings.date, monthEnd),
+            ne(bookings.status, "cancelled"),
+          ),
+        );
+
+      return {
+        dates: rows.map((r) => r.date),
       };
     }),
 } satisfies TRPCRouterRecord;

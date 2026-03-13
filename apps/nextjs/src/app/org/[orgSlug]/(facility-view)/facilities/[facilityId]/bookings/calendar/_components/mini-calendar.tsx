@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   addMonths,
   eachDayOfInterval,
@@ -16,6 +17,8 @@ import { es } from "date-fns/locale";
 
 import { Button } from "@wifo/ui/button";
 
+import { useFacilityContext } from "~/hooks";
+import { useTRPC } from "~/trpc/react";
 import { isSameDay, isToday } from "./calendar-utils";
 
 function ChevronLeftIcon({ className }: { className?: string }) {
@@ -55,7 +58,29 @@ export function MiniCalendar({
   selectedDate,
   onDateSelect,
 }: MiniCalendarProps) {
+  const trpc = useTRPC();
+  const { facilityId } = useFacilityContext();
   const [viewMonth, setViewMonth] = useState(startOfMonth(selectedDate));
+
+  // Fetch dates with bookings for the current view month
+  const { data: bookingDatesData } = useQuery({
+    ...trpc.calendar.getMonthBookingDates.queryOptions({
+      facilityId,
+      month: viewMonth,
+    }),
+  });
+
+  const bookingDatesSet = new Set(
+    bookingDatesData?.dates.map((d) => {
+      const date = new Date(d);
+      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    }) ?? [],
+  );
+
+  const hasBookings = (day: Date): boolean =>
+    bookingDatesSet.has(
+      `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`,
+    );
 
   const handlePrevMonth = () => {
     setViewMonth(subMonths(viewMonth, 1));
@@ -121,13 +146,14 @@ export function MiniCalendar({
           const isCurrentMonth = isSameMonth(day, viewMonth);
           const isTodayDate = isToday(day);
           const isSelected = isSameDay(day, selectedDate);
+          const hasDayBookings = isCurrentMonth && hasBookings(day);
 
           return (
             <button
               key={day.toISOString()}
               onClick={() => onDateSelect(day)}
               disabled={!isCurrentMonth}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors ${
+              className={`relative flex h-8 w-8 flex-col items-center justify-center rounded-full text-sm transition-colors ${
                 !isCurrentMonth
                   ? "text-gray-300"
                   : isSelected
@@ -138,6 +164,13 @@ export function MiniCalendar({
               }`}
             >
               {format(day, "d")}
+              {hasDayBookings && (
+                <span
+                  className={`absolute bottom-0.5 h-1 w-1 rounded-full ${
+                    isSelected ? "bg-white" : "bg-blue-500"
+                  }`}
+                />
+              )}
             </button>
           );
         })}

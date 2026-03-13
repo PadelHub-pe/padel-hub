@@ -35,7 +35,7 @@ import {
 import { toast } from "@wifo/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
-import { formatTime } from "./calendar-utils";
+import { calculateEndTime, formatTime } from "./calendar-utils";
 
 const quickBookingSchema = z.object({
   customerName: z.string().min(1, "El nombre es requerido").max(100),
@@ -293,11 +293,4 @@ export function QuickBookingForm({
       </DialogContent>
     </Dialog>
   );
-}
-
-function calculateEndTime(startTime: string): string {
-  const [hours, minutes] = startTime.split(":").map(Number);
-  const endHour = (hours ?? 0) + 1;
-  const endMinute = minutes ?? 30;
-  return `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
 }

@@ -211,9 +211,9 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 3. **Mini calendar booking dots** — Dates with bookings show a small dot indicator below the date number. Fetch booking counts per month (lightweight query or derive from existing week data when possible).
 
 **AC:**
-- [ ] `calculateEndTime("09:30")` returns "11:00" (1.5h later)
-- [ ] `calculateEndTime("19:00")` returns "20:30" (1.5h later)
-- [ ] Cannot click blocked time slots in day grid
-- [ ] Cannot click cells outside operating hours
-- [ ] Mini calendar dates with bookings show dot indicator
-- [ ] Typecheck and lint pass
+- [x] `calculateEndTime("09:30")` returns "11:00" (1.5h later)
+- [x] `calculateEndTime("19:00")` returns "20:30" (1.5h later)
+- [x] Cannot click blocked time slots in day grid
+- [x] Cannot click cells outside operating hours
+- [x] Mini calendar dates with bookings show dot indicator
+- [x] Typecheck and lint pass
