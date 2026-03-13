@@ -10,6 +10,7 @@ import { BookingStatusBadge } from "../../_components/booking-status-badge";
 import {
   formatDuration,
   formatTime,
+  getCourtDotColor,
   getDurationMinutes,
 } from "./calendar-utils";
 
@@ -195,23 +196,6 @@ function getInitials(name: string): string {
     return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
   }
   return (name.slice(0, 2) || "??").toUpperCase();
-}
-
-function getCourtDotColor(courtName: string): string {
-  // Generate a consistent color based on court name
-  const colors = [
-    "#3B82F6", // blue
-    "#10B981", // green
-    "#F59E0B", // amber
-    "#8B5CF6", // purple
-    "#EF4444", // red
-    "#06B6D4", // cyan
-  ];
-  let hash = 0;
-  for (let i = 0; i < courtName.length; i++) {
-    hash = courtName.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length] ?? "#3B82F6";
 }
 
 function ClockIcon({ className }: { className?: string }) {

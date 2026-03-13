@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 import { BookingTooltip } from "./booking-tooltip";
 import {
   generateTimeSlots,
+  getCourtDotColor,
   getStatusColors,
   getWeekDates,
   getWeekStart,
   isToday,
   timeToMinutes,
 } from "./calendar-utils";
+
+interface Court {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+}
 
 interface Booking {
   id: string;
@@ -45,19 +53,43 @@ interface CalendarWeekGridProps {
   weekStart: Date;
   days: DayInfo[];
   bookings: Booking[];
+  courts: Court[];
   onBookingClick: (bookingId: string) => void;
   onDayClick: (date: Date) => void;
+  onEmptySlotClick: (date: Date, startTime: string) => void;
+}
+
+function isWeekend(dayOfWeek: number): boolean {
+  return dayOfWeek === 0 || dayOfWeek === 6;
 }
 
 export function CalendarWeekGrid({
   weekStart,
   days,
   bookings,
+  courts,
   onBookingClick,
   onDayClick,
+  onEmptySlotClick,
 }: CalendarWeekGridProps) {
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
+  const [now, setNow] = useState(new Date());
   const weekDates = getWeekDates(getWeekStart(weekStart));
+
+  // Update current time every minute (for time indicator)
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Build court name lookup for color dots
+  const courtNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of courts) {
+      map.set(c.id, c.name);
+    }
+    return map;
+  }, [courts]);
 
   // Find common operating hours (use first non-closed day as reference)
   const referenceDay = days.find((d) => !d.operatingHours.isClosed);
@@ -97,6 +129,19 @@ export function CalendarWeekGrid({
     });
   };
 
+  // Current time indicator calculations
+  const todayColumnIndex = weekDates.findIndex((d) => isToday(d));
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const openMinutes = timeToMinutes(operatingHours.openTime);
+  const closeMinutes = timeToMinutes(operatingHours.closeTime);
+  const showTimeIndicator =
+    todayColumnIndex >= 0 &&
+    currentMinutes >= openMinutes &&
+    currentMinutes <= closeMinutes;
+  const timeIndicatorTopPercent = showTimeIndicator
+    ? ((currentMinutes - openMinutes) / (closeMinutes - openMinutes)) * 100
+    : 0;
+
   return (
     <div className="overflow-auto rounded-lg border bg-white">
       {/* Header row with day names */}
@@ -108,13 +153,14 @@ export function CalendarWeekGrid({
           const dayInfo = days[index];
           const isTodayDate = isToday(date);
           const isClosed = dayInfo?.operatingHours.isClosed;
+          const weekend = dayInfo ? isWeekend(dayInfo.dayOfWeek) : false;
 
           return (
             <button
               key={date.toISOString()}
               onClick={() => onDayClick(date)}
               className={`flex min-w-[120px] flex-1 flex-col items-center border-r px-2 py-2 transition-colors last:border-r-0 hover:bg-gray-100 ${
-                isTodayDate ? "bg-blue-50" : ""
+                isTodayDate ? "bg-blue-50" : weekend ? "bg-gray-50/70" : ""
               }`}
             >
               <span
@@ -150,6 +196,26 @@ export function CalendarWeekGrid({
 
       {/* Time slots grid */}
       <div className="relative">
+        {/* Current time red line indicator */}
+        {showTimeIndicator && (
+          <div
+            className="pointer-events-none absolute inset-x-0 z-20 flex"
+            style={{ top: `${timeIndicatorTopPercent}%` }}
+          >
+            <div className="w-20 shrink-0" />
+            {weekDates.map((_, i) => (
+              <div key={i} className="relative min-w-[120px] flex-1">
+                {i === todayColumnIndex && (
+                  <div className="absolute inset-x-0 flex items-center">
+                    <div className="relative -left-1 h-2.5 w-2.5 rounded-full bg-red-500" />
+                    <div className="h-[2px] flex-1 bg-red-500" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         {timeSlots.map((time) => (
           <div key={time} className="flex border-b last:border-b-0">
             {/* Time label */}
@@ -162,15 +228,28 @@ export function CalendarWeekGrid({
               const dayInfo = days[index];
               const isTodayDate = isToday(date);
               const isClosed = dayInfo?.operatingHours.isClosed;
-              const slotBookings = getBookingsForSlot(date, time);
+              const weekend = dayInfo ? isWeekend(dayInfo.dayOfWeek) : false;
+              const slotBookings = isClosed
+                ? []
+                : getBookingsForSlot(date, time);
 
               return (
                 <div
                   key={date.toISOString()}
-                  className={`relative min-h-[48px] min-w-[120px] flex-1 border-r p-0.5 last:border-r-0 ${
-                    isTodayDate ? "bg-blue-50/50" : ""
-                  } ${isClosed ? "bg-gray-100" : ""}`}
-                  onClick={() => !isClosed && onDayClick(date)}
+                  className={`group relative min-h-[48px] min-w-[120px] flex-1 border-r p-0.5 last:border-r-0 ${
+                    isClosed
+                      ? "bg-stripes-gray cursor-not-allowed bg-gray-100"
+                      : isTodayDate
+                        ? "bg-blue-50/50"
+                        : weekend
+                          ? "bg-gray-50/50"
+                          : ""
+                  } ${!isClosed ? "cursor-pointer hover:bg-blue-50/40" : ""}`}
+                  onClick={() => {
+                    if (!isClosed) {
+                      onEmptySlotClick(date, time);
+                    }
+                  }}
                 >
                   {!isClosed && (
                     <div className="flex flex-col gap-0.5">
@@ -181,6 +260,8 @@ export function CalendarWeekGrid({
                           booking.customerName ??
                           booking.user?.email ??
                           "Reserva";
+                        const courtName =
+                          courtNameMap.get(booking.courtId) ?? "";
 
                         return (
                           <BookingTooltip
@@ -200,18 +281,39 @@ export function CalendarWeekGrid({
                                 e.stopPropagation();
                                 setOpenTooltipId(booking.id);
                               }}
-                              className={`truncate rounded border-l-2 px-1 py-0.5 text-left text-[10px] ${colors.bg} ${colors.border} ${colors.text} hover:opacity-80`}
+                              className={`flex w-full items-center gap-1 truncate rounded border-l-2 px-1 py-0.5 text-left text-[10px] ${colors.bg} ${colors.border} ${colors.text} hover:opacity-80`}
                             >
-                              {displayName}
+                              <span
+                                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                style={{
+                                  backgroundColor: getCourtDotColor(courtName),
+                                }}
+                              />
+                              <span className="truncate">{displayName}</span>
                             </button>
                           </BookingTooltip>
                         );
                       })}
                       {slotBookings.length > 2 && (
-                        <span className="text-center text-[10px] text-gray-500">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDayClick(date);
+                          }}
+                          className="text-center text-[10px] font-medium text-blue-600 hover:text-blue-700"
+                        >
                           +{slotBookings.length - 2} más
-                        </span>
+                        </button>
                       )}
+                    </div>
+                  )}
+
+                  {/* "+" hover indicator for empty clickable cells */}
+                  {!isClosed && slotBookings.length === 0 && (
+                    <div className="absolute inset-0 hidden items-center justify-center group-hover:flex">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-500">
+                        +
+                      </span>
                     </div>
                   )}
                 </div>

@@ -232,6 +232,24 @@ export function CalendarView() {
     [updateUrl],
   );
 
+  const handleWeekEmptySlotClick = useCallback(
+    (date: Date, startTime: string) => {
+      const availableCourts = weekData?.courts ?? courts;
+      const firstCourt =
+        availableCourts.find((c) => c.status === "active") ??
+        availableCourts[0];
+      if (firstCourt) {
+        setQuickBookingSlot({
+          courtId: firstCourt.id,
+          courtName: firstCourt.name,
+          date,
+          startTime,
+        });
+      }
+    },
+    [weekData?.courts, courts],
+  );
+
   // Get current stats
   const stats =
     viewMode === "day"
@@ -349,8 +367,10 @@ export function CalendarView() {
                   weekStart={weekStart}
                   days={weekData.days}
                   bookings={weekData.bookings}
+                  courts={weekData.courts}
                   onBookingClick={handleBookingClick}
                   onDayClick={handleDayClickInWeekView}
+                  onEmptySlotClick={handleWeekEmptySlotClick}
                 />
               )}
         </div>

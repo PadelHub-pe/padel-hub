@@ -190,13 +190,13 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 6. **"+N más" → day view** — Click "+N más" overflow indicator switches to day view for that date.
 
 **AC:**
-- [ ] Booking chips show court color dot
-- [ ] Weekend columns have subtly distinct background
-- [ ] Closed days show diagonal stripe pattern
-- [ ] Current time red line visible on today's column
-- [ ] Empty slot click opens quick booking with date pre-filled
-- [ ] "+N más" click switches to day view
-- [ ] Typecheck and lint pass
+- [x] Booking chips show court color dot
+- [x] Weekend columns have subtly distinct background
+- [x] Closed days show diagonal stripe pattern
+- [x] Current time red line visible on today's column
+- [x] Empty slot click opens quick booking with date pre-filled
+- [x] "+N más" click switches to day view
+- [x] Typecheck and lint pass
 
 ---
 

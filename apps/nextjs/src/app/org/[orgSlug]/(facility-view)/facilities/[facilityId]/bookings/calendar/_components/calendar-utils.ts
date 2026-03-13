@@ -178,6 +178,25 @@ export function formatDuration(minutes: number): string {
   return `${hours.toFixed(1).replace(".0", "")}h`;
 }
 
+/**
+ * Generate a consistent color based on court name (for color dots)
+ */
+export function getCourtDotColor(courtName: string): string {
+  const colors = [
+    "#3B82F6", // blue
+    "#10B981", // green
+    "#F59E0B", // amber
+    "#8B5CF6", // purple
+    "#EF4444", // red
+    "#06B6D4", // cyan
+  ];
+  let hash = 0;
+  for (let i = 0; i < courtName.length; i++) {
+    hash = courtName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length] ?? "#3B82F6";
+}
+
 interface StatusColors {
   bg: string;
   border: string;
