@@ -100,7 +100,7 @@ pnpm test             # Run all tests with Vitest
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current coverage**: `packages/api` (access-control, invite, team, setup, slugify, default-operating-hours, last-admin, schedule-utils, schedule, pricing), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
+- **Current coverage**: `packages/api` (access-control, booking, booking-cancel, booking-list, booking-price, booking-status, dashboard, default-operating-hours, invite, last-admin, pricing, schedule-utils, schedule, setup, slugify, team), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
@@ -558,11 +558,11 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 | `invite`    | validate, accept, acceptExisting, getPendingInvites                                                                   | public/protected |
 | `facility`  | getProfile, updateProfile, getSetupStatus, saveCourts, saveSchedule, completeSetup                                    | protected        |
 | `court`     | list, getById, create, update, delete                                                                                 | protected        |
-| `booking`   | list, getById, confirm, cancel, updateStatus, createManual, getStats                                                  | protected        |
+| `booking`   | list, getById, confirm, cancel, updateStatus, createManual, getStats, addPlayer, removePlayer, getActivity, searchUsers, getSlotInfo, calculatePrice | protected        |
 | `calendar`  | getSlots (calendar view data)                                                                                         | protected        |
 | `schedule`  | operating hours (get/update), peak periods (get/create/update/delete), blocked slots (get/list/checkConflicts/block/delete), getDayOverview | protected |
 | `pricing`   | getOverview, updateDefaultRates, updateCourtPricing, resetCourtPricing, calculateRevenue                              | protected        |
-| `dashboard` | getStats (facility dashboard)                                                                                         | protected        |
+| `dashboard` | getStats, getTodaySchedule (facility dashboard)                                                                       | protected        |
 | `account`   | getMyProfile, updateMyProfile                                                                                         | protected        |
 | `images`    | getUploadUrl, confirmUpload, delete, reorder                                                                          | protected        |
 | `auth`      | getSession                                                                                                            | public           |
@@ -609,6 +609,18 @@ Shared zone calculation in `packages/api/src/utils/schedule.ts` — pure functio
 - Courts with `priceInCents IS NOT NULL` are "custom" — courts with `NULL` use facility defaults
 - Peak pricing is **markup-based**: `markupPercent` on `peak_periods` table (0–200%)
 
+### Booking Status Resolution
+
+On-access status transitions in `packages/api/src/utils/booking-status.ts` — pure functions:
+
+- `resolveBookingStatus(booking, now)` → detects `confirmed → in_progress` (at start time) and `in_progress → completed` (at end time)
+- `resolveBookingStatuses(bookings, now)` → batch version, returns list of transitions needed
+
+Persistence layer in `packages/api/src/lib/booking-status-persist.ts`:
+
+- `resolveAndPersistBookingStatuses(db, bookings, now)` → resolves + batch-updates DB + logs `booking_activity` entries
+- Integrated into `booking.list` and `booking.getById` — statuses auto-correct on every read
+
 ### Workspace Packages
 
 - All internal packages use `workspace:*` specifier
@@ -640,9 +652,9 @@ Optional:
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current suites**: `access-control` (104), `invite` (24), `team` (27), `setup` (37), `slugify` (15), `default-operating-hours` (2), `last-admin` (8), `schedule-utils` (48), `schedule` (30), `pricing` (42), `images` (21), `validators` (1) — 310 total
+- **Current suites**: `access-control` (24), `booking` (54), `booking-cancel` (28), `booking-list` (18), `booking-price` (13), `booking-status` (16), `dashboard` (11), `default-operating-hours` (2), `invite` (24), `last-admin` (8), `pricing` (27), `schedule-utils` (43), `schedule` (23), `setup` (37), `slugify` (15), `team` (27), `images` (21), `validators` (1) — 453 total
 - **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
-- **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()`, `makePeakPeriod()`, `makeOperatingHour()` — return typed objects with optional overrides
+- **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()`, `makePeakPeriod()`, `makeOperatingHour()`, `makeBooking()`, `makeBookingPlayer()` — return typed objects with optional overrides
 - **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)
 - **Error assertions**: `expect(...).rejects.toThrow("Spanish error message")`
 - **ESLint overrides**: Tests use `/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */` at file top for mock compatibility
