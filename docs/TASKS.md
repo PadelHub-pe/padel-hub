@@ -63,13 +63,13 @@ Fix critical API bugs and add missing data to calendar endpoints. Write tests fi
 **Tests:** Write comprehensive tests for `getDayView`, `getWeekView`, `getDayStats` covering: correct data shape, peak periods from correct table, blocked slots included, status resolution, cancelled exclusion, court ordering.
 
 **AC:**
-- [ ] Peak periods sourced from `peakPeriods` table (not `timeSlotTemplates`)
-- [ ] Blocked slots included in getDayView and getWeekView responses
-- [ ] Booking statuses auto-resolved on read
-- [ ] getDayStats excludes cancelled bookings from count
-- [ ] Courts sorted: active first, then maintenance, inactive hidden
-- [ ] Calendar router test file with full coverage
-- [ ] All existing tests pass (`pnpm test`)
+- [x] Peak periods sourced from `peakPeriods` table (not `timeSlotTemplates`)
+- [x] Blocked slots included in getDayView and getWeekView responses
+- [x] Booking statuses auto-resolved on read
+- [x] getDayStats excludes cancelled bookings from count
+- [x] Courts sorted: active first, then maintenance, inactive hidden
+- [x] Calendar router test file with full coverage
+- [x] All existing tests pass (`pnpm test`)
 
 ---
 

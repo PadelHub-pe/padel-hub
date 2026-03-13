@@ -1,17 +1,18 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { addDays, startOfDay, startOfWeek } from "date-fns";
-import { and, asc, count, eq, gte, lt, sum } from "drizzle-orm";
+import { and, asc, count, eq, gte, lt, ne, sum } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import type { db as DbType } from "@wifo/db/client";
 import {
+  blockedSlots,
   bookings,
   courts,
   operatingHours,
-  timeSlotTemplates,
+  peakPeriods,
 } from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
+import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -88,26 +89,20 @@ function calculateUtilization(
 }
 
 /**
- * Get peak periods from time slot templates for a given day
+ * Sort courts: active first (by name), then maintenance (by name).
+ * Inactive courts are filtered out.
  */
-async function getPeakPeriods(
-  db: typeof DbType,
-  facilityId: string,
-  dayOfWeek: number,
-): Promise<{ startTime: string; endTime: string }[]> {
-  const templates = await db.query.timeSlotTemplates.findMany({
-    where: and(
-      eq(timeSlotTemplates.facilityId, facilityId),
-      eq(timeSlotTemplates.dayOfWeek, dayOfWeek),
-      eq(timeSlotTemplates.isActive, true),
-    ),
-    orderBy: [asc(timeSlotTemplates.startTime)],
-  });
-
-  return templates.map((t) => ({
-    startTime: t.startTime,
-    endTime: t.endTime,
-  }));
+function sortAndFilterCourts<T extends { status: string; name: string }>(
+  courtsList: T[],
+): T[] {
+  return courtsList
+    .filter((c) => c.status !== "inactive")
+    .sort((a, b) => {
+      if (a.status === b.status) return a.name.localeCompare(b.name);
+      if (a.status === "active") return -1;
+      if (b.status === "active") return 1;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 // =============================================================================
@@ -132,12 +127,15 @@ export const calendarRouter = {
       const dayOfWeek = date.getDay(); // 0 = Sunday
 
       // Fetch data in parallel
-      const [courtsList, operatingHoursList, bookingsList] = await Promise.all([
+      const [
+        courtsList,
+        operatingHoursList,
+        bookingsList,
+        peakPeriodsList,
+        blockedSlotsList,
+      ] = await Promise.all([
         ctx.db.query.courts.findMany({
-          where: and(
-            eq(courts.facilityId, facilityId),
-            eq(courts.isActive, true),
-          ),
+          where: eq(courts.facilityId, facilityId),
           orderBy: [asc(courts.name)],
         }),
         ctx.db.query.operatingHours.findMany({
@@ -156,7 +154,33 @@ export const calendarRouter = {
           },
           orderBy: [asc(bookings.startTime)],
         }),
+        ctx.db.query.peakPeriods.findMany({
+          where: eq(peakPeriods.facilityId, facilityId),
+        }),
+        ctx.db.query.blockedSlots.findMany({
+          where: and(
+            eq(blockedSlots.facilityId, facilityId),
+            gte(blockedSlots.date, dayStart),
+            lt(blockedSlots.date, dayEnd),
+          ),
+        }),
       ]);
+
+      // Resolve booking statuses on access
+      const now = new Date();
+      const statusMap = await resolveAndPersistBookingStatuses(
+        ctx.db,
+        bookingsList,
+        now,
+      );
+
+      // Filter peak periods: active and matching dayOfWeek
+      const filteredPeakPeriods = peakPeriodsList.filter(
+        (pp) => pp.isActive && pp.daysOfWeek.includes(dayOfWeek),
+      );
+
+      // Sort and filter courts
+      const sortedCourts = sortAndFilterCourts(courtsList);
 
       // Get operating hours for this day
       const dayOperatingHours = getOperatingHoursForDay(
@@ -164,12 +188,9 @@ export const calendarRouter = {
         dayOfWeek,
       );
 
-      // Get peak periods
-      const peakPeriods = await getPeakPeriods(ctx.db, facilityId, dayOfWeek);
-
       // Calculate stats (exclude cancelled bookings)
       const activeBookings = bookingsList.filter(
-        (b) => b.status !== "cancelled",
+        (b) => (statusMap.get(b.id) ?? b.status) !== "cancelled",
       );
       const totalRevenue = activeBookings.reduce(
         (sum, b) => sum + b.priceInCents,
@@ -177,14 +198,14 @@ export const calendarRouter = {
       );
       const utilization = calculateUtilization(
         activeBookings,
-        courtsList.length,
+        sortedCourts.length,
         dayOperatingHours.openTime,
         dayOperatingHours.closeTime,
       );
 
       return {
         date: dayStart,
-        courts: courtsList.map((c) => ({
+        courts: sortedCourts.map((c) => ({
           id: c.id,
           name: c.name,
           type: c.type,
@@ -204,7 +225,7 @@ export const calendarRouter = {
           endTime: b.endTime,
           priceInCents: b.priceInCents,
           isPeakRate: b.isPeakRate,
-          status: b.status,
+          status: statusMap.get(b.id) ?? b.status,
           customerName: b.customerName,
           playerCount: b.players.length,
           user: b.user
@@ -214,7 +235,20 @@ export const calendarRouter = {
               }
             : null,
         })),
-        peakPeriods,
+        peakPeriods: filteredPeakPeriods.map((pp) => ({
+          name: pp.name,
+          startTime: pp.startTime,
+          endTime: pp.endTime,
+          markupPercent: pp.markupPercent,
+        })),
+        blockedSlots: blockedSlotsList.map((bs) => ({
+          id: bs.id,
+          courtId: bs.courtId,
+          startTime: bs.startTime,
+          endTime: bs.endTime,
+          reason: bs.reason,
+          notes: bs.notes,
+        })),
         stats: {
           totalBookings: activeBookings.length,
           revenueInCents: totalRevenue,
@@ -239,31 +273,47 @@ export const calendarRouter = {
       const weekEnd = addDays(mondayStart, 7);
 
       // Fetch data in parallel
-      const [courtsList, operatingHoursList, bookingsList] = await Promise.all([
-        ctx.db.query.courts.findMany({
-          where: and(
-            eq(courts.facilityId, facilityId),
-            eq(courts.isActive, true),
-          ),
-          orderBy: [asc(courts.name)],
-        }),
-        ctx.db.query.operatingHours.findMany({
-          where: eq(operatingHours.facilityId, facilityId),
-        }),
-        ctx.db.query.bookings.findMany({
-          where: and(
-            eq(bookings.facilityId, facilityId),
-            gte(bookings.date, mondayStart),
-            lt(bookings.date, weekEnd),
-          ),
-          with: {
-            court: true,
-            user: true,
-            players: true,
-          },
-          orderBy: [asc(bookings.date), asc(bookings.startTime)],
-        }),
-      ]);
+      const [courtsList, operatingHoursList, bookingsList, blockedSlotsList] =
+        await Promise.all([
+          ctx.db.query.courts.findMany({
+            where: eq(courts.facilityId, facilityId),
+            orderBy: [asc(courts.name)],
+          }),
+          ctx.db.query.operatingHours.findMany({
+            where: eq(operatingHours.facilityId, facilityId),
+          }),
+          ctx.db.query.bookings.findMany({
+            where: and(
+              eq(bookings.facilityId, facilityId),
+              gte(bookings.date, mondayStart),
+              lt(bookings.date, weekEnd),
+            ),
+            with: {
+              court: true,
+              user: true,
+              players: true,
+            },
+            orderBy: [asc(bookings.date), asc(bookings.startTime)],
+          }),
+          ctx.db.query.blockedSlots.findMany({
+            where: and(
+              eq(blockedSlots.facilityId, facilityId),
+              gte(blockedSlots.date, mondayStart),
+              lt(blockedSlots.date, weekEnd),
+            ),
+          }),
+        ]);
+
+      // Resolve booking statuses on access
+      const now = new Date();
+      const statusMap = await resolveAndPersistBookingStatuses(
+        ctx.db,
+        bookingsList,
+        now,
+      );
+
+      // Sort and filter courts
+      const sortedCourts = sortAndFilterCourts(courtsList);
 
       // Build days array
       const days = Array.from({ length: 7 }, (_, i) => {
@@ -280,7 +330,7 @@ export const calendarRouter = {
         });
 
         const activeBookings = dayBookings.filter(
-          (b) => b.status !== "cancelled",
+          (b) => (statusMap.get(b.id) ?? b.status) !== "cancelled",
         );
         const dayRevenue = activeBookings.reduce(
           (sum, b) => sum + b.priceInCents,
@@ -302,7 +352,7 @@ export const calendarRouter = {
 
       // Calculate weekly stats
       const activeBookings = bookingsList.filter(
-        (b) => b.status !== "cancelled",
+        (b) => (statusMap.get(b.id) ?? b.status) !== "cancelled",
       );
       const totalRevenue = activeBookings.reduce(
         (sum, b) => sum + b.priceInCents,
@@ -315,13 +365,13 @@ export const calendarRouter = {
         const dayBookings = bookingsList.filter(
           (b) =>
             startOfDay(b.date).getTime() === startOfDay(day.date).getTime() &&
-            b.status !== "cancelled",
+            (statusMap.get(b.id) ?? b.status) !== "cancelled",
         );
         return (
           acc +
           calculateUtilization(
             dayBookings,
-            courtsList.length,
+            sortedCourts.length,
             day.operatingHours.openTime,
             day.operatingHours.closeTime,
           )
@@ -334,7 +384,7 @@ export const calendarRouter = {
 
       return {
         weekStart: mondayStart,
-        courts: courtsList.map((c) => ({
+        courts: sortedCourts.map((c) => ({
           id: c.id,
           name: c.name,
           type: c.type,
@@ -350,7 +400,7 @@ export const calendarRouter = {
           endTime: b.endTime,
           priceInCents: b.priceInCents,
           isPeakRate: b.isPeakRate,
-          status: b.status,
+          status: statusMap.get(b.id) ?? b.status,
           customerName: b.customerName,
           playerCount: b.players.length,
           user: b.user
@@ -359,6 +409,14 @@ export const calendarRouter = {
                 email: b.user.email,
               }
             : null,
+        })),
+        blockedSlots: blockedSlotsList.map((bs) => ({
+          id: bs.id,
+          courtId: bs.courtId,
+          startTime: bs.startTime,
+          endTime: bs.endTime,
+          reason: bs.reason,
+          notes: bs.notes,
         })),
         stats: {
           totalBookings: activeBookings.length,
@@ -404,6 +462,7 @@ export const calendarRouter = {
               eq(bookings.facilityId, facilityId),
               gte(bookings.date, dayStart),
               lt(bookings.date, dayEnd),
+              ne(bookings.status, "cancelled"),
             ),
           ),
       ]);
