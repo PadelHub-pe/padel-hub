@@ -20,6 +20,7 @@ const updateMyProfileSchema = z.object({
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(100),
+  phone: z.string().max(20).nullish(),
 });
 
 // =============================================================================
@@ -36,12 +37,20 @@ export const accountRouter = {
     // Get user info
     const userRow = await ctx.db.query.user.findFirst({
       where: eq(user.id, userId),
-      columns: { id: true, name: true, email: true, image: true },
+      columns: { id: true, name: true, email: true, image: true, phone: true },
     });
 
     if (!userRow) {
       throw new Error("User not found");
     }
+
+    // Get auth provider (credential / google / null)
+    const accounts = await ctx.db.query.account.findMany({
+      where: eq(account.userId, userId),
+      columns: { providerId: true },
+    });
+    const firstProvider = accounts[0]?.providerId ?? null;
+    const authProvider = firstProvider as "credential" | "google" | null;
 
     // Get organization membership with org details
     const membership = await ctx.db.query.organizationMembers.findFirst({
@@ -69,6 +78,8 @@ export const accountRouter = {
       name: userRow.name,
       email: userRow.email,
       image: userRow.image,
+      phone: userRow.phone ?? null,
+      authProvider,
       organization: membership
         ? {
             id: membership.organization.id,
@@ -93,7 +104,10 @@ export const accountRouter = {
 
       await ctx.db
         .update(user)
-        .set({ name: input.name })
+        .set({
+          name: input.name,
+          ...(input.phone !== undefined && { phone: input.phone ?? null }),
+        })
         .where(eq(user.id, userId));
 
       return { success: true };

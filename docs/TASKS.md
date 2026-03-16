@@ -81,10 +81,10 @@ Extend `account.getMyProfile` to return `phone` and `authProvider` (credential/g
 - `packages/api/src/__tests__/account.test.ts` — new test file
 
 **Acceptance**:
-- [ ] `getMyProfile` returns `phone` (string | null) and `authProvider` ("credential" | "google" | null)
-- [ ] `updateMyProfile` accepts `{ name, phone? }` — phone validated as optional, format hint only
-- [ ] Tests: getMyProfile returns phone + authProvider, updateMyProfile updates phone
-- [ ] `pnpm test` passes
+- [x] `getMyProfile` returns `phone` (string | null) and `authProvider` ("credential" | "google" | null)
+- [x] `updateMyProfile` accepts `{ name, phone? }` — phone validated as optional, format hint only
+- [x] Tests: getMyProfile returns phone + authProvider, updateMyProfile updates phone
+- [x] `pnpm test` passes
 
 ---
 
