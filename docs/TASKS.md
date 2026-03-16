@@ -42,4 +42,162 @@ Calendar router fixes + tests, day view grid enhancements (zone backgrounds, blo
 
 ## Current
 
-_No active tasks. Ready for the next flow._
+### Flow 9: Settings (7 tasks)
+
+**Context**: Facility settings page already exists with tabs (Mi Perfil, Info del Local, Fotos, Notificaciones, Seguridad). Most sub-flows are partially or fully implemented. This flow fills the remaining gaps.
+
+---
+
+#### TASK-9.01 — Schema: add phone column to user table
+
+**Type**: config
+**Priority**: P0
+**Depends on**: —
+
+Add `phone` text column (nullable) to the `user` table in `packages/db/src/auth-schema.ts`. Run `pnpm db:push` to apply. Update seed data to include phone numbers for test accounts.
+
+**Files**:
+- `packages/db/src/auth-schema.ts` — add `phone: text("phone")` to user table
+- `packages/db/src/seed.ts` — add phone to seed users (optional)
+
+**Acceptance**:
+- [ ] `phone` column exists on `user` table (nullable text)
+- [ ] `pnpm db:push` succeeds
+- [ ] Existing data unaffected (column is nullable)
+- [ ] Comment in auth-schema.ts warning not to blindly re-run `auth:generate`
+
+---
+
+#### TASK-9.02 — API: extend account router (phone + auth provider)
+
+**Type**: feature
+**Priority**: P0
+**Depends on**: TASK-9.01
+
+Extend `account.getMyProfile` to return `phone` and `authProvider` (credential/google, derived from `account` table's `providerId`). Extend `account.updateMyProfile` to accept optional `phone` field with Peruvian format validation.
+
+**Files**:
+- `packages/api/src/router/account.ts` — extend both procedures
+- `packages/api/src/__tests__/account.test.ts` — new test file
+
+**Acceptance**:
+- [ ] `getMyProfile` returns `phone` (string | null) and `authProvider` ("credential" | "google" | null)
+- [ ] `updateMyProfile` accepts `{ name, phone? }` — phone validated as optional, format hint only
+- [ ] Tests: getMyProfile returns phone + authProvider, updateMyProfile updates phone
+- [ ] `pnpm test` passes
+
+---
+
+#### TASK-9.03 — UI: enhance profile tab (phone + avatar)
+
+**Type**: feature
+**Priority**: P0
+**Depends on**: TASK-9.02
+
+Add phone field to profile form. Add avatar upload using existing `ImageUpload` component with `entityType="user"`, `mode="single"`, `variant="avatar"`. Show Google avatar for OAuth users with option to override.
+
+**Files**:
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/profile-tab.tsx`
+
+**Acceptance**:
+- [ ] Phone field in form (optional, with format hint "+51 999 888 777")
+- [ ] Avatar upload with circular preview using ImageUpload component
+- [ ] Initials fallback when no avatar
+- [ ] Google OAuth user: shows Google avatar by default, can override
+- [ ] Email shown read-only with note "Para cambiar tu email, contacta a soporte"
+- [ ] Save updates name + phone, toast "Perfil actualizado"
+- [ ] "Guardar cambios" disabled until form is dirty
+
+---
+
+#### TASK-9.04 — UI: enable password change in security tab
+
+**Type**: feature
+**Priority**: P0
+**Depends on**: —
+
+Wire up the password change button in the security tab. Use Better Auth's client-side `changePassword` method (no tRPC router needed). Create a modal with current password, new password (strength indicator), and confirm password fields.
+
+**Files**:
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/security-tab.tsx` — enable password card, add modal trigger
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/change-password-modal.tsx` — new file
+- `packages/auth/src/client.ts` — export `changePassword` from authClient
+
+**Acceptance**:
+- [ ] "Cambiar Contraseña" button enabled (not disabled)
+- [ ] Remove "Próximamente" badge from Security tab header (keep it on 2FA/sessions only)
+- [ ] Modal: current password (required), new password (min 8, strength indicator), confirm password (must match)
+- [ ] Wrong current password → "Contraseña actual incorrecta"
+- [ ] Success → toast "Contraseña actualizada", modal closes, other sessions revoked
+- [ ] Google OAuth users: show "Tu cuenta usa Google para iniciar sesión. No tienes contraseña configurada." with option to set one
+- [ ] 2FA and sessions cards remain as disabled stubs with "Próximamente" badges
+
+---
+
+#### TASK-9.05 — RBAC: allow staff to access settings (scoped tabs)
+
+**Type**: feature
+**Priority**: P0
+**Depends on**: —
+
+Currently staff is fully redirected away from settings. The spec says staff should see 3 tabs: Mi Perfil, Notificaciones, Seguridad. Fix the page-level redirect and add role-based tab visibility.
+
+**Files**:
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/page.tsx` — remove staff redirect, pass role to view
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/facility-settings-view.tsx` — conditionally render tabs based on role
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/_components/facility-sidebar-nav.tsx` — show "Ajustes" link for all roles (remove `canConfigureFacility` permission gate)
+
+**Acceptance**:
+- [ ] Staff can navigate to `/settings` from sidebar
+- [ ] Staff sees 3 tabs: Mi Perfil, Notificaciones, Seguridad
+- [ ] Staff does NOT see: Info del Local, Fotos, Equipo
+- [ ] Admin/Manager still see all tabs
+- [ ] Staff navigating to hidden tab via URL defaults to Mi Perfil tab
+
+---
+
+#### TASK-9.06 — API + UI: facility team tab
+
+**Type**: feature
+**Priority**: P1
+**Depends on**: TASK-9.05
+
+Add "Equipo" tab to facility settings showing team members scoped to this facility. Reuse team columns and dialogs from org settings. Add `facilityId` filter to `org.getTeamMembers` or create a new query.
+
+**Files**:
+- `packages/api/src/router/org.ts` — add optional `facilityId` filter to `getTeamMembers`
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/facility-team-tab.tsx` — new file
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/facility-settings-view.tsx` — add Equipo tab
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/page.tsx` — prefetch team data
+
+**Acceptance**:
+- [ ] "Equipo" tab visible for admin + manager, hidden for staff
+- [ ] Shows team members who have access to this facility
+- [ ] Org admins always listed (access all facilities)
+- [ ] Managers/staff filtered to those assigned to this facility
+- [ ] Admin: "Invitar Miembro" button (opens Flow 3 invite dialog)
+- [ ] Manager: "Invitar Staff" button (scoped to this facility, staff role only)
+- [ ] Edit/remove use same modals from org settings (Flow 3)
+- [ ] Pending invites for this facility shown
+- [ ] Empty state: "No hay equipo asignado a este local"
+
+---
+
+#### TASK-9.07 — Polish: unsaved changes warning + sidebar sync
+
+**Type**: feature
+**Priority**: P1
+**Depends on**: TASK-9.03
+
+Add unsaved changes warning when navigating away from dirty forms (profile, facility info). Ensure updated name/avatar reflects immediately in the sidebar user section.
+
+**Files**:
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/profile-tab.tsx` — add beforeunload handler
+- `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/facility-info-tab.tsx` — add beforeunload handler
+- Sidebar component — ensure it reads from the same query that profile tab invalidates
+
+**Acceptance**:
+- [ ] Browser warns when navigating away from dirty profile form
+- [ ] Browser warns when navigating away from dirty facility info form
+- [ ] Updated name reflected immediately in sidebar after save
+- [ ] Updated avatar reflected immediately in sidebar after save
