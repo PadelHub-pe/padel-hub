@@ -645,9 +645,14 @@ export const orgRouter = {
     }),
 
   getTeamMembers: protectedProcedure
-    .input(z.object({ organizationId: z.string().uuid() }))
+    .input(
+      z.object({
+        organizationId: z.string().uuid(),
+        facilityId: z.string().uuid().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      const { organizationId } = input;
+      const { organizationId, facilityId } = input;
 
       const membership = await verifyOrgMembership(ctx, organizationId);
 
@@ -730,20 +735,50 @@ export const orgRouter = {
       }));
 
       // Apply facility scoping for managers
-      const filteredMembers = isManager
+      let filteredMembers = isManager
         ? memberList.filter((m) => isVisibleToManager(m.facilityIds, m.role))
         : memberList;
-      const filteredInvites = isManager
+      let filteredInvites = isManager
         ? inviteList.filter((inv) =>
             isVisibleToManager(inv.facilityIds, inv.role),
           )
         : inviteList;
 
+      // Apply facility-specific filter when facilityId is provided
+      if (facilityId) {
+        const fId = facilityId;
+        const hasAccessToFacility = (
+          memberFacilityIds: string[],
+          memberRole: string,
+        ): boolean => {
+          if (memberRole === "org_admin") return true;
+          if (
+            memberRole === "facility_manager" &&
+            memberFacilityIds.length === 0
+          )
+            return true;
+          return memberFacilityIds.includes(fId);
+        };
+
+        filteredMembers = filteredMembers.filter((m) =>
+          hasAccessToFacility(m.facilityIds, m.role),
+        );
+        filteredInvites = filteredInvites.filter((inv) =>
+          hasAccessToFacility(inv.facilityIds, inv.role),
+        );
+      }
+
+      // Scope facilities list
+      let scopedFacilities = isManager
+        ? orgFacilities.filter((f) => callerFacilityIds.includes(f.id))
+        : orgFacilities;
+      if (facilityId) {
+        scopedFacilities = scopedFacilities.filter((f) => f.id === facilityId);
+      }
+
       return {
         members: [...filteredMembers, ...filteredInvites],
-        facilities: isManager
-          ? orgFacilities.filter((f) => callerFacilityIds.includes(f.id))
-          : orgFacilities,
+        facilities: scopedFacilities,
       };
     }),
 

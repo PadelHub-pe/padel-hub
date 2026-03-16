@@ -25,12 +25,22 @@ export default async function FacilitySettingsPage({
   prefetch(trpc.account.getSecurityInfo.queryOptions());
   if (org.role !== "staff") {
     prefetch(trpc.facility.getProfile.queryOptions({ facilityId }));
+    prefetch(
+      trpc.org.getTeamMembers.queryOptions({
+        organizationId: org.id,
+        facilityId,
+      }),
+    );
   }
 
   return (
     <HydrateClient>
       <Suspense fallback={<SettingsPageSkeleton />}>
-        <FacilitySettingsView facilityId={facilityId} userRole={org.role} />
+        <FacilitySettingsView
+          facilityId={facilityId}
+          organizationId={org.id}
+          userRole={org.role}
+        />
       </Suspense>
     </HydrateClient>
   );

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wifo/ui/tabs";
 
 import { FacilityInfoTab } from "./facility-info-tab";
 import { FacilityPhotosTab } from "./facility-photos-tab";
+import { FacilityTeamTab } from "./facility-team-tab";
 import { NotificationsTab } from "./notifications-tab";
 import { ProfileTab } from "./profile-tab";
 import { SecurityTab } from "./security-tab";
@@ -17,11 +18,13 @@ const STAFF_TABS = new Set(["profile", "notifications", "security"]);
 
 interface FacilitySettingsViewProps {
   facilityId: string;
+  organizationId: string;
   userRole: OrgRole;
 }
 
 export function FacilitySettingsView({
   facilityId,
+  organizationId,
   userRole,
 }: FacilitySettingsViewProps) {
   const isStaff = userRole === "staff";
@@ -52,6 +55,7 @@ export function FacilitySettingsView({
             <TabsTrigger value="facility">Info del Local</TabsTrigger>
           )}
           {!isStaff && <TabsTrigger value="photos">Fotos</TabsTrigger>}
+          {!isStaff && <TabsTrigger value="team">Equipo</TabsTrigger>}
           <TabsTrigger value="notifications" className="gap-2">
             Notificaciones
             <Badge variant="secondary" className="ml-1 text-[10px]">
@@ -74,6 +78,15 @@ export function FacilitySettingsView({
         {!isStaff && (
           <TabsContent value="photos">
             <FacilityPhotosTab facilityId={facilityId} />
+          </TabsContent>
+        )}
+
+        {!isStaff && (
+          <TabsContent value="team">
+            <FacilityTeamTab
+              organizationId={organizationId}
+              facilityId={facilityId}
+            />
           </TabsContent>
         )}
 

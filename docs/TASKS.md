@@ -171,15 +171,15 @@ Add "Equipo" tab to facility settings showing team members scoped to this facili
 - `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/page.tsx` — prefetch team data
 
 **Acceptance**:
-- [ ] "Equipo" tab visible for admin + manager, hidden for staff
-- [ ] Shows team members who have access to this facility
-- [ ] Org admins always listed (access all facilities)
-- [ ] Managers/staff filtered to those assigned to this facility
-- [ ] Admin: "Invitar Miembro" button (opens Flow 3 invite dialog)
-- [ ] Manager: "Invitar Staff" button (scoped to this facility, staff role only)
-- [ ] Edit/remove use same modals from org settings (Flow 3)
-- [ ] Pending invites for this facility shown
-- [ ] Empty state: "No hay equipo asignado a este local"
+- [x] "Equipo" tab visible for admin + manager, hidden for staff
+- [x] Shows team members who have access to this facility
+- [x] Org admins always listed (access all facilities)
+- [x] Managers/staff filtered to those assigned to this facility
+- [x] Admin: "Invitar Miembro" button (opens Flow 3 invite dialog)
+- [x] Manager: "Invitar Staff" button (scoped to this facility, staff role only)
+- [x] Edit/remove use same modals from org settings (Flow 3)
+- [x] Pending invites for this facility shown
+- [x] Empty state: "No hay equipo asignado a este local"
 
 ---
 

@@ -459,6 +459,158 @@ describe("org.getTeamMembers – facility_manager scoping", () => {
 });
 
 // ===========================================================================
+// Tests: getTeamMembers – facilityId filter
+// ===========================================================================
+
+describe("org.getTeamMembers – facilityId filter", () => {
+  const adminMember = makeMemberWithUser(
+    USER_ADMIN.id,
+    "org_admin",
+    [],
+    USER_ADMIN.email,
+  );
+  const managerAB = makeMemberWithUser(
+    USER_MANAGER.id,
+    "facility_manager",
+    [FACILITY_A, FACILITY_B],
+    USER_MANAGER.email,
+  );
+  const managerAll = makeMemberWithUser(
+    "00000000-0000-1000-a000-000000000203",
+    "facility_manager",
+    [],
+    "mgr-all@test.com",
+  );
+  const staffA = makeMemberWithUser(
+    "00000000-0000-1000-a000-000000000201",
+    "staff",
+    [FACILITY_A],
+    "staff-a@test.com",
+  );
+  const staffC = makeMemberWithUser(
+    "00000000-0000-1000-a000-000000000202",
+    "staff",
+    [FACILITY_C],
+    "staff-c@test.com",
+  );
+
+  it("filters members to those with access to the specified facility", async () => {
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [adminMember, managerAB, staffA, staffC, managerAll],
+      pendingInvites: [],
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    const result = await caller.org.getTeamMembers({
+      organizationId: ORG_ID,
+      facilityId: FACILITY_A,
+    });
+
+    const emails = result.members.map((m) => m.email);
+    // org_admin always included
+    expect(emails).toContain(USER_ADMIN.email);
+    // manager with FACILITY_A in facilityIds
+    expect(emails).toContain(USER_MANAGER.email);
+    // manager with empty facilityIds (all-facility access)
+    expect(emails).toContain("mgr-all@test.com");
+    // staff with FACILITY_A
+    expect(emails).toContain("staff-a@test.com");
+    // staff with only FACILITY_C — excluded
+    expect(emails).not.toContain("staff-c@test.com");
+  });
+
+  it("filters invites by facility", async () => {
+    const inviteA = makeInvite("inv-a@test.com", "staff", [FACILITY_A]);
+    const inviteC = makeInvite("inv-c@test.com", "staff", [FACILITY_C]);
+    const inviteAdmin = makeInvite("inv-admin@test.com", "org_admin", []);
+
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [adminMember],
+      pendingInvites: [inviteA, inviteC, inviteAdmin],
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    const result = await caller.org.getTeamMembers({
+      organizationId: ORG_ID,
+      facilityId: FACILITY_A,
+    });
+
+    const inviteEmails = result.members
+      .filter((m) => m.type === "invite")
+      .map((m) => m.email);
+    expect(inviteEmails).toContain("inv-a@test.com");
+    expect(inviteEmails).toContain("inv-admin@test.com");
+    expect(inviteEmails).not.toContain("inv-c@test.com");
+  });
+
+  it("returns only the specified facility in facilities list", async () => {
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [adminMember],
+      pendingInvites: [],
+      facilities: [
+        { id: FACILITY_A, name: "Facility A" },
+        { id: FACILITY_B, name: "Facility B" },
+        { id: FACILITY_C, name: "Facility C" },
+      ],
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    const result = await caller.org.getTeamMembers({
+      organizationId: ORG_ID,
+      facilityId: FACILITY_A,
+    });
+
+    expect(result.facilities).toHaveLength(1);
+    expect(result.facilities[0]).toEqual(
+      expect.objectContaining({ id: FACILITY_A }),
+    );
+  });
+
+  it("combines facilityId filter with facility_manager scoping", async () => {
+    // Manager has access to A and B; filter by A
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_MANAGER.id, "facility_manager", [
+        FACILITY_A,
+        FACILITY_B,
+      ]),
+      allMembers: [adminMember, managerAB, staffA, staffC, managerAll],
+      pendingInvites: [],
+    });
+    const caller = authedCaller(db, USER_MANAGER);
+
+    const result = await caller.org.getTeamMembers({
+      organizationId: ORG_ID,
+      facilityId: FACILITY_A,
+    });
+
+    const emails = result.members.map((m) => m.email);
+    expect(emails).toContain(USER_ADMIN.email);
+    expect(emails).toContain(USER_MANAGER.email);
+    expect(emails).toContain("staff-a@test.com");
+    expect(emails).toContain("mgr-all@test.com");
+    expect(emails).not.toContain("staff-c@test.com");
+  });
+
+  it("without facilityId returns all members (no facility filter)", async () => {
+    const db = createMockDb({
+      callerMembership: makeMembership(USER_ADMIN.id, "org_admin"),
+      allMembers: [adminMember, managerAB, staffA, staffC],
+      pendingInvites: [],
+    });
+    const caller = authedCaller(db, USER_ADMIN);
+
+    const result = await caller.org.getTeamMembers({
+      organizationId: ORG_ID,
+    });
+
+    expect(result.members).toHaveLength(4);
+  });
+});
+
+// ===========================================================================
 // Tests: inviteMember – duplicate prevention
 // ===========================================================================
 
