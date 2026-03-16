@@ -58,12 +58,7 @@ export function FacilitySettingsView({
               Pronto
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            Seguridad
-            <Badge variant="secondary" className="ml-1 text-[10px]">
-              Pronto
-            </Badge>
-          </TabsTrigger>
+          <TabsTrigger value="security">Seguridad</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">

@@ -22,6 +22,7 @@ export default async function FacilitySettingsPage({
 
   // Prefetch data in parallel
   prefetch(trpc.account.getMyProfile.queryOptions());
+  prefetch(trpc.account.getSecurityInfo.queryOptions());
   if (org.role !== "staff") {
     prefetch(trpc.facility.getProfile.queryOptions({ facilityId }));
   }

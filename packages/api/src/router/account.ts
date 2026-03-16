@@ -2,7 +2,12 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { facilities, organizationMembers, user } from "@wifo/db/schema";
+import {
+  account,
+  facilities,
+  organizationMembers,
+  user,
+} from "@wifo/db/schema";
 
 import { protectedProcedure } from "../trpc";
 
@@ -93,4 +98,20 @@ export const accountRouter = {
 
       return { success: true };
     }),
+  /**
+   * Get security info for current user (auth providers)
+   */
+  getSecurityInfo: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const accounts = await ctx.db.query.account.findMany({
+      where: eq(account.userId, userId),
+      columns: { providerId: true },
+    });
+
+    const hasCredential = accounts.some((a) => a.providerId === "credential");
+    const hasGoogle = accounts.some((a) => a.providerId === "google");
+
+    return { hasCredential, hasGoogle };
+  }),
 } satisfies TRPCRouterRecord;

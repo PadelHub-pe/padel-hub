@@ -1,16 +1,48 @@
 "use client";
 
+import { useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+
+import { forgetPassword } from "@wifo/auth/client";
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
+import { toast } from "@wifo/ui/toast";
+
+import { useTRPC } from "~/trpc/react";
+import { ChangePasswordModal } from "./change-password-modal";
 
 export function SecurityTab() {
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [sendingResetEmail, setSendingResetEmail] = useState(false);
+  const trpc = useTRPC();
+  const { data: securityInfo } = useSuspenseQuery(
+    trpc.account.getSecurityInfo.queryOptions(),
+  );
+  const { data: profile } = useSuspenseQuery(
+    trpc.account.getMyProfile.queryOptions(),
+  );
+
+  const isGoogleOnly = securityInfo.hasGoogle && !securityInfo.hasCredential;
+
+  async function handleSetPassword() {
+    setSendingResetEmail(true);
+    try {
+      await forgetPassword({
+        email: profile.email,
+        redirectTo: "/reset-password",
+      });
+      toast.success("Te enviamos un email para configurar tu contraseña");
+    } catch {
+      toast.error("Error al enviar el email");
+    } finally {
+      setSendingResetEmail(false);
+    }
+  }
+
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
-          <Badge variant="secondary">Próximamente</Badge>
-        </div>
+        <h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
         <p className="mt-1 text-sm text-gray-500">
           Administra la seguridad de tu cuenta
         </p>
@@ -18,21 +50,43 @@ export function SecurityTab() {
 
       <div className="space-y-4">
         {/* Password */}
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-5">
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-200">
-              <LockIcon className="h-5 w-5 text-gray-500" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
+              <LockIcon className="h-5 w-5 text-gray-600" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900">Contraseña</p>
-              <p className="text-xs text-gray-500">
-                Última actualización hace 30 días
-              </p>
+              {isGoogleOnly ? (
+                <p className="max-w-xs text-xs text-gray-500">
+                  Tu cuenta usa Google para iniciar sesión. No tienes contraseña
+                  configurada.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Cambia tu contraseña periódicamente para mayor seguridad
+                </p>
+              )}
             </div>
           </div>
-          <Button variant="outline" size="sm" disabled>
-            Cambiar Contraseña
-          </Button>
+          {isGoogleOnly ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSetPassword}
+              disabled={sendingResetEmail}
+            >
+              {sendingResetEmail ? "Enviando..." : "Configurar Contraseña"}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPasswordModalOpen(true)}
+            >
+              Cambiar Contraseña
+            </Button>
+          )}
         </div>
 
         {/* 2FA */}
@@ -50,9 +104,12 @@ export function SecurityTab() {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" disabled>
-            Activar 2FA
-          </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Próximamente</Badge>
+            <Button variant="outline" size="sm" disabled>
+              Activar 2FA
+            </Button>
+          </div>
         </div>
 
         {/* Sessions */}
@@ -70,11 +127,19 @@ export function SecurityTab() {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" disabled>
-            Gestionar Sesiones
-          </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Próximamente</Badge>
+            <Button variant="outline" size="sm" disabled>
+              Gestionar Sesiones
+            </Button>
+          </div>
         </div>
       </div>
+
+      <ChangePasswordModal
+        open={passwordModalOpen}
+        onOpenChange={setPasswordModalOpen}
+      />
     </div>
   );
 }

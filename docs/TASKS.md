@@ -110,7 +110,7 @@ Add phone field to profile form. Add avatar upload using existing `ImageUpload` 
 
 ---
 
-#### TASK-9.04 — UI: enable password change in security tab
+#### TASK-9.04 — UI: enable password change in security tab ✅
 
 **Type**: feature
 **Priority**: P0
@@ -124,13 +124,13 @@ Wire up the password change button in the security tab. Use Better Auth's client
 - `packages/auth/src/client.ts` — export `changePassword` from authClient
 
 **Acceptance**:
-- [ ] "Cambiar Contraseña" button enabled (not disabled)
-- [ ] Remove "Próximamente" badge from Security tab header (keep it on 2FA/sessions only)
-- [ ] Modal: current password (required), new password (min 8, strength indicator), confirm password (must match)
-- [ ] Wrong current password → "Contraseña actual incorrecta"
-- [ ] Success → toast "Contraseña actualizada", modal closes, other sessions revoked
-- [ ] Google OAuth users: show "Tu cuenta usa Google para iniciar sesión. No tienes contraseña configurada." with option to set one
-- [ ] 2FA and sessions cards remain as disabled stubs with "Próximamente" badges
+- [x] "Cambiar Contraseña" button enabled (not disabled)
+- [x] Remove "Próximamente" badge from Security tab header (keep it on 2FA/sessions only)
+- [x] Modal: current password (required), new password (min 8, strength indicator), confirm password (must match)
+- [x] Wrong current password → "Contraseña actual incorrecta"
+- [x] Success → toast "Contraseña actualizada", modal closes, other sessions revoked
+- [x] Google OAuth users: show "Tu cuenta usa Google para iniciar sesión. No tienes contraseña configurada." with option to set one
+- [x] 2FA and sessions cards remain as disabled stubs with "Próximamente" badges
 
 ---
 
