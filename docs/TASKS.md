@@ -134,7 +134,7 @@ Wire up the password change button in the security tab. Use Better Auth's client
 
 ---
 
-#### TASK-9.05 — RBAC: allow staff to access settings (scoped tabs)
+#### TASK-9.05 — RBAC: allow staff to access settings (scoped tabs) ✅
 
 **Type**: feature
 **Priority**: P0
@@ -148,11 +148,11 @@ Currently staff is fully redirected away from settings. The spec says staff shou
 - `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/_components/facility-sidebar-nav.tsx` — show "Ajustes" link for all roles (remove `canConfigureFacility` permission gate)
 
 **Acceptance**:
-- [ ] Staff can navigate to `/settings` from sidebar
-- [ ] Staff sees 3 tabs: Mi Perfil, Notificaciones, Seguridad
-- [ ] Staff does NOT see: Info del Local, Fotos, Equipo
-- [ ] Admin/Manager still see all tabs
-- [ ] Staff navigating to hidden tab via URL defaults to Mi Perfil tab
+- [x] Staff can navigate to `/settings` from sidebar
+- [x] Staff sees 3 tabs: Mi Perfil, Notificaciones, Seguridad
+- [x] Staff does NOT see: Info del Local, Fotos, Equipo
+- [x] Admin/Manager still see all tabs
+- [x] Staff navigating to hidden tab via URL defaults to Mi Perfil tab
 
 ---
 

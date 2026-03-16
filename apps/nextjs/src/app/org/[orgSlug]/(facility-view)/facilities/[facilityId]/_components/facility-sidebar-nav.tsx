@@ -74,7 +74,6 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
           label: "Ajustes",
           href: `${base}/settings`,
           icon: SettingsIcon,
-          permission: "canConfigureFacility",
         },
       ],
     },

@@ -13,22 +13,23 @@ export default async function FacilitySettingsPage({
 }: FacilitySettingsPageProps) {
   const { orgSlug, facilityId } = await params;
 
-  // Staff cannot access facility settings
   const caller = await api();
   const organizations = await caller.org.getMyOrganizations();
   const org = organizations.find((o) => o.slug === orgSlug);
-  if (org?.role === "staff") {
+  if (!org) {
     redirect(`/org/${orgSlug}/facilities/${facilityId}`);
   }
 
   // Prefetch data in parallel
   prefetch(trpc.account.getMyProfile.queryOptions());
-  prefetch(trpc.facility.getProfile.queryOptions({ facilityId }));
+  if (org.role !== "staff") {
+    prefetch(trpc.facility.getProfile.queryOptions({ facilityId }));
+  }
 
   return (
     <HydrateClient>
       <Suspense fallback={<SettingsPageSkeleton />}>
-        <FacilitySettingsView facilityId={facilityId} />
+        <FacilitySettingsView facilityId={facilityId} userRole={org.role} />
       </Suspense>
     </HydrateClient>
   );
