@@ -1,12 +1,16 @@
 import { relations } from "drizzle-orm";
 import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
+// WARNING: Do not blindly re-run `pnpm auth:generate` — it will overwrite
+// custom columns (e.g. `phone`) that are not part of Better Auth's base schema.
+// If you need to regenerate, manually merge the diff to preserve custom fields.
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  phone: text("phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

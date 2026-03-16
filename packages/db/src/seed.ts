@@ -162,6 +162,7 @@ async function seed() {
       name: "Carlos Mendoza",
       email: testEmail,
       emailVerified: true,
+      phone: "+51999888777",
     });
 
     await db.insert(account).values({
@@ -182,6 +183,7 @@ async function seed() {
       name: "Ana García",
       email: managerEmail,
       emailVerified: true,
+      phone: "+51987654321",
     });
 
     await db.insert(account).values({
@@ -202,6 +204,7 @@ async function seed() {
       name: "Luis Vargas",
       email: staffEmail,
       emailVerified: true,
+      phone: "+51912345678",
     });
 
     await db.insert(account).values({

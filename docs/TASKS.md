@@ -61,10 +61,10 @@ Add `phone` text column (nullable) to the `user` table in `packages/db/src/auth-
 - `packages/db/src/seed.ts` — add phone to seed users (optional)
 
 **Acceptance**:
-- [ ] `phone` column exists on `user` table (nullable text)
-- [ ] `pnpm db:push` succeeds
-- [ ] Existing data unaffected (column is nullable)
-- [ ] Comment in auth-schema.ts warning not to blindly re-run `auth:generate`
+- [x] `phone` column exists on `user` table (nullable text)
+- [x] `pnpm db:push` succeeds
+- [x] Existing data unaffected (column is nullable)
+- [x] Comment in auth-schema.ts warning not to blindly re-run `auth:generate`
 
 ---
 
