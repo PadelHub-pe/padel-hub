@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   useMutation,
@@ -15,6 +14,7 @@ import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
 import type { CancelBookingInfo } from "../../_components/cancel-booking-dialog";
+import { useSetBreadcrumbEntity } from "~/components/navigation";
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingStatusBadge } from "../../_components/booking-status-badge";
@@ -28,13 +28,16 @@ import { PlayerGrid } from "./player-grid";
 export function BookingDetailView() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { facilityId, basePath } = useFacilityContext();
+  const { facilityId } = useFacilityContext();
   const { bookingId } = useParams<{ bookingId: string }>();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: booking } = useSuspenseQuery(
     trpc.booking.getById.queryOptions({ facilityId, id: bookingId }),
   );
+
+  // Set breadcrumb entity label for the layout-level breadcrumbs
+  useSetBreadcrumbEntity(booking.code);
 
   const confirmMutation = useMutation(
     trpc.booking.confirm.mutationOptions({
@@ -73,20 +76,8 @@ export function BookingDetailView() {
   return (
     <>
       <div className="p-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500">
-          <Link
-            href={`${basePath}/bookings`}
-            className="hover:text-gray-700 hover:underline"
-          >
-            Reservas
-          </Link>
-          <ChevronRightIcon className="h-4 w-4" />
-          <span className="font-medium text-gray-900">{booking.code}</span>
-        </nav>
-
         {/* Header row */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-mono text-2xl font-semibold text-blue-600">
               {booking.code}
@@ -173,22 +164,4 @@ function buildCancelInfo(booking: {
     timeRange: `${st} - ${et}`,
     playerCount: booking.playerCount,
   };
-}
-
-function ChevronRightIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-      />
-    </svg>
-  );
 }

@@ -9,6 +9,7 @@ import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 
+import { useSetBreadcrumbEntity } from "~/components/navigation";
 import { getClientImageUrl } from "~/lib/image-url";
 import { useTRPC } from "~/trpc/react";
 
@@ -63,19 +64,13 @@ export function CourtView({ id }: CourtViewProps) {
 
   const basePath = `/org/${orgSlug}/facilities/${facilityId}`;
 
+  // Set breadcrumb entity label for the layout-level breadcrumbs
+  useSetBreadcrumbEntity(court.name);
+
   return (
     <div className="p-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href={`${basePath}/courts`} className="hover:text-gray-700">
-          Canchas
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900">{court.name}</span>
-      </nav>
-
       {/* Header */}
-      <header className="mt-4 flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-gray-900">{court.name}</h1>
           <Badge variant={status.variant}>{status.label}</Badge>

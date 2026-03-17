@@ -178,7 +178,9 @@ In `(facility-view)/facilities/[facilityId]/layout.tsx`:
 
 ---
 
-#### TASK-10.06: Breadcrumbs component
+#### TASK-10.06: Breadcrumbs component ✅
+
+- [x] Completed
 
 **Type:** feature | **Priority:** P1
 

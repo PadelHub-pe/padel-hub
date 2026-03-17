@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getSession } from "~/auth/server";
+import { BreadcrumbProvider, Breadcrumbs } from "~/components/navigation";
 import { api } from "~/trpc/server";
 import { FacilitySidebar } from "./_components/facility-sidebar";
 
@@ -96,7 +97,18 @@ export default async function FacilityLayout({
         userName={session.user.name}
         userImage={session.user.image}
       />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto">
+        <BreadcrumbProvider>
+          <Breadcrumbs
+            orgName={currentOrg.name}
+            orgSlug={orgSlug}
+            facilityName={facility.name}
+            facilityId={facilityId}
+            userRole={currentOrg.role}
+          />
+          {children}
+        </BreadcrumbProvider>
+      </main>
     </div>
   );
 }

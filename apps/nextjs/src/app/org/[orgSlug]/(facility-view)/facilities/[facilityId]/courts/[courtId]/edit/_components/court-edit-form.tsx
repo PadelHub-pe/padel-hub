@@ -11,6 +11,7 @@ import { Button } from "@wifo/ui/button";
 import { Form } from "@wifo/ui/form";
 import { toast } from "@wifo/ui/toast";
 
+import { useSetBreadcrumbEntity } from "~/components/navigation";
 import { useTRPC } from "~/trpc/react";
 import { BasicInfoSection } from "../../_components/basic-info-section";
 import { CourtTypeSection } from "../../_components/court-type-section";
@@ -125,25 +126,15 @@ export function CourtEditForm({ id }: CourtEditFormProps) {
     deleteMutation.mutate({ facilityId, id });
   }
 
+  // Set breadcrumb entity label for the layout-level breadcrumbs
+  useSetBreadcrumbEntity(court.name);
+
   return (
     <div className="p-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href={`${basePath}/courts`} className="hover:text-gray-700">
-          Canchas
-        </Link>
-        <span>/</span>
-        <Link href={`${basePath}/courts/${id}`} className="hover:text-gray-700">
-          {court.name}
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900">Editar</span>
-      </nav>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           {/* Header */}
-          <header className="mt-4 flex items-center justify-between">
+          <header className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold text-gray-900">
               Editar {court.name}
             </h1>
