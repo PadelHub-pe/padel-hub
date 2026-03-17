@@ -50,4 +50,28 @@ Sidebar alignment, breadcrumbs, mobile nav, role-based landing, route guards, si
 
 ## Current
 
-(No active flow — ready for next flow)
+### E2E Testing — Playwright MCP (10 tasks)
+
+See `docs/TECHNICAL_PLAN.md` for full architecture and rationale.
+
+#### Phase 1: Infrastructure
+
+- [x] TASK-E2E.01 — Create `docs/e2e/` directory structure + README with execution protocol
+- [x] TASK-E2E.02 — Write smoke test suite (`docs/e2e/smoke.md`) + verify Playwright MCP connectivity
+
+#### Phase 2: Core Flow Suites
+
+- [x] TASK-E2E.03 — Suite A (Auth & Access) + Suite I (Navigation)
+- [x] TASK-E2E.04 — Suite B (Org Management) + Suite C (Team & RBAC)
+- [x] TASK-E2E.05 — Suite D (Facility Onboarding) + Suite H (Settings)
+- [x] TASK-E2E.06 — Suite E (Schedule & Pricing) + Suite F (Booking Management)
+- [x] TASK-E2E.07 — Suite G (Calendar)
+
+#### Phase 3: Cross-Cutting Suites
+
+- [x] TASK-E2E.08 — RBAC matrix + error states
+- [x] TASK-E2E.09 — Mobile responsive
+
+#### Phase 4: Validation
+
+- [ ] TASK-E2E.10 — Full suite run, fix gaps, update docs
