@@ -1,12 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
-import { signOut } from "@wifo/auth/client";
 import { getAvatarUrl } from "@wifo/images/url";
 import { Avatar, AvatarFallback, AvatarImage } from "@wifo/ui/avatar";
-import { Button } from "@wifo/ui/button";
 
+import { SignOutButton } from "~/components/sign-out-button";
 import { OrgSelector } from "./org-selector";
 import { OrgSidebarNav } from "./org-sidebar-nav";
 
@@ -33,8 +30,6 @@ export function OrgSidebar({
   userName,
   userImage,
 }: OrgSidebarProps) {
-  const router = useRouter();
-
   const avatarUrl = getAvatarUrl(userImage ?? null);
   const initials = userName
     ? userName
@@ -44,11 +39,6 @@ export function OrgSidebar({
         .toUpperCase()
         .slice(0, 2)
     : userEmail.charAt(0).toUpperCase();
-
-  async function handleSignOut() {
-    await signOut();
-    router.push("/login");
-  }
 
   return (
     <aside className="flex h-screen w-64 flex-col bg-gray-900 text-white">
@@ -86,34 +76,8 @@ export function OrgSidebar({
             <p className="truncate text-xs text-gray-400">{userEmail}</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSignOut}
-          className="mt-3 w-full justify-start text-gray-400 hover:bg-gray-800 hover:text-white"
-        >
-          <LogoutIcon className="mr-2 h-4 w-4" />
-          Cerrar sesión
-        </Button>
+        <SignOutButton />
       </div>
     </aside>
-  );
-}
-
-function LogoutIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
-      />
-    </svg>
   );
 }

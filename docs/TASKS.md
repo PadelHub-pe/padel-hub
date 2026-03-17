@@ -129,7 +129,7 @@ Three enhancements to the facility switcher dropdown:
 
 ---
 
-#### TASK-10.04: Sign out confirmation dialog
+#### TASK-10.04: Sign out confirmation dialog ✅
 
 **Type:** feature | **Priority:** P0
 
