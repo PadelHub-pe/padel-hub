@@ -100,13 +100,13 @@ Add phone field to profile form. Add avatar upload using existing `ImageUpload` 
 - `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/profile-tab.tsx`
 
 **Acceptance**:
-- [ ] Phone field in form (optional, with format hint "+51 999 888 777")
-- [ ] Avatar upload with circular preview using ImageUpload component
-- [ ] Initials fallback when no avatar
-- [ ] Google OAuth user: shows Google avatar by default, can override
-- [ ] Email shown read-only with note "Para cambiar tu email, contacta a soporte"
-- [ ] Save updates name + phone, toast "Perfil actualizado"
-- [ ] "Guardar cambios" disabled until form is dirty
+- [x] Phone field in form (optional, with format hint "+51 999 888 777")
+- [x] Avatar upload with circular preview using ImageUpload component
+- [x] Initials fallback when no avatar
+- [x] Google OAuth user: shows Google avatar by default, can override
+- [x] Email shown read-only with note "Para cambiar tu email, contacta a soporte"
+- [x] Save updates name + phone, toast "Perfil actualizado"
+- [x] "Guardar cambios" disabled until form is dirty
 
 ---
 

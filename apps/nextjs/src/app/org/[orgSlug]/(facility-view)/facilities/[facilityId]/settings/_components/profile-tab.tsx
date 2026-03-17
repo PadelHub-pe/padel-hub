@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
@@ -22,6 +23,7 @@ import {
 import { Input } from "@wifo/ui/input";
 import { toast } from "@wifo/ui/toast";
 
+import { ImageUpload } from "~/components/images/ImageUpload";
 import { useTRPC } from "~/trpc/react";
 
 const profileSchema = z.object({
@@ -29,6 +31,11 @@ const profileSchema = z.object({
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(100),
+  phone: z
+    .string()
+    .max(20, "Máximo 20 caracteres")
+    .optional()
+    .or(z.literal("")),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -53,10 +60,22 @@ export function ProfileTab() {
     trpc.account.getMyProfile.queryOptions(),
   );
 
+  const [avatarValue, setAvatarValue] = useState<string[]>(
+    profile.image ? [profile.image] : [],
+  );
+
+  function handleAvatarChange(ids: string[]) {
+    setAvatarValue(ids);
+    void queryClient.invalidateQueries(
+      trpc.account.getMyProfile.queryOptions(),
+    );
+  }
+
   const form = useForm<ProfileFormValues>({
     resolver: standardSchemaResolver(profileSchema),
     defaultValues: {
       name: profile.name,
+      phone: profile.phone ?? "",
     },
   });
 
@@ -75,7 +94,10 @@ export function ProfileTab() {
   );
 
   function onSubmit(values: ProfileFormValues) {
-    updateProfile.mutate({ name: values.name });
+    updateProfile.mutate({
+      name: values.name,
+      phone: values.phone !== "" ? values.phone : null,
+    });
   }
 
   const initials = profile.name
@@ -99,15 +121,60 @@ export function ProfileTab() {
         </div>
 
         {/* Avatar */}
-        <div className="mb-8 flex items-center gap-4">
-          <div className="from-primary-500 to-primary-700 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br text-xl font-bold text-white">
-            {initials}
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">{profile.name}</p>
-            <p className="text-xs text-gray-500">
-              La carga de foto estará disponible próximamente
-            </p>
+        <div className="mb-8">
+          <p className="mb-2 text-sm font-medium text-gray-900">
+            Foto de perfil
+          </p>
+          <div className="flex items-center gap-5">
+            <div className="relative h-20 w-20">
+              {avatarValue.length > 0 ? (
+                <ImageUpload
+                  entityType="user"
+                  entityId={profile.id}
+                  mode="single"
+                  value={avatarValue}
+                  onChange={handleAvatarChange}
+                  variant="avatar"
+                  aspectRatio="1/1"
+                  placeholder=""
+                  className="[&_img]:rounded-full"
+                />
+              ) : (
+                <div className="relative h-full w-full">
+                  <div className="from-primary-500 to-primary-700 flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br text-2xl font-bold text-white">
+                    {initials}
+                  </div>
+                  <div className="absolute inset-0">
+                    <ImageUpload
+                      entityType="user"
+                      entityId={profile.id}
+                      mode="single"
+                      value={avatarValue}
+                      onChange={handleAvatarChange}
+                      variant="avatar"
+                      aspectRatio="1/1"
+                      placeholder=""
+                      className="h-full w-full rounded-full opacity-0 hover:opacity-100 [&>div]:rounded-full"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {profile.name}
+              </p>
+              {profile.authProvider === "google" && !profile.image && (
+                <p className="text-xs text-gray-500">
+                  Sube una foto o usaremos tu avatar de Google
+                </p>
+              )}
+              {!profile.image && profile.authProvider !== "google" && (
+                <p className="text-xs text-gray-500">
+                  Haz clic para subir una foto
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -135,9 +202,26 @@ export function ProfileTab() {
                 className="mt-1.5 bg-gray-50"
               />
               <p className="mt-1 text-xs text-gray-400">
-                El email no puede ser modificado desde aquí
+                Para cambiar tu email, contacta a soporte
               </p>
             </div>
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teléfono</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+51 999 888 777" {...field} />
+                  </FormControl>
+                  <p className="text-xs text-gray-400">
+                    Formato sugerido: +51 999 888 777
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {form.formState.errors.root && (
               <div className="text-sm text-red-500">
