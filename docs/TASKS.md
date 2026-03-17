@@ -104,7 +104,7 @@ Add the back-to-org link at the top of the facility sidebar, visible only for `o
 
 ---
 
-#### TASK-10.03: Facility switcher enhancements
+#### TASK-10.03: Facility switcher enhancements ✅
 
 **Type:** feature | **Priority:** P0
 

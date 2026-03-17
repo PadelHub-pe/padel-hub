@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { cn } from "@wifo/ui";
 import { Button } from "@wifo/ui/button";
@@ -48,6 +48,54 @@ function getGradient(index: number) {
   return gradients[index % gradients.length]!;
 }
 
+/** Pages that can be preserved when switching facilities */
+const PRESERVABLE_SEGMENTS = new Set([
+  "bookings",
+  "courts",
+  "schedule",
+  "pricing",
+  "settings",
+]);
+
+/** Sub-pages that should be fully preserved (not collapsed to parent) */
+const PRESERVABLE_SUB_PAGES = new Set(["bookings/calendar"]);
+
+/**
+ * Compute the target path when switching between facilities.
+ * - Preserves the current page segment (e.g., /bookings, /courts)
+ * - Collapses detail pages to list pages (e.g., /courts/[id] → /courts)
+ * - Navigates to facility root for non-preservable pages (e.g., /setup)
+ */
+export function getFacilitySwitchPath(
+  currentPathname: string,
+  basePath: string,
+  currentFacilityId: string,
+  newFacilityId: string,
+): string {
+  const currentFacilityPath = `${basePath}/${currentFacilityId}`;
+
+  const relativePath = currentPathname.startsWith(currentFacilityPath)
+    ? currentPathname.slice(currentFacilityPath.length)
+    : "";
+
+  const segments = relativePath.replace(/^\//, "").split("/").filter(Boolean);
+
+  const firstSegment = segments[0];
+  if (!firstSegment || !PRESERVABLE_SEGMENTS.has(firstSegment)) {
+    return `${basePath}/${newFacilityId}`;
+  }
+
+  if (segments.length >= 2) {
+    const subPage = `${firstSegment}/${segments[1]}`;
+    if (PRESERVABLE_SUB_PAGES.has(subPage)) {
+      return `${basePath}/${newFacilityId}/${subPage}`;
+    }
+    return `${basePath}/${newFacilityId}/${firstSegment}`;
+  }
+
+  return `${basePath}/${newFacilityId}/${firstSegment}`;
+}
+
 export function FacilitySwitcher({
   currentFacilityId,
   facilities,
@@ -55,12 +103,44 @@ export function FacilitySwitcher({
   userRole,
 }: FacilitySwitcherProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const currentFacility = facilities.find((f) => f.id === currentFacilityId);
 
   if (!currentFacility) return null;
 
   const currentIndex = facilities.findIndex((f) => f.id === currentFacilityId);
   const basePath = `/org/${organization.slug}/facilities`;
+  const isSingleFacility = facilities.length === 1;
+
+  const facilityInfoBlock = (
+    <>
+      <div
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-sm font-bold text-white",
+          getGradient(currentIndex),
+        )}
+      >
+        {currentFacility.name.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex flex-1 flex-col truncate">
+        <span className="truncate text-sm font-semibold text-white">
+          {currentFacility.name}
+        </span>
+        <span className="truncate text-xs text-gray-400">
+          {currentFacility.district}
+        </span>
+      </div>
+    </>
+  );
+
+  // Single facility: show info only, no dropdown
+  if (isSingleFacility) {
+    return (
+      <div className="flex w-full items-center gap-3 px-4 py-3">
+        {facilityInfoBlock}
+      </div>
+    );
+  }
 
   return (
     <DropdownMenu>
@@ -69,22 +149,7 @@ export function FacilitySwitcher({
           variant="ghost"
           className="h-auto w-full justify-start gap-3 px-4 py-3 text-left hover:bg-gray-800"
         >
-          <div
-            className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-sm font-bold text-white",
-              getGradient(currentIndex),
-            )}
-          >
-            {currentFacility.name.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex flex-1 flex-col truncate">
-            <span className="truncate text-sm font-semibold text-white">
-              {currentFacility.name}
-            </span>
-            <span className="truncate text-xs text-gray-400">
-              {currentFacility.district}
-            </span>
-          </div>
+          {facilityInfoBlock}
           <ChevronUpDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
         </Button>
       </DropdownMenuTrigger>
@@ -119,17 +184,25 @@ export function FacilitySwitcher({
         </DropdownMenuLabel>
         {facilities.map((facility, index) => {
           const isCurrent = facility.id === currentFacilityId;
+          const isInactive = !facility.isActive;
           return (
             <DropdownMenuItem
               key={facility.id}
               onClick={() => {
                 if (!isCurrent) {
-                  router.push(`${basePath}/${facility.id}`);
+                  const targetPath = getFacilitySwitchPath(
+                    pathname,
+                    basePath,
+                    currentFacilityId,
+                    facility.id,
+                  );
+                  router.push(targetPath);
                 }
               }}
               className={cn(
                 "cursor-pointer text-gray-200 focus:bg-gray-700 focus:text-white",
                 isCurrent && "bg-gray-700",
+                isInactive && "opacity-50",
               )}
             >
               <div className="flex w-full items-center gap-3">
@@ -142,9 +215,16 @@ export function FacilitySwitcher({
                   {facility.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-1 flex-col truncate">
-                  <span className="truncate text-sm font-medium">
-                    {facility.name}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-medium">
+                      {facility.name}
+                    </span>
+                    {isInactive && (
+                      <span className="shrink-0 rounded bg-gray-600 px-1.5 py-0.5 text-[10px] font-medium text-gray-300">
+                        Inactivo
+                      </span>
+                    )}
+                  </div>
                   <span className="truncate text-xs text-gray-400">
                     {facility.district}
                   </span>
