@@ -100,7 +100,13 @@ export async function middleware(request: NextRequest) {
   const authResponse = checkAuth(request);
   if (authResponse) return authResponse;
 
-  return NextResponse.next();
+  // Pass pathname to server components via request header
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {

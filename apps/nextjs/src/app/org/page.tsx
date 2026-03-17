@@ -15,11 +15,35 @@ export default async function OrgIndexPage() {
   const caller = await api();
   const organizations = await caller.org.getMyOrganizations();
 
-  // Determine where the user normally goes
+  // Determine where the user normally goes based on role
   const firstOrg = organizations[0];
-  const defaultRedirect = firstOrg
-    ? `/org/${firstOrg.slug}/facilities`
-    : "/no-organization";
+  let defaultRedirect = "/no-organization";
+
+  if (firstOrg) {
+    if (firstOrg.role === "org_admin") {
+      // Admins land on the facilities list (org-level view)
+      defaultRedirect = `/org/${firstOrg.slug}/facilities`;
+    } else {
+      // Managers and staff land on their first accessible facility
+      const facilities = await caller.org.getFacilities({
+        organizationId: firstOrg.id,
+        status: "all",
+        sortBy: "name",
+      });
+      const firstFacility = facilities[0];
+
+      if (!firstFacility) {
+        // No accessible facilities — show empty state
+        defaultRedirect = `/org/${firstOrg.slug}/facilities`;
+      } else if (firstOrg.role === "staff") {
+        // Staff land directly on bookings
+        defaultRedirect = `/org/${firstOrg.slug}/facilities/${firstFacility.id}/bookings`;
+      } else {
+        // Facility managers land on the facility dashboard
+        defaultRedirect = `/org/${firstOrg.slug}/facilities/${firstFacility.id}`;
+      }
+    }
+  }
 
   // Check for pending invites
   const pendingInvites = await caller.invite.getPendingInvites();

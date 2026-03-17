@@ -147,7 +147,9 @@ Replace direct sign-out with a lightweight confirmation popover.
 
 ---
 
-#### TASK-10.05: Role-based landing pages + staff route guards
+#### TASK-10.05: Role-based landing pages + staff route guards ✅
+
+- [x] Completed
 
 **Type:** feature | **Priority:** P0
 

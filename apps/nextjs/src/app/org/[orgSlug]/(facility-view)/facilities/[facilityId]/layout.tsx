@@ -1,8 +1,17 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getSession } from "~/auth/server";
 import { api } from "~/trpc/server";
 import { FacilitySidebar } from "./_components/facility-sidebar";
+
+/** Routes that staff members are not allowed to access */
+const STAFF_RESTRICTED_SEGMENTS = [
+  "/courts",
+  "/schedule",
+  "/pricing",
+  "/settings",
+];
 
 interface FacilityLayoutProps {
   children: React.ReactNode;
@@ -48,6 +57,22 @@ export default async function FacilityLayout({
       );
     }
     redirect(`/org/${orgSlug}/facilities`);
+  }
+
+  // Staff route guard: prevent access to config pages via direct URL
+  if (currentOrg.role === "staff") {
+    const headersList = await headers();
+    const pathname = headersList.get("x-pathname") ?? "";
+    const facilityBasePath = `/org/${orgSlug}/facilities/${facilityId}`;
+    const subPath = pathname.slice(facilityBasePath.length);
+
+    const isRestricted = STAFF_RESTRICTED_SEGMENTS.some(
+      (segment) => subPath === segment || subPath.startsWith(`${segment}/`),
+    );
+
+    if (isRestricted) {
+      redirect(`/org/${orgSlug}/facilities/${facilityId}/bookings`);
+    }
   }
 
   return (
