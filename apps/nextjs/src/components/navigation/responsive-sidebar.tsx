@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { getAvatarUrl } from "@wifo/images/url";
@@ -22,6 +22,16 @@ export function ResponsiveSidebar({
   userAvatarUrl,
   userName,
 }: ResponsiveSidebarProps) {
+  // Defer Sheet mount until after hydration to prevent Radix UI auto-generated
+  // ID mismatches. The Sheet (Dialog.Root) allocates useId() slots that shift
+  // the ID tree between SSR and client when the sidebar's Radix components
+  // (DropdownMenu, Popover) are also present. Since the Sheet starts closed and
+  // is only visible on mobile, deferring it has no visual impact.
+  const [sheetMounted, setSheetMounted] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => setSheetMounted(true));
+  }, []);
+
   // Track the pathname at which the sheet was opened.
   // When pathname changes (nav link clicked), the derived `open` becomes false.
   const [sheetState, setSheetState] = useState({ open: false, pathname: "" });
@@ -64,17 +74,19 @@ export function ResponsiveSidebar({
         </Avatar>
       </header>
 
-      {/* Mobile sidebar sheet */}
-      <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent
-          side="left"
-          className="w-64 border-gray-800 bg-gray-900 p-0"
-          showCloseButton={false}
-        >
-          <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-          {sidebar}
-        </SheetContent>
-      </Sheet>
+      {/* Mobile sidebar sheet — deferred to avoid hydration mismatch */}
+      {sheetMounted && (
+        <Sheet open={open} onOpenChange={handleOpenChange}>
+          <SheetContent
+            side="left"
+            className="w-64 border-gray-800 bg-gray-900 p-0"
+            showCloseButton={false}
+          >
+            <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
+            {sidebar}
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Main content — top padding on mobile for fixed header */}
       <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">{children}</main>
