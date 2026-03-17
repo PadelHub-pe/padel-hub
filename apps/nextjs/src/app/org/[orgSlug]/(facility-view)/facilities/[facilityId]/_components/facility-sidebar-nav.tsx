@@ -26,11 +26,13 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
   const base = `/org/${orgSlug}/facilities/${facilityId}`;
   return [
     {
+      title: "GENERAL",
       items: [
         {
           label: "Dashboard",
           href: base,
           icon: DashboardIcon,
+          permission: "canConfigureFacility",
         },
         {
           label: "Canchas",
@@ -41,10 +43,10 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
       ],
     },
     {
-      title: "RESERVAS",
+      title: "OPERACIONES",
       items: [
         {
-          label: "Lista",
+          label: "Reservas",
           href: `${base}/bookings`,
           icon: ListIcon,
         },
@@ -71,9 +73,10 @@ function getNavSections(orgSlug: string, facilityId: string): NavSection[] {
           permission: "canConfigureFacility",
         },
         {
-          label: "Ajustes",
+          label: "Configuración",
           href: `${base}/settings`,
           icon: SettingsIcon,
+          permission: "canConfigureFacility",
         },
       ],
     },

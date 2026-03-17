@@ -55,7 +55,7 @@ Align existing sidebar architecture with spec, add missing navigation features (
 
 ---
 
-#### TASK-10.01: Align sidebar nav items with spec
+#### ~~TASK-10.01: Align sidebar nav items with spec~~ - [x] Done
 
 **Type:** refactor | **Priority:** P0
 
