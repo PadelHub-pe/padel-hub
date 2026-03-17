@@ -241,26 +241,15 @@ export function FacilitySwitcher({
 
         {/* Role-based actions */}
         {userRole === "org_admin" && (
-          <>
-            <DropdownMenuItem asChild>
-              <Link
-                href={basePath}
-                className="cursor-pointer text-gray-200 focus:bg-gray-700 focus:text-white"
-              >
-                <BuildingIcon className="mr-2 h-4 w-4 text-gray-400" />
-                Ajustes de organización
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                href={`${basePath}/new`}
-                className="cursor-pointer text-gray-200 focus:bg-gray-700 focus:text-white"
-              >
-                <PlusIcon className="mr-2 h-4 w-4 text-gray-400" />
-                Agregar sede
-              </Link>
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem asChild>
+            <Link
+              href={`${basePath}/new`}
+              className="cursor-pointer text-gray-200 focus:bg-gray-700 focus:text-white"
+            >
+              <PlusIcon className="mr-2 h-4 w-4 text-gray-400" />
+              Agregar sede
+            </Link>
+          </DropdownMenuItem>
         )}
         <DropdownMenuItem asChild>
           <Link
@@ -307,24 +296,6 @@ function CheckIcon({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M4.5 12.75l6 6 9-13.5"
-      />
-    </svg>
-  );
-}
-
-function BuildingIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
       />
     </svg>
   );

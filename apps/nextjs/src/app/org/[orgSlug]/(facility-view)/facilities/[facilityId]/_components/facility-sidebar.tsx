@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { getAvatarUrl } from "@wifo/images/url";
 import { Avatar, AvatarFallback, AvatarImage } from "@wifo/ui/avatar";
 
@@ -56,8 +58,17 @@ export function FacilitySidebar({
         <span className="text-xl font-semibold">PadelHub</span>
       </div>
 
-      {/* Facility Switcher */}
+      {/* Back to organization (org_admin only) + Facility Switcher */}
       <div className="border-b border-gray-800 py-1">
+        {userRole === "org_admin" && (
+          <Link
+            href={`/org/${organization.slug}/facilities`}
+            className="flex items-center gap-1.5 px-4 pt-2 pb-1 text-sm text-gray-400 transition-colors hover:text-white"
+          >
+            <ArrowLeftIcon className="h-3.5 w-3.5" />
+            Volver a Organización
+          </Link>
+        )}
         <FacilitySwitcher
           currentFacilityId={facilityId}
           facilities={facilities}
@@ -90,5 +101,23 @@ export function FacilitySidebar({
         <SignOutButton />
       </div>
     </aside>
+  );
+}
+
+function ArrowLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+      />
+    </svg>
   );
 }

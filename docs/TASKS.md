@@ -83,7 +83,7 @@ Align org and facility sidebar navigation items with Flow 10 spec. Remove phanto
 
 ---
 
-#### TASK-10.02: Add "← Volver a Organización" link + facility sidebar fixes
+#### ~~TASK-10.02: Add "← Volver a Organización" link + facility sidebar fixes~~ - [x] Done
 
 **Type:** feature | **Priority:** P0
 
