@@ -4,4 +4,5 @@ export default defineWorkspace([
   "packages/api/vitest.config.ts",
   "packages/images/vitest.config.ts",
   "packages/validators/vitest.config.ts",
+  "apps/nextjs/vitest.config.ts",
 ]);

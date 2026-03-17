@@ -241,7 +241,9 @@ Make the sidebar responsive for tablet and mobile viewports.
 
 ---
 
-#### TASK-10.08: 404 page + navigation edge cases
+#### TASK-10.08: 404 page + navigation edge cases ✅
+
+- [x] Completed
 
 **Type:** feature | **Priority:** P1
 
