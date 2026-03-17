@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
@@ -24,6 +25,7 @@ import { Input } from "@wifo/ui/input";
 import { toast } from "@wifo/ui/toast";
 
 import { ImageUpload } from "~/components/images/ImageUpload";
+import { useUnsavedChanges } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 
 const profileSchema = z.object({
@@ -55,6 +57,7 @@ const ROLE_COLORS: Record<string, string> = {
 export function ProfileTab() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data: profile } = useSuspenseQuery(
     trpc.account.getMyProfile.queryOptions(),
@@ -69,6 +72,8 @@ export function ProfileTab() {
     void queryClient.invalidateQueries(
       trpc.account.getMyProfile.queryOptions(),
     );
+    // Re-render server layout so sidebar avatar updates
+    router.refresh();
   }
 
   const form = useForm<ProfileFormValues>({
@@ -79,13 +84,18 @@ export function ProfileTab() {
     },
   });
 
+  useUnsavedChanges(form.formState.isDirty);
+
   const updateProfile = useMutation(
     trpc.account.updateMyProfile.mutationOptions({
       onSuccess: () => {
         void queryClient.invalidateQueries(
           trpc.account.getMyProfile.queryOptions(),
         );
+        form.reset(form.getValues());
         toast.success("Perfil actualizado");
+        // Re-render server layout so sidebar name/avatar updates
+        router.refresh();
       },
       onError: (error) => {
         form.setError("root", { message: error.message });

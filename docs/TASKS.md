@@ -197,7 +197,7 @@ Add unsaved changes warning when navigating away from dirty forms (profile, faci
 - Sidebar component — ensure it reads from the same query that profile tab invalidates
 
 **Acceptance**:
-- [ ] Browser warns when navigating away from dirty profile form
-- [ ] Browser warns when navigating away from dirty facility info form
-- [ ] Updated name reflected immediately in sidebar after save
-- [ ] Updated avatar reflected immediately in sidebar after save
+- [x] Browser warns when navigating away from dirty profile form
+- [x] Browser warns when navigating away from dirty facility info form
+- [x] Updated name reflected immediately in sidebar after save
+- [x] Updated avatar reflected immediately in sidebar after save

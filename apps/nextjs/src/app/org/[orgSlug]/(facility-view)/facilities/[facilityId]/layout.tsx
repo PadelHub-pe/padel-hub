@@ -69,6 +69,7 @@ export default async function FacilityLayout({
         userRole={currentOrg.role}
         userEmail={session.user.email}
         userName={session.user.name}
+        userImage={session.user.image}
       />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>

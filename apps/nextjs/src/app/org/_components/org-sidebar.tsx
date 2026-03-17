@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 
 import { signOut } from "@wifo/auth/client";
-import { Avatar, AvatarFallback } from "@wifo/ui/avatar";
+import { getAvatarUrl } from "@wifo/images/url";
+import { Avatar, AvatarFallback, AvatarImage } from "@wifo/ui/avatar";
 import { Button } from "@wifo/ui/button";
 
 import { OrgSelector } from "./org-selector";
@@ -22,6 +23,7 @@ interface OrgSidebarProps {
   currentRole: Organization["role"];
   userEmail: string;
   userName?: string;
+  userImage?: string | null;
 }
 
 export function OrgSidebar({
@@ -29,9 +31,11 @@ export function OrgSidebar({
   currentRole,
   userEmail,
   userName,
+  userImage,
 }: OrgSidebarProps) {
   const router = useRouter();
 
+  const avatarUrl = getAvatarUrl(userImage ?? null);
   const initials = userName
     ? userName
         .split(" ")
@@ -70,6 +74,7 @@ export function OrgSidebar({
       <div className="border-t border-gray-800 p-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={userName ?? ""} />}
             <AvatarFallback className="bg-gray-700 text-sm text-gray-200">
               {initials}
             </AvatarFallback>

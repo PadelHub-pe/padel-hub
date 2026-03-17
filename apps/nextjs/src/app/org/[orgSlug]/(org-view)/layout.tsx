@@ -26,6 +26,7 @@ export default async function OrgViewLayout({
         currentRole={currentOrg?.role ?? "staff"}
         userEmail={session?.user.email ?? ""}
         userName={session?.user.name ?? ""}
+        userImage={session?.user.image}
       />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>

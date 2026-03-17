@@ -24,7 +24,7 @@ import { Input } from "@wifo/ui/input";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
 
-import { useFacilityContext } from "~/hooks";
+import { useFacilityContext, useUnsavedChanges } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 
 const facilityInfoSchema = z.object({
@@ -72,12 +72,15 @@ export function FacilityInfoTab({ facilityId }: FacilityInfoTabProps) {
     },
   });
 
+  useUnsavedChanges(form.formState.isDirty);
+
   const updateProfile = useMutation(
     trpc.facility.updateProfile.mutationOptions({
       onSuccess: () => {
         void queryClient.invalidateQueries(
           trpc.facility.getProfile.queryOptions({ facilityId }),
         );
+        form.reset(form.getValues());
         toast.success("Local actualizado");
       },
       onError: (error) => {
