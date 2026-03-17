@@ -4,3 +4,4 @@ export {
   useBreadcrumbEntity,
   useSetBreadcrumbEntity,
 } from "./breadcrumb-context";
+export { ResponsiveSidebar } from "./responsive-sidebar";

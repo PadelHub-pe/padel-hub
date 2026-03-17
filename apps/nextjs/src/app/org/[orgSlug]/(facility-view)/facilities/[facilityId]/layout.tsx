@@ -2,7 +2,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getSession } from "~/auth/server";
-import { BreadcrumbProvider, Breadcrumbs } from "~/components/navigation";
+import {
+  BreadcrumbProvider,
+  Breadcrumbs,
+  ResponsiveSidebar,
+} from "~/components/navigation";
 import { api } from "~/trpc/server";
 import { FacilitySidebar } from "./_components/facility-sidebar";
 
@@ -76,39 +80,54 @@ export default async function FacilityLayout({
     }
   }
 
+  const userName = session.user.name;
+  const userEmail = session.user.email;
+  const userInitials = userName
+    ? userName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : userEmail.charAt(0).toUpperCase();
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      <FacilitySidebar
-        facilityId={facilityId}
-        facilities={facilities.map((f) => ({
-          id: f.id,
-          name: f.name,
-          district: f.district,
-          isActive: f.isActive,
-          isSetupComplete: f.isSetupComplete,
-        }))}
-        organization={{
-          name: currentOrg.name,
-          slug: currentOrg.slug,
-          logoUrl: currentOrg.logoUrl,
-        }}
-        userRole={currentOrg.role}
-        userEmail={session.user.email}
-        userName={session.user.name}
-        userImage={session.user.image}
-      />
-      <main className="flex-1 overflow-y-auto">
-        <BreadcrumbProvider>
-          <Breadcrumbs
-            orgName={currentOrg.name}
-            orgSlug={orgSlug}
-            facilityName={facility.name}
-            facilityId={facilityId}
-            userRole={currentOrg.role}
-          />
-          {children}
-        </BreadcrumbProvider>
-      </main>
-    </div>
+    <ResponsiveSidebar
+      sidebar={
+        <FacilitySidebar
+          facilityId={facilityId}
+          facilities={facilities.map((f) => ({
+            id: f.id,
+            name: f.name,
+            district: f.district,
+            isActive: f.isActive,
+            isSetupComplete: f.isSetupComplete,
+          }))}
+          organization={{
+            name: currentOrg.name,
+            slug: currentOrg.slug,
+            logoUrl: currentOrg.logoUrl,
+          }}
+          userRole={currentOrg.role}
+          userEmail={userEmail}
+          userName={userName}
+          userImage={session.user.image}
+        />
+      }
+      userInitials={userInitials}
+      userAvatarUrl={session.user.image ?? null}
+      userName={userName}
+    >
+      <BreadcrumbProvider>
+        <Breadcrumbs
+          orgName={currentOrg.name}
+          orgSlug={orgSlug}
+          facilityName={facility.name}
+          facilityId={facilityId}
+          userRole={currentOrg.role}
+        />
+        {children}
+      </BreadcrumbProvider>
+    </ResponsiveSidebar>
   );
 }
