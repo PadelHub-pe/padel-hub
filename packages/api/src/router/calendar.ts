@@ -330,7 +330,8 @@ export const calendarRouter = {
       // Build days array
       const days = Array.from({ length: 7 }, (_, i) => {
         const dayDate = addDays(mondayStart, i);
-        const dayOfWeek = getLimaDayOfWeek(dayDate);
+        // Mon=1, Tue=2, ..., Sat=6, Sun=0 — derived from index since we start on Monday
+        const dayOfWeek = (i + 1) % 7;
         const dayOperatingHours = getOperatingHoursForDay(
           operatingHoursList,
           dayOfWeek,

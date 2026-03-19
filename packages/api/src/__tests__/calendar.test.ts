@@ -22,8 +22,8 @@ const COURT_ID_2 = "40000000-0000-4000-8000-000000000042";
 const COURT_ID_3 = "40000000-0000-4000-8000-000000000043";
 const BOOKING_ID = "40000000-0000-4000-8000-000000000050";
 
-// 2026-03-18T00:00Z → March 17 in Lima (UTC-5) = Tuesday, dayOfWeek = 2
-const TEST_DATE = new Date("2026-03-18");
+// Tuesday March 17, 2026 — dayOfWeek = 2 (noon UTC avoids TZ drift)
+const TEST_DATE = new Date("2026-03-17T15:00:00Z");
 
 // =============================================================================
 // Factories
@@ -550,7 +550,7 @@ describe("calendar.getWeekView", () => {
     });
     const caller = authedCaller(db);
 
-    // March 18 is Wednesday, so weekStart should be aligned to Monday March 16
+    // March 17 is Tuesday, so weekStart should be aligned to Monday March 16
     const result = await caller.calendar.getWeekView({
       facilityId: FACILITY_ID,
       weekStart: TEST_DATE,

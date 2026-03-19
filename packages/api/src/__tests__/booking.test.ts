@@ -518,7 +518,7 @@ describe("booking.createManual", () => {
     return {
       facilityId: FACILITY_ID,
       courtId: COURT_ID,
-      date: new Date(2026, 2, 12), // Thursday
+      date: new Date("2026-03-12T15:00:00Z"), // Thursday
       startTime: "10:00",
       endTime: "11:30",
       customerName: "Juan Pérez",
@@ -1185,7 +1185,7 @@ describe("booking.getSlotInfo", () => {
     // Sunday = 0
     const result = await caller.booking.getSlotInfo({
       facilityId: FACILITY_ID,
-      date: new Date(2026, 2, 15), // March 15, 2026 = Sunday
+      date: new Date("2026-03-15T15:00:00Z"), // Sunday
     });
 
     expect(result.operatingHours).toBeDefined();
@@ -1200,7 +1200,7 @@ describe("booking.getSlotInfo", () => {
 
     const result = await caller.booking.getSlotInfo({
       facilityId: FACILITY_ID,
-      date: new Date(2026, 2, 15),
+      date: new Date("2026-03-15T15:00:00Z"),
     });
 
     expect(result.operatingHours).toEqual({
@@ -1232,7 +1232,7 @@ describe("booking.getSlotInfo", () => {
     // Sunday = 0
     const result = await caller.booking.getSlotInfo({
       facilityId: FACILITY_ID,
-      date: new Date(2026, 2, 15), // Sunday
+      date: new Date("2026-03-15T15:00:00Z"), // Sunday
     });
 
     // Only the Sunday peak period should be included
@@ -1259,7 +1259,7 @@ describe("booking.getSlotInfo", () => {
 
     const result = await caller.booking.getSlotInfo({
       facilityId: FACILITY_ID,
-      date: new Date(2026, 2, 15),
+      date: new Date("2026-03-15T15:00:00Z"),
     });
 
     expect(result.existingBookings).toHaveLength(1);
@@ -1282,7 +1282,7 @@ describe("booking.getSlotInfo", () => {
 
     const result = await caller.booking.getSlotInfo({
       facilityId: FACILITY_ID,
-      date: new Date(2026, 2, 15),
+      date: new Date("2026-03-15T15:00:00Z"),
     });
 
     expect(result.blockedSlots).toHaveLength(1);

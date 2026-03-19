@@ -190,8 +190,8 @@ function makeCreateManualInput(overrides?: Record<string, unknown>) {
   return {
     facilityId: FACILITY_ID,
     courtId: COURT_ID,
-    // Thursday = dayOfWeek 4 in local time
-    date: new Date(2026, 2, 12),
+    // Thursday March 12, 2026 — dayOfWeek 4 (noon UTC avoids TZ drift)
+    date: new Date("2026-03-12T15:00:00Z"),
     startTime: "10:00",
     endTime: "11:30",
     customerName: "Juan Pérez",
@@ -491,7 +491,7 @@ describe("booking.calculatePrice — price preview", () => {
     const result = await caller.booking.calculatePrice({
       facilityId: FACILITY_ID,
       courtId: COURT_ID,
-      date: new Date(2026, 2, 12),
+      date: new Date("2026-03-12T15:00:00Z"),
       startTime: "10:00",
       endTime: "11:30",
     });
@@ -521,7 +521,7 @@ describe("booking.calculatePrice — price preview", () => {
     const result = await caller.booking.calculatePrice({
       facilityId: FACILITY_ID,
       courtId: COURT_ID,
-      date: new Date(2026, 2, 12),
+      date: new Date("2026-03-12T15:00:00Z"),
       startTime: "18:00",
       endTime: "19:30",
     });
@@ -551,7 +551,7 @@ describe("booking.calculatePrice — price preview", () => {
     const result = await caller.booking.calculatePrice({
       facilityId: FACILITY_ID,
       courtId: COURT_ID,
-      date: new Date(2026, 2, 12),
+      date: new Date("2026-03-12T15:00:00Z"),
       startTime: "17:00",
       endTime: "18:30",
     });
@@ -582,7 +582,7 @@ describe("booking.calculatePrice — price preview", () => {
     const result = await caller.booking.calculatePrice({
       facilityId: FACILITY_ID,
       courtId: COURT_ID,
-      date: new Date(2026, 2, 12),
+      date: new Date("2026-03-12T15:00:00Z"),
       startTime: "17:30",
       endTime: "18:30",
     });
