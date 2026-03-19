@@ -14,6 +14,7 @@ import {
 
 import { verifyFacilityAccess } from "../lib/access-control";
 import { protectedProcedure } from "../trpc";
+import { getLimaDayOfWeek } from "../utils/schedule";
 
 // =============================================================================
 // Input Schemas
@@ -617,7 +618,7 @@ export const scheduleRouter = {
 
       const dayStart = startOfDay(date);
       const dayEnd = addDays(dayStart, 1);
-      const dayOfWeek = date.getDay(); // 0 = Sunday
+      const dayOfWeek = getLimaDayOfWeek(date);
 
       // Fetch all data in parallel
       const [

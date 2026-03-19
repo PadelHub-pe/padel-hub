@@ -4,6 +4,22 @@
  * Pure logic — no DB dependencies. Consumed by Flows 6, 7, and 8.
  */
 
+import { toZonedTime } from "date-fns-tz";
+
+const LIMA_TZ = "America/Lima";
+
+// =============================================================================
+// Timezone
+// =============================================================================
+
+/**
+ * Get the day of week (0=Sunday .. 6=Saturday) in America/Lima timezone.
+ * Avoids timezone drift when the server runs in UTC (e.g. CI, production).
+ */
+export function getLimaDayOfWeek(date: Date): number {
+  return toZonedTime(date, LIMA_TZ).getDay();
+}
+
 // =============================================================================
 // Types
 // =============================================================================

@@ -43,6 +43,7 @@ import {
 } from "../lib/booking-status-persist";
 import { protectedProcedure } from "../trpc";
 import {
+  getLimaDayOfWeek,
   getRateForSlot,
   getTimeZoneWithMarkup,
   parseTimeToMinutes,
@@ -606,7 +607,7 @@ export const bookingRouter = {
       }
 
       // --- Server-side price calculation ---
-      const dayOfWeek = input.date.getDay();
+      const dayOfWeek = getLimaDayOfWeek(input.date);
       const dateStr = `${input.date.getFullYear()}-${(input.date.getMonth() + 1).toString().padStart(2, "0")}-${input.date.getDate().toString().padStart(2, "0")}`;
 
       const [hoursList, periodsList, blockedSlotsList, facility] =
@@ -1048,7 +1049,7 @@ export const bookingRouter = {
 
       const dayStart = startOfDay(date);
       const dayEnd = startOfDay(addDays(date, 1));
-      const dayOfWeek = date.getDay(); // 0 = Sunday
+      const dayOfWeek = getLimaDayOfWeek(date);
 
       const [
         operatingHoursList,
@@ -1161,7 +1162,7 @@ export const bookingRouter = {
 
       const dayStart = startOfDay(date);
       const dayEnd = startOfDay(addDays(date, 1));
-      const dayOfWeek = date.getDay();
+      const dayOfWeek = getLimaDayOfWeek(date);
       const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
       const [hoursList, periodsList, blockedSlotsList, facility] =

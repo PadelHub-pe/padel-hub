@@ -20,6 +20,7 @@ import {
 import { verifyFacilityAccess } from "../lib/access-control";
 import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
 import { protectedProcedure } from "../trpc";
+import { getLimaDayOfWeek } from "../utils/schedule";
 
 // =============================================================================
 // Input Schemas
@@ -135,7 +136,7 @@ export const calendarRouter = {
       // Get the day boundaries
       const dayStart = startOfDay(date);
       const dayEnd = startOfDay(addDays(date, 1));
-      const dayOfWeek = date.getDay(); // 0 = Sunday
+      const dayOfWeek = getLimaDayOfWeek(date);
 
       // Fetch data in parallel
       const [
@@ -329,7 +330,7 @@ export const calendarRouter = {
       // Build days array
       const days = Array.from({ length: 7 }, (_, i) => {
         const dayDate = addDays(mondayStart, i);
-        const dayOfWeek = dayDate.getDay();
+        const dayOfWeek = getLimaDayOfWeek(dayDate);
         const dayOperatingHours = getOperatingHoursForDay(
           operatingHoursList,
           dayOfWeek,
@@ -450,7 +451,7 @@ export const calendarRouter = {
 
       const dayStart = startOfDay(date);
       const dayEnd = startOfDay(addDays(date, 1));
-      const dayOfWeek = date.getDay();
+      const dayOfWeek = getLimaDayOfWeek(date);
 
       const [courtsList, operatingHoursList, statsResult] = await Promise.all([
         ctx.db.query.courts.findMany({

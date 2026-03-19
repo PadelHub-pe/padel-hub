@@ -11,6 +11,8 @@ import {
   peakPeriods,
 } from "@wifo/db/schema";
 
+import { getLimaDayOfWeek } from "../utils/schedule";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -98,7 +100,7 @@ export async function getFacilityForCalendar(
 ) {
   const dayStart = startOfDay(date);
   const dayEnd = addDays(dayStart, 1);
-  const dayOfWeek = date.getDay(); // 0 = Sunday
+  const dayOfWeek = getLimaDayOfWeek(date);
 
   // Fetch all data in parallel
   const [
