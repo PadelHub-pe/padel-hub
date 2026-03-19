@@ -86,6 +86,14 @@ function checkAuth(request: NextRequest): NextResponse | null {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Redirect bare /org/[slug] to /org/[slug]/facilities (avoid server component redirect loop)
+  const orgSlugMatch = /^\/org\/([^/]+)$/.exec(pathname);
+  if (orgSlugMatch) {
+    return NextResponse.redirect(
+      new URL(`/org/${orgSlugMatch[1]}/facilities`, request.url),
+    );
+  }
+
   return null;
 }
 

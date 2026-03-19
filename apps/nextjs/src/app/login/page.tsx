@@ -70,9 +70,8 @@ export default function LoginPage() {
             ? "Cuenta bloqueada temporalmente. Intenta en 15 minutos."
             : "Email o contraseña incorrectos";
         form.setError("root", { message });
-      } else {
-        router.push("/org");
       }
+      // Navigation is handled by the useEffect when session updates
     } catch (error) {
       const isNetworkError =
         error instanceof TypeError && error.message === "Failed to fetch";
