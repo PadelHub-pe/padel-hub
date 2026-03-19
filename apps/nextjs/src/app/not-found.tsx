@@ -1,11 +1,16 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 px-4 text-center">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold text-white">
-        P
-      </div>
+      <Image
+        src="/images/logomark-reversed.svg"
+        alt="PadelHub"
+        width={56}
+        height={56}
+        className="mb-6 h-14 w-auto"
+      />
       <h1 className="text-4xl font-bold text-white">404</h1>
       <p className="mt-2 text-lg text-gray-400">Página no encontrada</p>
       <p className="mt-1 text-sm text-gray-500">

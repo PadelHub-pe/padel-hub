@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { DM_Sans, Geist_Mono, Sora } from "next/font/google";
 
 import { cn } from "@wifo/ui";
 import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
@@ -25,6 +25,19 @@ export const metadata: Metadata = {
       "Manage your padel courts, bookings, and grow your business with PadelHub",
     url: "https://dashboard.padelhub.pe",
     siteName: "PadelHub",
+    images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -35,9 +48,13 @@ export const viewport: Viewport = {
   ],
 };
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
+});
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-sora",
 });
 const geistMono = Geist_Mono({
   subsets: ["latin"],
@@ -50,7 +67,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
-          inter.variable,
+          dmSans.variable,
+          sora.variable,
           geistMono.variable,
         )}
       >

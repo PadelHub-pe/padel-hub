@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -116,9 +117,11 @@ export function FacilitySwitcher({
         <div className="flex items-center gap-3 px-3 py-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-xs font-bold text-white">
             {organization.logoUrl ? (
-              <img
+              <Image
                 src={organization.logoUrl}
                 alt={organization.name}
+                width={28}
+                height={28}
                 className="h-7 w-7 rounded-md object-cover"
               />
             ) : (

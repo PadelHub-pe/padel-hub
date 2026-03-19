@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@wifo/ui/button";
@@ -14,6 +15,13 @@ export function NoInviteMessage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <Image
+            src="/images/logo-horizontal-fullcolor.svg"
+            alt="PadelHub"
+            width={160}
+            height={32}
+            className="mx-auto mb-4 h-8 w-auto"
+          />
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
             <LockIcon className="h-8 w-8 text-blue-600" />
           </div>

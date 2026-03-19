@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { DM_Sans, Geist_Mono, Sora } from "next/font/google";
 
 import { cn } from "@wifo/ui";
 import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
@@ -28,9 +28,13 @@ export const viewport: Viewport = {
   ],
 };
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
+});
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-sora",
 });
 const geistMono = Geist_Mono({
   subsets: ["latin"],
@@ -43,7 +47,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
-          inter.variable,
+          dmSans.variable,
+          sora.variable,
           geistMono.variable,
         )}
       >

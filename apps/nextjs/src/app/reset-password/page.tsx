@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -120,6 +121,13 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <Image
+            src="/images/logo-horizontal-fullcolor.svg"
+            alt="PadelHub"
+            width={160}
+            height={32}
+            className="mx-auto mb-4 h-8 w-auto"
+          />
           <CardTitle className="text-2xl">Nueva contraseña</CardTitle>
           <CardDescription>Ingresa tu nueva contraseña</CardDescription>
         </CardHeader>

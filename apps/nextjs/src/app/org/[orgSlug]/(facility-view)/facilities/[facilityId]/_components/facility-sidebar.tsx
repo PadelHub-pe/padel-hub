@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { getAvatarUrl } from "@wifo/images/url";
@@ -51,11 +52,14 @@ export function FacilitySidebar({
   return (
     <aside className="flex h-screen w-64 flex-col bg-gray-900 text-white">
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-gray-800 px-6 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold">
-          P
-        </div>
-        <span className="text-xl font-semibold">PadelHub</span>
+      <div className="flex items-center border-b border-gray-800 px-6 py-5">
+        <Image
+          src="/images/logo-horizontal-reversed.svg"
+          alt="PadelHub"
+          width={160}
+          height={32}
+          className="h-8 w-auto"
+        />
       </div>
 
       {/* Back to organization (org_admin only) + Facility Switcher */}

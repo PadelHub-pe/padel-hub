@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { getAvatarUrl } from "@wifo/images/url";
@@ -60,12 +61,13 @@ export function ResponsiveSidebar({
         >
           <MenuIcon className="h-6 w-6" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-sm font-bold">
-            P
-          </div>
-          <span className="text-lg font-semibold">PadelHub</span>
-        </div>
+        <Image
+          src="/images/logo-horizontal-reversed.svg"
+          alt="PadelHub"
+          width={140}
+          height={28}
+          className="h-7 w-auto"
+        />
         <Avatar className="h-8 w-8">
           {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
           <AvatarFallback className="bg-gray-700 text-xs text-gray-200">
@@ -89,7 +91,9 @@ export function ResponsiveSidebar({
       )}
 
       {/* Main content — top padding on mobile for fixed header */}
-      <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">{children}</main>
+      <main className="relative flex-1 overflow-y-auto pt-14 lg:pt-0">
+        {children}
+      </main>
     </div>
   );
 }

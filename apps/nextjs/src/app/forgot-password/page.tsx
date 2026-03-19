@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useForm } from "react-hook-form";
@@ -79,6 +80,13 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <Image
+            src="/images/logo-horizontal-fullcolor.svg"
+            alt="PadelHub"
+            width={160}
+            height={32}
+            className="mx-auto mb-4 h-8 w-auto"
+          />
           <CardTitle className="text-2xl">¿Olvidaste tu contraseña?</CardTitle>
           <CardDescription>
             Ingresa tu email y te enviaremos un enlace para restablecerla

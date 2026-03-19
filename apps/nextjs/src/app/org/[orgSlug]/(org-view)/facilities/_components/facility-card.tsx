@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
@@ -75,10 +76,11 @@ export function FacilityCard({
         className="relative h-40 cursor-pointer"
         onClick={() => router.push(dashboardPath)}
       >
-        <img
+        <Image
           src={photoUrl}
           alt={facility.name}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
         />
         {/* Gray overlay for inactive */}
         {!facility.isActive && (

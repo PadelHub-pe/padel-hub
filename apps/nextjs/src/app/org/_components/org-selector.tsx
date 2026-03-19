@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
 import { cn } from "@wifo/ui";
@@ -57,9 +58,11 @@ export function OrgSelector({ organizations }: OrgSelectorProps) {
     <div className="flex h-auto w-full items-center justify-start gap-3 px-3 py-3 text-left">
       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold text-white">
         {currentOrg.logoUrl ? (
-          <img
+          <Image
             src={getLogoUrl(currentOrg.logoUrl)}
             alt={currentOrg.name}
+            width={36}
+            height={36}
             className="h-9 w-9 rounded-lg object-cover"
           />
         ) : (
@@ -115,9 +118,11 @@ export function OrgSelector({ organizations }: OrgSelectorProps) {
               <div className="flex w-full items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">
                   {org.logoUrl ? (
-                    <img
+                    <Image
                       src={getLogoUrl(org.logoUrl)}
                       alt={org.name}
+                      width={32}
+                      height={32}
                       className="h-8 w-8 rounded-md object-cover"
                     />
                   ) : (

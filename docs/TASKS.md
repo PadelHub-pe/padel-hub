@@ -50,6 +50,18 @@ Sidebar alignment, breadcrumbs, mobile nav, role-based landing, route guards, si
 
 ## Current
 
+### Web Dashboard Brand Assets (5 tasks)
+
+Replace placeholder "P" boxes and missing metadata with actual PadelHub brand assets from `/assets/`.
+
+- [x] TASK-BRAND.01 — Copy brand assets to `apps/nextjs/public/` (favicons, horizontal logo SVGs, OG image; follow landing page naming convention). Delete `t3-icon.svg`.
+- [x] TASK-BRAND.02 — Add favicon & icon metadata to `apps/nextjs/src/app/layout.tsx` (favicon-16, favicon-32, apple-touch-icon-180, OG image)
+- [x] TASK-BRAND.03 — Replace "P" box in OrgSidebar and FacilitySidebar with horizontal logo (reversed variant for dark sidebar)
+- [x] TASK-BRAND.04 — Replace "P" box in mobile header (`responsive-sidebar.tsx`) with logomark
+- [x] TASK-BRAND.05 — Replace "P" box on 404 page with logomark
+
+---
+
 ### E2E Testing — Playwright MCP (10 tasks)
 
 See `docs/TECHNICAL_PLAN.md` for full architecture and rationale.

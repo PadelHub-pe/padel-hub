@@ -106,15 +106,14 @@ export default function LoginPage() {
       <div className="hidden flex-col justify-center bg-gradient-to-br from-blue-600 to-blue-800 px-12 text-white lg:flex lg:w-1/2">
         <div className="max-w-md">
           {/* Logo */}
-          <div className="mb-8 flex items-center gap-3">
+          <div className="mb-8">
             <Image
-              src="/images/logomark-reversed.svg"
+              src="/images/logo-horizontal-reversed.svg"
               alt="PadelHub"
-              width={40}
-              height={41}
+              width={200}
+              height={40}
               className="h-10 w-auto"
             />
-            <span className="text-2xl font-bold">PadelHub</span>
           </div>
 
           {/* Headline */}
