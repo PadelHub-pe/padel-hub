@@ -74,4 +74,4 @@ See `docs/TECHNICAL_PLAN.md` for full architecture and rationale.
 
 #### Phase 4: Validation
 
-- [ ] TASK-E2E.10 — Full suite run, fix gaps, update docs
+- [x] TASK-E2E.10 — Full suite run, fix gaps, update docs

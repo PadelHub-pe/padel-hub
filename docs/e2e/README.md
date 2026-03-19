@@ -111,15 +111,40 @@ After each suite, Claude reports:
 - Failed scenarios with details
 - Screenshots of failures
 
+## Recommended Run Order
+
+When running all suites, follow this order (dependencies flow top-down):
+
+1. **Smoke** (`smoke.md`) — Quick sanity check (~3 min)
+2. **Suite A** (`auth.md`) — Auth flows must work before anything else
+3. **Suite B** (`org-management.md`) + **Suite I** (`navigation.md`) — Core navigation
+4. **Suite C** (`team-rbac.md`) — Team management and role verification
+5. **Suite D** (`facility-onboarding.md`) — Onboarding wizard
+6. **Suite E** (`schedule-pricing.md`) — Schedule & pricing configuration
+7. **Suite F** (`booking-management.md`) — Booking CRUD
+8. **Suite G** (`calendar.md`) — Calendar views
+9. **Suite H** (`settings.md`) — Settings & profile
+10. **RBAC Matrix** (`rbac-matrix.md`) — Cross-role verification (needs all roles working)
+11. **Mobile Responsive** (`mobile-responsive.md`) — Viewport tests (resize back to 1280x720 after)
+12. **Error States** (`error-states.md`) — Edge cases and error handling
+
+## Important Notes
+
+- **Always seed before running:** `pnpm db:seed` ensures clean, predictable test data
+- **Snapshot-first verification:** Use `browser_snapshot` (DOM tree) as the primary verification method — it's more reliable than screenshots for checking text content and element structure
+- **Sign-out confirmation:** The sign-out button shows a confirmation popover ("¿Cerrar sesión?") — always click "Confirmar" to complete logout
+- **Page load timing:** Some pages may briefly show a loading/rendering state after navigation. Use `browser_wait_for` with expected text to wait for content to appear
+- **Breadcrumb labels:** Some pages use different labels in breadcrumbs vs. sidebar (e.g., sidebar says "Precios" but breadcrumb shows "Tarifas") — this is by design
+
 ## File Structure
 
 ```
 docs/e2e/
 ├── README.md                         # This file
-├── smoke.md                          # Level 1: Smoke tests
+├── smoke.md                          # Level 1: Smoke tests (6 scenarios)
 ├── flows/
-│   ├── auth.md                       # Suite A: Authentication & Access
-│   ├── org-management.md             # Suite B: Organization & Facilities
+│   ├── auth.md                       # Suite A: Authentication & Access (17 scenarios)
+│   ├── org-management.md             # Suite B: Organization & Facilities (8 scenarios)
 │   ├── team-rbac.md                  # Suite C: Team & RBAC
 │   ├── facility-onboarding.md        # Suite D: Facility Onboarding
 │   ├── schedule-pricing.md           # Suite E: Schedule & Pricing
@@ -129,6 +154,12 @@ docs/e2e/
 │   └── navigation.md                 # Suite I: Navigation & Context
 └── cross-cutting/
     ├── rbac-matrix.md                # Role-based access verification
-    ├── mobile-responsive.md          # Mobile layout tests
+    ├── mobile-responsive.md          # Mobile layout tests (10 scenarios)
     └── error-states.md               # Error handling & edge cases
 ```
+
+## Last Validated
+
+**Date:** 2026-03-19
+**Status:** All suites pass against seeded data on `localhost:3000`
+**Environment:** Local Supabase + Next.js dev server

@@ -61,3 +61,6 @@ dist/
 
 # react-email
 .react-email
+
+# playwright-mcp
+.playwright-mcp/
