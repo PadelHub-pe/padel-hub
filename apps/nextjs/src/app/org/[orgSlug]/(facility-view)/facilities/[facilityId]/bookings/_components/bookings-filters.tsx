@@ -87,6 +87,13 @@ export function BookingsFilters({
     return () => clearTimeout(timer);
   }, [searchInput, onSearchChange, search]);
 
+  // Defer Radix component mount to prevent hydration ID mismatches (BUG-005).
+  // Same pattern as responsive-sidebar.tsx (BUG-002).
+  const [radixMounted, setRadixMounted] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => setRadixMounted(true));
+  }, []);
+
   const handleClearFilters = () => {
     setSearchInput("");
     onClearFilters();
@@ -120,20 +127,24 @@ export function BookingsFilters({
           />
         </div>
 
-        {/* Court filter */}
-        <Select value={courtId ?? "all"} onValueChange={handleCourtSelect}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Todas las canchas" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las canchas</SelectItem>
-            {courts.map((court) => (
-              <SelectItem key={court.id} value={court.id}>
-                {court.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Court filter — deferred mount to prevent hydration ID mismatch (BUG-005) */}
+        {radixMounted ? (
+          <Select value={courtId ?? "all"} onValueChange={handleCourtSelect}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Todas las canchas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las canchas</SelectItem>
+              {courts.map((court) => (
+                <SelectItem key={court.id} value={court.id}>
+                  {court.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="border-input h-9 w-40 rounded-md border" />
+        )}
 
         {/* Date range */}
         <DateRangePicker
@@ -199,6 +210,12 @@ function DateRangePicker({
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
 
+  // Defer Radix Popover mount to prevent hydration ID mismatches (BUG-005)
+  const [radixMounted, setRadixMounted] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => setRadixMounted(true));
+  }, []);
+
   const hasRange = Boolean(dateFrom) && Boolean(dateTo);
 
   const displayLabel =
@@ -259,6 +276,20 @@ function DateRangePicker({
     const d = new Date(val + "T00:00:00");
     onDateRangeChange(dateFrom ?? d, d);
   };
+
+  if (!radixMounted) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="min-w-[180px] justify-start font-normal text-gray-500"
+        disabled
+      >
+        <CalendarIcon className="mr-2 h-4 w-4" />
+        Rango de fechas
+      </Button>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

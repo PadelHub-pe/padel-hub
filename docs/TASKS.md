@@ -87,3 +87,14 @@ See `docs/TECHNICAL_PLAN.md` for full architecture and rationale.
 #### Phase 4: Validation
 
 - [x] TASK-E2E.10 — Full suite run, fix gaps, update docs
+
+---
+
+### BUG-005: Hydration mismatch on bookings page (4 subtasks)
+
+Fix Radix UI auto-generated ID mismatches in `bookings-filters.tsx` — same class as BUG-002.
+
+- [x] TASK-BUG5.01 — Defer mount of `Select` (court filter) in `BookingsFilters` with `useState(false)` + `useEffect` + `requestAnimationFrame` pattern. Show static placeholder button matching dimensions while unmounted.
+- [x] TASK-BUG5.02 — Defer mount of `Popover` (date range picker) in `DateRangePicker` with the same pattern.
+- [x] TASK-BUG5.03 — Verify fix: dev overlay shows 0 Issues on bookings page, no hydration console errors.
+- [x] TASK-BUG5.04 — Update BUG-005 status to Fixed in `docs/BUGS.md` with actual fix description and lesson learned.

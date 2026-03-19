@@ -256,7 +256,7 @@ router.replace(pathname, { scroll: false });
 ## BUG-005: Hydration mismatch on bookings page (2 Issues in dev overlay)
 
 **Severity:** Low
-**Status:** Open
+**Status:** Fixed
 **Found in:** E2E Suite F (Booking Management) — all scenarios on bookings page
 **Affected area:** web `/org/[orgSlug]/facilities/[facilityId]/bookings` — `bookings-filters.tsx`
 
@@ -312,3 +312,24 @@ Alternatively, pass explicit `id` props to the Radix `Select` and `Popover` comp
 ### Workaround
 
 Dev-mode only — no impact on production builds. The overlay badge may intercept clicks near the bottom of the sidebar (same as BUG-003).
+
+### Actual Fix
+
+Applied the same deferred-mount pattern from BUG-002 to both Radix components in `bookings-filters.tsx`:
+
+1. **`BookingsFilters`** — deferred `Select` (court filter) mount with `useState(false)` + `useEffect` + `requestAnimationFrame`. Shows a static `<div>` placeholder matching the trigger dimensions until mounted.
+2. **`DateRangePicker`** — deferred `Popover` (date range picker) mount with the same pattern. Shows a disabled `<Button>` placeholder matching the trigger appearance until mounted.
+
+```tsx
+const [radixMounted, setRadixMounted] = useState(false);
+useEffect(() => {
+  requestAnimationFrame(() => setRadixMounted(true));
+}, []);
+
+// In JSX:
+{radixMounted ? <Select ...> : <div className="..." />}
+```
+
+The ~16ms delay (one animation frame) is imperceptible. Both placeholders match the dimensions and style of the real components, so there's no visible layout shift.
+
+**Lesson learned:** When the deferred-mount pattern from BUG-002 shifts the Radix ID tree, all Radix components in the same render tree are affected — not just the ones in the sidebar. Any page with Radix `Select`, `Popover`, `Dialog`, etc. may need the same treatment if it shares a layout with the deferred `Sheet`.
