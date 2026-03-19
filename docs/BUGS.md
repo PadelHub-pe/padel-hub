@@ -164,3 +164,151 @@ In dev mode, scroll the sidebar or use keyboard navigation. In E2E tests, the ov
 ### Actual Fix
 
 No standalone fix needed — resolved by fixing BUG-002. Once the hydration mismatch was eliminated, the dev overlay no longer shows the issue badge, and the `<nextjs-portal>` element no longer expands its click target to intercept sidebar buttons.
+
+---
+
+## BUG-004: "Limpiar filtros" on bookings page navigates to facility dashboard
+
+**Severity:** Medium
+**Status:** Fixed
+**Found in:** E2E Suite F (Booking Management) — scenarios F2, F3, F4
+**Affected area:** web `/org/[orgSlug]/facilities/[facilityId]/bookings`
+
+### Description
+
+Clicking the "Limpiar filtros" button on the bookings page redirects the user to the facility dashboard (`/facilities/[facilityId]`) instead of staying on the bookings page with cleared filters. This also happens when the search input is cleared to empty (same code path).
+
+### Steps to Reproduce
+
+1. Navigate to `http://localhost:3000/org/padel-group-lima/facilities/{facilityId}/bookings`
+2. Apply any filter: click a status chip (e.g., "Confirmada"), set a date range, or type in the search box
+3. Click the "Limpiar filtros" button that appears
+4. Observe: browser navigates to `/org/padel-group-lima/facilities/{facilityId}` (facility dashboard)
+
+### Expected Behavior
+
+User stays on `/org/padel-group-lima/facilities/{facilityId}/bookings` with all query params removed and the full unfiltered booking list visible.
+
+### Actual Behavior
+
+User is redirected to `/org/padel-group-lima/facilities/{facilityId}` (the facility dashboard page), losing the bookings context entirely.
+
+### Root Cause
+
+In `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/bookings/_components/bookings-view.tsx`:
+
+**Line 185-187** — `handleClearFilters`:
+```typescript
+const handleClearFilters = useCallback(() => {
+  router.replace(".", { scroll: false });
+}, [router]);
+```
+
+**Line 116** — `updateParams` fallback (same issue when all params are deleted):
+```typescript
+const qs = params.toString();
+router.replace(qs ? `?${qs}` : ".", { scroll: false });
+```
+
+The `"."` in `router.replace(".")` resolves as a **relative URL**. For the path `/org/slug/facilities/abc/bookings`, the browser treats `bookings` as a "filename" and `"."` resolves to its parent directory: `/org/slug/facilities/abc/`. This is standard URL resolution behavior (RFC 3986), not a Next.js-specific issue.
+
+### Fix Recommendation
+
+Import `usePathname` and use the absolute pathname instead of `"."`:
+
+```typescript
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+// Inside the component:
+const pathname = usePathname();
+
+// handleClearFilters — line 186:
+router.replace(pathname, { scroll: false });
+
+// updateParams — line 116:
+router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+```
+
+Alternatively, use `basePath` from `useFacilityContext()` (already imported) appended with `/bookings`.
+
+### Workaround
+
+Click "Reservas" in the sidebar to navigate back to the bookings page, or manually remove query parameters from the URL bar.
+
+### Actual Fix
+
+Replaced relative URL `"."` with `usePathname()` in `bookings-view.tsx`. The `"."` was resolving to the parent directory per RFC 3986, navigating away from `/bookings`. Using the absolute pathname from `usePathname()` ensures `router.replace()` stays on the current page:
+
+```typescript
+const pathname = usePathname();
+
+// updateParams — when all params cleared:
+router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+
+// handleClearFilters:
+router.replace(pathname, { scroll: false });
+```
+
+**Lesson learned:** Never use relative URLs like `"."` with Next.js `router.replace()` — browsers resolve them against the current path per RFC 3986, treating the last segment as a "filename". Always use `usePathname()` for same-page navigation.
+
+---
+
+## BUG-005: Hydration mismatch on bookings page (2 Issues in dev overlay)
+
+**Severity:** Low
+**Status:** Open
+**Found in:** E2E Suite F (Booking Management) — all scenarios on bookings page
+**Affected area:** web `/org/[orgSlug]/facilities/[facilityId]/bookings` — `bookings-filters.tsx`
+
+### Description
+
+The bookings page produces two hydration mismatch errors on every page load. The Next.js dev overlay shows "2 Issues" and the console logs `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties`. This is the same class of bug as BUG-002 (Radix UI auto-generated ID conflicts) but in a different component.
+
+### Steps to Reproduce
+
+1. Start dev server (`pnpm dev:next`)
+2. Login as any user and navigate to any facility's bookings page
+3. Open browser console — observe hydration mismatch error
+4. Check Next.js dev overlay badge — shows "2 Issues"
+
+### Expected Behavior
+
+No hydration mismatch. Server and client render identical HTML attributes. Dev overlay shows "0 Issues".
+
+### Actual Behavior
+
+Console error:
+```
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.
+```
+Dev overlay shows "2 Issues" badge, which can intercept clicks on nearby elements (same downstream effect as BUG-003).
+
+### Root Cause
+
+Two Radix UI components in `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/bookings/_components/bookings-filters.tsx` generate auto-IDs via `useId()` that differ between SSR and client hydration:
+
+1. **`Select` component** (lines 124-136) — the "Todas las canchas" court filter dropdown. Radix `Select.Root` allocates `useId()` slots during render.
+2. **`Popover` component** (lines 264-332) — the date range picker. `Popover.Root` allocates `useId()` slots even when starting in `open={false}` state.
+
+These components are in the same render tree as the deferred `Sheet` in `responsive-sidebar.tsx`. When the Sheet mount is deferred (BUG-002 fix), it shifts the Radix ID counter for subsequent components, causing the bookings filter components' server-generated IDs to mismatch their client-generated IDs.
+
+### Fix Recommendation
+
+Apply the same deferred-mount pattern used in BUG-002. In `bookings-filters.tsx`:
+
+```typescript
+const [mounted, setMounted] = useState(false);
+useEffect(() => {
+  requestAnimationFrame(() => setMounted(true));
+}, []);
+
+// Wrap Select and Popover:
+{mounted && <Select ...>...</Select>}
+{mounted && <Popover ...>...</Popover>}
+```
+
+Alternatively, pass explicit `id` props to the Radix `Select` and `Popover` components to avoid relying on auto-generated sequential IDs.
+
+### Workaround
+
+Dev-mode only — no impact on production builds. The overlay badge may intercept clicks near the bottom of the sidebar (same as BUG-003).

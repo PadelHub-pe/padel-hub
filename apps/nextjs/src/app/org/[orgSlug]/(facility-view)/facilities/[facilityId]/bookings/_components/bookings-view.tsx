@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   keepPreviousData,
   useQuery,
@@ -76,6 +76,7 @@ function formatDateParam(date: Date): string {
 export function BookingsView() {
   const trpc = useTRPC();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { facilityId, basePath } = useFacilityContext();
 
@@ -113,9 +114,9 @@ export function BookingsView() {
         }
       }
       const qs = params.toString();
-      router.replace(qs ? `?${qs}` : ".", { scroll: false });
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [searchParams, router],
+    [searchParams, router, pathname],
   );
 
   const { data: courts } = useSuspenseQuery(
@@ -183,8 +184,8 @@ export function BookingsView() {
   );
 
   const handleClearFilters = useCallback(() => {
-    router.replace(".", { scroll: false });
-  }, [router]);
+    router.replace(pathname, { scroll: false });
+  }, [router, pathname]);
 
   const handleBookingClick = (bookingId: string) => {
     setSelectedBookingId(bookingId);
