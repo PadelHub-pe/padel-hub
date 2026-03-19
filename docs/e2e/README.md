@@ -148,7 +148,7 @@ docs/e2e/
 │   ├── team-rbac.md                  # Suite C: Team & RBAC
 │   ├── facility-onboarding.md        # Suite D: Facility Onboarding
 │   ├── schedule-pricing.md           # Suite E: Schedule & Pricing
-│   ├── booking-management.md         # Suite F: Booking Management
+│   ├── booking-management.md         # Suite F: Booking Management (32 scenarios)
 │   ├── calendar.md                   # Suite G: Calendar
 │   ├── settings.md                   # Suite H: Settings & Profile
 │   └── navigation.md                 # Suite I: Navigation & Context
