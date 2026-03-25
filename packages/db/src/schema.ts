@@ -191,6 +191,10 @@ export const facilities = pgTable(
     // Facility-level default pricing (nullable; courts with NULL prices fall back to these)
     defaultPriceInCents: integer("default_price_in_cents"),
     defaultPeakPriceInCents: integer("default_peak_price_in_cents"),
+    // Allowed booking durations in minutes for public booking page (e.g. [60, 90])
+    allowedDurationMinutes: jsonb("allowed_duration_minutes")
+      .$type<number[]>()
+      .default([60, 90]),
     isActive: boolean("is_active").default(false).notNull(),
     // Onboarding tracking (migrated from ownerAccounts)
     onboardingCompletedAt: timestamp("onboarding_completed_at"),
@@ -200,7 +204,10 @@ export const facilities = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [unique().on(table.organizationId, table.slug)],
+  (table) => [
+    unique().on(table.organizationId, table.slug),
+    unique().on(table.slug),
+  ],
 );
 
 export const facilitiesRelations = relations(facilities, ({ one, many }) => ({

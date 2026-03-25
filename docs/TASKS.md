@@ -56,7 +56,7 @@ Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. See `docs/T
 
 #### Phase 0: Schema & Infrastructure
 
-- [ ] TASK-PB.01 — Add `allowedDurationMinutes` jsonb column to facilities table (default `[60, 90]`) + unique constraint on `slug`. Update Drizzle schema, push migration.
+- [x] TASK-PB.01 — Add `allowedDurationMinutes` jsonb column to facilities table (default `[60, 90]`) + unique constraint on `slug`. Update Drizzle schema, push migration.
 - [ ] TASK-PB.02 — Create `packages/whatsapp` package: Kapso SDK client (`@kapso/whatsapp-cloud-api`), OTP send/verify helpers, env validation. Follow `@wifo/email` pattern.
 - [ ] TASK-PB.03 — Add "Duraciones permitidas" setting to facility settings page in dashboard (multi-select: 60, 90, 120 min). Depends on TASK-PB.01.
 
