@@ -46,8 +46,17 @@ function makeFacility(overrides?: Partial<Record<string, any>>) {
     id: FACILITY_ID,
     organizationId: ORG_ID,
     name: "Test Facility",
+    phone: "+51 999 888 777",
+    email: "test@example.com",
+    website: "https://example.com",
+    description: "A test facility",
+    address: "Av. Test 123",
+    district: "Miraflores",
+    city: "Lima",
     photos: [],
     amenities: [],
+    allowedDurationMinutes: [60, 90],
+    isActive: true,
     onboardingCompletedAt: null,
     ...overrides,
   };
@@ -88,6 +97,159 @@ function buildCaller(db?: any) {
 
 // ---------------------------------------------------------------------------
 // Tests
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// facility.getProfile
+// ---------------------------------------------------------------------------
+
+describe("facility.getProfile", () => {
+  it("returns allowedDurationMinutes from facility", async () => {
+    mockFacility = makeFacility({ allowedDurationMinutes: [60, 90, 120] });
+    mockCourts = [makeCourt({ id: "c1" })];
+    const caller = buildCaller();
+
+    const result = await caller.facility.getProfile({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.allowedDurationMinutes).toEqual([60, 90, 120]);
+  });
+
+  it("returns default [60, 90] when allowedDurationMinutes is not set", async () => {
+    mockFacility = makeFacility();
+    mockCourts = [];
+    const caller = buildCaller();
+
+    const result = await caller.facility.getProfile({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.allowedDurationMinutes).toEqual([60, 90]);
+  });
+
+  it("returns empty array when allowedDurationMinutes is null", async () => {
+    mockFacility = makeFacility({ allowedDurationMinutes: null });
+    mockCourts = [];
+    const caller = buildCaller();
+
+    const result = await caller.facility.getProfile({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.allowedDurationMinutes).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// facility.updateProfile
+// ---------------------------------------------------------------------------
+
+describe("facility.updateProfile", () => {
+  let mockUpdate: ReturnType<typeof vi.fn>;
+  let mockSet: ReturnType<typeof vi.fn>;
+  let mockWhere: ReturnType<typeof vi.fn>;
+
+  function buildUpdateDb() {
+    mockWhere = vi.fn().mockResolvedValue(undefined);
+    mockSet = vi.fn().mockReturnValue({ where: mockWhere });
+    mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
+    return {
+      query: {
+        courts: { findMany: vi.fn().mockResolvedValue([]) },
+        operatingHours: { findMany: vi.fn().mockResolvedValue([]) },
+      },
+      update: mockUpdate,
+    };
+  }
+
+  it("persists allowedDurationMinutes when provided", async () => {
+    mockFacility = makeFacility();
+    const db = buildUpdateDb();
+    const caller = buildCaller(db);
+
+    await caller.facility.updateProfile({
+      facilityId: FACILITY_ID,
+      name: "Test Facility",
+      phone: "+51 999 888 777",
+      address: { street: "Av. Test 123", district: "Miraflores", city: "Lima" },
+      amenities: [],
+      allowedDurationMinutes: [60, 90, 120],
+    });
+
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedDurationMinutes: [60, 90, 120],
+      }),
+    );
+  });
+
+  it("persists allowedDurationMinutes with single value", async () => {
+    mockFacility = makeFacility();
+    const db = buildUpdateDb();
+    const caller = buildCaller(db);
+
+    await caller.facility.updateProfile({
+      facilityId: FACILITY_ID,
+      name: "Test Facility",
+      phone: "+51 999 888 777",
+      address: { street: "Av. Test 123", district: "Miraflores", city: "Lima" },
+      amenities: [],
+      allowedDurationMinutes: [90],
+    });
+
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedDurationMinutes: [90],
+      }),
+    );
+  });
+
+  it("rejects empty allowedDurationMinutes array", async () => {
+    mockFacility = makeFacility();
+    const db = buildUpdateDb();
+    const caller = buildCaller(db);
+
+    await expect(
+      caller.facility.updateProfile({
+        facilityId: FACILITY_ID,
+        name: "Test Facility",
+        phone: "+51 999 888 777",
+        address: {
+          street: "Av. Test 123",
+          district: "Miraflores",
+          city: "Lima",
+        },
+        amenities: [],
+        allowedDurationMinutes: [],
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects invalid duration values", async () => {
+    mockFacility = makeFacility();
+    const db = buildUpdateDb();
+    const caller = buildCaller(db);
+
+    await expect(
+      caller.facility.updateProfile({
+        facilityId: FACILITY_ID,
+        name: "Test Facility",
+        phone: "+51 999 888 777",
+        address: {
+          street: "Av. Test 123",
+          district: "Miraflores",
+          city: "Lima",
+        },
+        amenities: [],
+        allowedDurationMinutes: [45] as any,
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// facility.getSetupStatus
 // ---------------------------------------------------------------------------
 
 describe("facility.getSetupStatus", () => {

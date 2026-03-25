@@ -34,6 +34,9 @@ const updateProfileSchema = z.object({
     city: z.string().min(1),
   }),
   amenities: z.array(z.string()),
+  allowedDurationMinutes: z
+    .array(z.union([z.literal(60), z.literal(90), z.literal(120)]))
+    .min(1, "Debe seleccionar al menos una duración"),
 });
 
 // Setup wizard schemas
@@ -124,6 +127,7 @@ export const facilityRouter = {
         },
         amenities: facility.amenities ?? [],
         photos: facility.photos ?? [],
+        allowedDurationMinutes: facility.allowedDurationMinutes ?? [],
         isActive: facility.isActive,
         onboardingCompletedAt: facility.onboardingCompletedAt,
         courtCount,
@@ -155,6 +159,7 @@ export const facilityRouter = {
           district: profileData.address.district,
           city: profileData.address.city,
           amenities: profileData.amenities,
+          allowedDurationMinutes: profileData.allowedDurationMinutes,
         })
         .where(eq(facilities.id, facilityId));
 

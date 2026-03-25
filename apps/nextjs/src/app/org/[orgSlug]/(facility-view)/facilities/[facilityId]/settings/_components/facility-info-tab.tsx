@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
+import { Checkbox } from "@wifo/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -21,11 +22,18 @@ import {
   FormMessage,
 } from "@wifo/ui/form";
 import { Input } from "@wifo/ui/input";
+import { Label } from "@wifo/ui/label";
 import { Textarea } from "@wifo/ui/textarea";
 import { toast } from "@wifo/ui/toast";
 
 import { useFacilityContext, useUnsavedChanges } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
+
+const DURATION_OPTIONS = [
+  { value: 60, label: "60 min" },
+  { value: 90, label: "90 min" },
+  { value: 120, label: "120 min" },
+] as const;
 
 const facilityInfoSchema = z.object({
   name: z
@@ -44,6 +52,9 @@ const facilityInfoSchema = z.object({
     .max(500, "Máximo 500 caracteres")
     .optional()
     .or(z.literal("")),
+  allowedDurationMinutes: z
+    .array(z.number())
+    .min(1, "Debe seleccionar al menos una duración"),
 });
 
 type FacilityInfoFormValues = z.infer<typeof facilityInfoSchema>;
@@ -69,6 +80,10 @@ export function FacilityInfoTab({ facilityId }: FacilityInfoTabProps) {
       email: facility.email,
       address: facility.address,
       description: facility.description,
+      allowedDurationMinutes:
+        facility.allowedDurationMinutes.length > 0
+          ? facility.allowedDurationMinutes
+          : [60, 90],
     },
   });
 
@@ -98,6 +113,11 @@ export function FacilityInfoTab({ facilityId }: FacilityInfoTabProps) {
       address: values.address,
       description: values.description ?? undefined,
       amenities: facility.amenities,
+      allowedDurationMinutes: values.allowedDurationMinutes as (
+        | 60
+        | 90
+        | 120
+      )[],
     });
   }
 
@@ -222,6 +242,48 @@ export function FacilityInfoTab({ facilityId }: FacilityInfoTabProps) {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="allowedDurationMinutes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duraciones permitidas</FormLabel>
+                <p className="text-sm text-gray-500">
+                  Duraciones que los jugadores pueden reservar en la página
+                  pública
+                </p>
+                <div className="flex gap-4">
+                  {DURATION_OPTIONS.map((option) => {
+                    const checked = field.value.includes(option.value);
+                    return (
+                      <div
+                        key={option.value}
+                        className="flex items-center gap-2"
+                      >
+                        <Checkbox
+                          id={`duration-${option.value}`}
+                          checked={checked}
+                          onCheckedChange={(isChecked) => {
+                            const next = isChecked
+                              ? [...field.value, option.value].sort(
+                                  (a, b) => a - b,
+                                )
+                              : field.value.filter((v) => v !== option.value);
+                            field.onChange(next);
+                          }}
+                        />
+                        <Label htmlFor={`duration-${option.value}`}>
+                          {option.label}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

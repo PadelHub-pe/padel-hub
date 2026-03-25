@@ -60,6 +60,10 @@ export function StepPhotos({ facilityId }: StepPhotosProps) {
           description: facility.description,
           address: facility.address,
           amenities: newAmenities,
+          allowedDurationMinutes:
+            facility.allowedDurationMinutes.length > 0
+              ? (facility.allowedDurationMinutes as (60 | 90 | 120)[])
+              : [60, 90],
         },
         {
           onSuccess: () => {
