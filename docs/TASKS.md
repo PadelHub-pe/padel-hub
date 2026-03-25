@@ -50,6 +50,43 @@ Sidebar alignment, breadcrumbs, mobile nav, role-based landing, route guards, si
 
 ## Current
 
+### Public Booking Page (14 tasks)
+
+Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. See `docs/TECHNICAL_PLAN.md` for full architecture.
+
+#### Phase 0: Schema & Infrastructure
+
+- [ ] TASK-PB.01 — Add `allowedDurationMinutes` jsonb column to facilities table (default `[60, 90]`) + unique constraint on `slug`. Update Drizzle schema, push migration.
+- [ ] TASK-PB.02 — Create `packages/whatsapp` package: Kapso SDK client (`@kapso/whatsapp-cloud-api`), OTP send/verify helpers, env validation. Follow `@wifo/email` pattern.
+- [ ] TASK-PB.03 — Add "Duraciones permitidas" setting to facility settings page in dashboard (multi-select: 60, 90, 120 min). Depends on TASK-PB.01.
+
+#### Phase 1: Public API
+
+- [ ] TASK-PB.04 — Write `getAvailableSlots()` pure function in `packages/api/src/utils/slots.ts`. Compose existing schedule utils (`getTimeZoneWithMarkup`, `getRateForSlot`). Write tests. Depends on TASK-PB.01.
+- [ ] TASK-PB.05 — Create `publicBooking` tRPC router with read procedures: `getFacility`, `getAvailableSlots`, `calculatePrice`. All use `publicProcedure`. Write tests. Depends on TASK-PB.04.
+- [ ] TASK-PB.06 — Add OTP procedures to `publicBooking` router: `sendOtp`, `verifyOtp`. Integrate `@wifo/whatsapp`. Rate-limit with Upstash Redis. Write tests. Depends on TASK-PB.02, TASK-PB.05.
+- [ ] TASK-PB.07 — Add booking mutation procedures: `createBooking` (with OTP token validation + conflict detection + Turnstile), `getMyBookings`, `cancelBooking`. Reuse existing price calculation. Write tests. Depends on TASK-PB.06.
+
+#### Phase 2: Booking App Shell
+
+- [ ] TASK-PB.08 — Scaffold `apps/bookings` Next.js app: package.json, tsconfig, env, tRPC client setup, Tailwind, Cloudflare Turnstile. Follow `apps/admin` boilerplate. Add `dev:bookings` script to root. Port 3002. Depends on TASK-PB.05.
+- [ ] TASK-PB.09 — Build facility landing page (`/[facilitySlug]`): facility info header, photo carousel, date picker, CTA button. Dynamic OG meta tags for WhatsApp previews. Mobile-first layout. Depends on TASK-PB.08.
+- [ ] TASK-PB.10 — Build booking flow: `/[facilitySlug]/book` (court & time slot grid), `/[facilitySlug]/confirm` (name + phone + OTP verification), `/[facilitySlug]/success` (confirmation with booking code + "add to calendar"). Depends on TASK-PB.07, TASK-PB.09.
+
+#### Phase 3: Player Features
+
+- [ ] TASK-PB.11 — Build "Mis Reservas" page (`/[facilitySlug]/mis-reservas`): booking history for verified phone, cancel upcoming bookings, empty state. Depends on TASK-PB.10.
+- [ ] TASK-PB.12 — Send WhatsApp booking confirmation message via Kapso after successful booking: booking details, facility name, date/time, court, booking code. Depends on TASK-PB.02, TASK-PB.10.
+
+#### Phase 4: Dashboard Integration
+
+- [ ] TASK-PB.13 — Add "Enlace de reservas" section to facility settings in dashboard: shareable URL display, QR code generator, copy-to-clipboard button. Depends on TASK-PB.08.
+- [ ] TASK-PB.14 — Differentiate online vs manual bookings in dashboard booking list: add "Online" / "Manual" badge column, filter by booking source. Depends on TASK-PB.10.
+
+---
+
+## Completed
+
 ### Web Dashboard Brand Assets (5 tasks)
 
 Replace placeholder "P" boxes and missing metadata with actual PadelHub brand assets from `/assets/`.
@@ -60,35 +97,20 @@ Replace placeholder "P" boxes and missing metadata with actual PadelHub brand as
 - [x] TASK-BRAND.04 — Replace "P" box in mobile header (`responsive-sidebar.tsx`) with logomark
 - [x] TASK-BRAND.05 — Replace "P" box on 404 page with logomark
 
----
-
 ### E2E Testing — Playwright MCP (10 tasks)
 
 See `docs/TECHNICAL_PLAN.md` for full architecture and rationale.
 
-#### Phase 1: Infrastructure
-
 - [x] TASK-E2E.01 — Create `docs/e2e/` directory structure + README with execution protocol
 - [x] TASK-E2E.02 — Write smoke test suite (`docs/e2e/smoke.md`) + verify Playwright MCP connectivity
-
-#### Phase 2: Core Flow Suites
-
 - [x] TASK-E2E.03 — Suite A (Auth & Access) + Suite I (Navigation)
 - [x] TASK-E2E.04 — Suite B (Org Management) + Suite C (Team & RBAC)
 - [x] TASK-E2E.05 — Suite D (Facility Onboarding) + Suite H (Settings)
 - [x] TASK-E2E.06 — Suite E (Schedule & Pricing) + Suite F (Booking Management)
 - [x] TASK-E2E.07 — Suite G (Calendar)
-
-#### Phase 3: Cross-Cutting Suites
-
 - [x] TASK-E2E.08 — RBAC matrix + error states
 - [x] TASK-E2E.09 — Mobile responsive
-
-#### Phase 4: Validation
-
 - [x] TASK-E2E.10 — Full suite run, fix gaps, update docs
-
----
 
 ### BUG-005: Hydration mismatch on bookings page (4 subtasks)
 
