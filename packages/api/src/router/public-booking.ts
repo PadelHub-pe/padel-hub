@@ -13,12 +13,16 @@ import {
   operatingHours,
   peakPeriods,
 } from "@wifo/db/schema";
+import { generateOtpCode, sendOtp, whatsappConfig } from "@wifo/whatsapp";
 
 import type {
   ScheduleConfig,
   SlotCourtPricing,
   SlotFacilityDefaults,
 } from "../utils/schedule";
+import { checkOtpSendRateLimit } from "../lib/otp-rate-limit";
+import { storeOtpCode, verifyOtpCode } from "../lib/otp-store";
+import { createVerificationToken } from "../lib/verification-token";
 import { publicProcedure } from "../trpc";
 import {
   getLimaDayOfWeek,
@@ -47,6 +51,15 @@ const calculatePriceSchema = z.object({
   date: z.date(),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
+});
+
+const sendOtpSchema = z.object({
+  phone: z.string().regex(/^\d{8,15}$/, "Número de teléfono inválido"),
+});
+
+const verifyOtpSchema = z.object({
+  phone: z.string().regex(/^\d{8,15}$/, "Número de teléfono inválido"),
+  code: z.string().length(6, "El código debe tener 6 dígitos"),
 });
 
 // =============================================================================
@@ -348,5 +361,70 @@ export const publicBookingRouter = {
         courtPricing,
         facilityDefaults,
       );
+    }),
+
+  /**
+   * Send a WhatsApp OTP code for phone verification (public).
+   * Rate-limited to 5 sends per phone per hour.
+   */
+  sendOtp: publicProcedure.input(sendOtpSchema).mutation(async ({ input }) => {
+    const { phone } = input;
+
+    // 1. Rate limit
+    const rateLimit = await checkOtpSendRateLimit(phone);
+    if (!rateLimit.allowed) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: `Demasiados intentos. Intenta de nuevo en ${rateLimit.retryAfterSeconds ?? 60} segundos.`,
+      });
+    }
+
+    // 2. Generate and store code
+    const code = generateOtpCode();
+    await storeOtpCode(phone, code);
+
+    // 3. Send via WhatsApp
+    const result = await sendOtp({ phone, code });
+    if (!result.success) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "No se pudo enviar el código. Intenta más tarde.",
+      });
+    }
+
+    return {
+      success: true as const,
+      expiresInSeconds: whatsappConfig.otp.expirationMinutes * 60,
+    };
+  }),
+
+  /**
+   * Verify an OTP code and return a signed verification token (public).
+   */
+  verifyOtp: publicProcedure
+    .input(verifyOtpSchema)
+    .mutation(async ({ input }) => {
+      const { phone, code } = input;
+
+      const result = await verifyOtpCode(phone, code);
+
+      switch (result) {
+        case "expired":
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Código expirado o no encontrado. Solicita uno nuevo.",
+          });
+        case "max_attempts":
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "Demasiados intentos fallidos. Solicita un nuevo código.",
+          });
+        case "invalid":
+          return { verified: false as const };
+        case "valid": {
+          const token = createVerificationToken(phone);
+          return { verified: true as const, token };
+        }
+      }
     }),
 } satisfies TRPCRouterRecord;
