@@ -70,7 +70,7 @@ Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. See `docs/T
 #### Phase 2: Booking App Shell
 
 - [x] TASK-PB.08 — Scaffold `apps/bookings` Next.js app: package.json, tsconfig, env, tRPC client setup, Tailwind, Cloudflare Turnstile. Follow `apps/admin` boilerplate. Add `dev:bookings` script to root. Port 3002. Depends on TASK-PB.05.
-- [ ] TASK-PB.09 — Build facility landing page (`/[facilitySlug]`): facility info header, photo carousel, date picker, CTA button. Dynamic OG meta tags for WhatsApp previews. Mobile-first layout. Depends on TASK-PB.08.
+- [x] TASK-PB.09 — Build facility landing page (`/[facilitySlug]`): facility info header, photo carousel, date picker, CTA button. Dynamic OG meta tags for WhatsApp previews. Mobile-first layout. Depends on TASK-PB.08.
 - [ ] TASK-PB.10 — Build booking flow: `/[facilitySlug]/book` (court & time slot grid), `/[facilitySlug]/confirm` (name + phone + OTP verification), `/[facilitySlug]/success` (confirmation with booking code + "add to calendar"). Depends on TASK-PB.07, TASK-PB.09.
 
 #### Phase 3: Player Features
