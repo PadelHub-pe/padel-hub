@@ -12,10 +12,14 @@ const {
   mockValidateVerificationToken,
   mockLogBookingActivity,
   mockResolveAndPersistBookingStatuses,
+  mockSendBookingConfirmation,
 } = vi.hoisted(() => ({
   mockValidateVerificationToken: vi.fn().mockReturnValue("51987654321"),
   mockLogBookingActivity: vi.fn().mockResolvedValue(undefined),
   mockResolveAndPersistBookingStatuses: vi.fn().mockResolvedValue([]),
+  mockSendBookingConfirmation: vi
+    .fn()
+    .mockResolvedValue({ success: true, messageId: "msg-123" }),
 }));
 
 vi.mock("../lib/verification-token", () => ({
@@ -35,6 +39,7 @@ vi.mock("../lib/booking-status-persist", () => ({
 vi.mock("@wifo/whatsapp", () => ({
   generateOtpCode: vi.fn().mockReturnValue("123456"),
   sendOtp: vi.fn().mockResolvedValue({ success: true }),
+  sendBookingConfirmation: mockSendBookingConfirmation,
   whatsappConfig: { otp: { expirationMinutes: 10, codeLength: 6 } },
 }));
 vi.mock("../lib/otp-store", () => ({
@@ -242,6 +247,10 @@ beforeEach(() => {
   mockValidateVerificationToken.mockReturnValue("51987654321");
   mockLogBookingActivity.mockResolvedValue(undefined);
   mockResolveAndPersistBookingStatuses.mockResolvedValue([]);
+  mockSendBookingConfirmation.mockResolvedValue({
+    success: true,
+    messageId: "msg-123",
+  });
 });
 
 // ===========================================================================
@@ -393,6 +402,38 @@ describe("publicBooking.createBooking", () => {
         customerName: "",
       }),
     ).rejects.toThrow();
+  });
+
+  it("sends WhatsApp booking confirmation after creation", async () => {
+    const db = createMockDb({});
+    const caller = publicCaller(db);
+
+    await caller.publicBooking.createBooking(validInput);
+
+    expect(mockSendBookingConfirmation).toHaveBeenCalledWith({
+      phone: "51987654321",
+      customerName: "Juan Pérez",
+      facilityName: "Club Test",
+      courtName: "Cancha 1",
+      date: "01/04/2026",
+      startTime: "10:00",
+      endTime: "11:00",
+      bookingCode: "PH-2026-ABCD",
+    });
+  });
+
+  it("succeeds even when WhatsApp confirmation fails", async () => {
+    mockSendBookingConfirmation.mockResolvedValue({
+      success: false,
+      error: "API error",
+    });
+    const db = createMockDb({});
+    const caller = publicCaller(db);
+
+    const result = await caller.publicBooking.createBooking(validInput);
+
+    expect(result).toHaveProperty("code");
+    expect(mockSendBookingConfirmation).toHaveBeenCalled();
   });
 });
 

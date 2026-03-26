@@ -14,7 +14,12 @@ import {
   operatingHours,
   peakPeriods,
 } from "@wifo/db/schema";
-import { generateOtpCode, sendOtp, whatsappConfig } from "@wifo/whatsapp";
+import {
+  generateOtpCode,
+  sendBookingConfirmation,
+  sendOtp,
+  whatsappConfig,
+} from "@wifo/whatsapp";
 
 import type {
   ScheduleConfig,
@@ -622,6 +627,21 @@ export const publicBookingRouter = {
           type: "created",
           description: `Reserva online creada por ${customerName}`,
           performedBy: null,
+        });
+
+        // Send WhatsApp confirmation (errors logged internally, not thrown)
+        const dd = date.getUTCDate().toString().padStart(2, "0");
+        const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+        const yyyy = date.getUTCFullYear().toString();
+        await sendBookingConfirmation({
+          phone: customerPhone,
+          customerName,
+          facilityName: facility.name,
+          courtName: court.name,
+          date: `${dd}/${mm}/${yyyy}`,
+          startTime,
+          endTime,
+          bookingCode: booking.code,
         });
       }
 
