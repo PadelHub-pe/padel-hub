@@ -139,6 +139,30 @@ describe("facility.getProfile", () => {
 
     expect(result.allowedDurationMinutes).toEqual([]);
   });
+
+  it("returns slug when facility has one", async () => {
+    mockFacility = makeFacility({ slug: "arena-miraflores" });
+    mockCourts = [];
+    const caller = buildCaller();
+
+    const result = await caller.facility.getProfile({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.slug).toBe("arena-miraflores");
+  });
+
+  it("returns null when facility has no slug", async () => {
+    mockFacility = makeFacility({ slug: null });
+    mockCourts = [];
+    const caller = buildCaller();
+
+    const result = await caller.facility.getProfile({
+      facilityId: FACILITY_ID,
+    });
+
+    expect(result.slug).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------

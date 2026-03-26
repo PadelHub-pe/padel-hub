@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@wifo/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wifo/ui/tabs";
 
+import { BookingLinkTab } from "./booking-link-tab";
 import { FacilityInfoTab } from "./facility-info-tab";
 import { FacilityPhotosTab } from "./facility-photos-tab";
 import { FacilityTeamTab } from "./facility-team-tab";
@@ -56,6 +57,9 @@ export function FacilitySettingsView({
           )}
           {!isStaff && <TabsTrigger value="photos">Fotos</TabsTrigger>}
           {!isStaff && <TabsTrigger value="team">Equipo</TabsTrigger>}
+          {!isStaff && (
+            <TabsTrigger value="booking-link">Enlace de Reservas</TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="gap-2">
             Notificaciones
             <Badge variant="secondary" className="ml-1 text-[10px]">
@@ -87,6 +91,12 @@ export function FacilitySettingsView({
               organizationId={organizationId}
               facilityId={facilityId}
             />
+          </TabsContent>
+        )}
+
+        {!isStaff && (
+          <TabsContent value="booking-link">
+            <BookingLinkTab facilityId={facilityId} />
           </TabsContent>
         )}
 

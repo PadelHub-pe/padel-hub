@@ -116,6 +116,7 @@ export const facilityRouter = {
       return {
         id: facility.id,
         name: facility.name,
+        slug: facility.slug ?? null,
         phone: facility.phone,
         email: facility.email ?? "",
         website: facility.website ?? "",
