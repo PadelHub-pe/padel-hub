@@ -11,6 +11,7 @@ import { inviteRouter } from "./router/invite";
 import { orgRouter } from "./router/org";
 import { postRouter } from "./router/post";
 import { pricingRouter } from "./router/pricing";
+import { publicBookingRouter } from "./router/public-booking";
 import { scheduleRouter } from "./router/schedule";
 import { createTRPCRouter } from "./trpc";
 
@@ -28,6 +29,7 @@ export const appRouter = createTRPCRouter({
   org: orgRouter,
   post: postRouter,
   pricing: pricingRouter,
+  publicBooking: publicBookingRouter,
   schedule: scheduleRouter,
 });
 
