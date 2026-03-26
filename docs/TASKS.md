@@ -75,7 +75,7 @@ Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. See `docs/T
 
 #### Phase 3: Player Features
 
-- [ ] TASK-PB.11 — Build "Mis Reservas" page (`/[facilitySlug]/mis-reservas`): booking history for verified phone, cancel upcoming bookings, empty state. Depends on TASK-PB.10.
+- [x] TASK-PB.11 — Build "Mis Reservas" page (`/[facilitySlug]/mis-reservas`): booking history for verified phone, cancel upcoming bookings, empty state. Depends on TASK-PB.10.
 - [ ] TASK-PB.12 — Send WhatsApp booking confirmation message via Kapso after successful booking: booking details, facility name, date/time, court, booking code. Depends on TASK-PB.02, TASK-PB.10.
 
 #### Phase 4: Dashboard Integration

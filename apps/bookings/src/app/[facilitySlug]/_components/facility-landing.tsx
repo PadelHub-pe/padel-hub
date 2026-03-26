@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "~/trpc/react";
@@ -23,6 +24,16 @@ export function FacilityLanding({ facilitySlug }: FacilityLandingProps) {
 
   return (
     <main className="container pb-8">
+      {/* Mis Reservas link */}
+      <div className="flex justify-end pt-1">
+        <Link
+          href={`/${facilitySlug}/mis-reservas`}
+          className="text-primary text-sm font-medium hover:underline"
+        >
+          Mis Reservas
+        </Link>
+      </div>
+
       {/* Photo Carousel */}
       {photos.length > 0 && (
         <PhotoCarousel photos={photos} facilityName={facility.name} />

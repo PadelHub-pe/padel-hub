@@ -168,6 +168,10 @@ export function SuccessPage({ facilitySlug }: SuccessPageProps) {
         )}
 
         <Button asChild variant="outline" className="w-full">
+          <Link href={`/${facilitySlug}/mis-reservas`}>Ver mis reservas</Link>
+        </Button>
+
+        <Button asChild variant="ghost" className="w-full">
           <Link href={`/${facilitySlug}`}>Hacer otra reserva</Link>
         </Button>
       </div>
