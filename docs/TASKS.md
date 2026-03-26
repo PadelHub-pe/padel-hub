@@ -65,7 +65,7 @@ Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. See `docs/T
 - [x] TASK-PB.04 — Write `getAvailableSlots()` pure function in `packages/api/src/utils/slots.ts`. Compose existing schedule utils (`getTimeZoneWithMarkup`, `getRateForSlot`). Write tests. Depends on TASK-PB.01.
 - [x] TASK-PB.05 — Create `publicBooking` tRPC router with read procedures: `getFacility`, `getAvailableSlots`, `calculatePrice`. All use `publicProcedure`. Write tests. Depends on TASK-PB.04.
 - [x] TASK-PB.06 — Add OTP procedures to `publicBooking` router: `sendOtp`, `verifyOtp`. Integrate `@wifo/whatsapp`. Rate-limit with Upstash Redis. Write tests. Depends on TASK-PB.02, TASK-PB.05.
-- [ ] TASK-PB.07 — Add booking mutation procedures: `createBooking` (with OTP token validation + conflict detection + Turnstile), `getMyBookings`, `cancelBooking`. Reuse existing price calculation. Write tests. Depends on TASK-PB.06.
+- [x] TASK-PB.07 — Add booking mutation procedures: `createBooking` (with OTP token validation + conflict detection + Turnstile), `getMyBookings`, `cancelBooking`. Reuse existing price calculation. Write tests. Depends on TASK-PB.06.
 
 #### Phase 2: Booking App Shell
 
