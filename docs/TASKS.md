@@ -81,7 +81,7 @@ Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. See `docs/T
 #### Phase 4: Dashboard Integration
 
 - [ ] TASK-PB.13 — Add "Enlace de reservas" section to facility settings in dashboard: shareable URL display, QR code generator, copy-to-clipboard button. Depends on TASK-PB.08.
-- [ ] TASK-PB.14 — Differentiate online vs manual bookings in dashboard booking list: add "Online" / "Manual" badge column, filter by booking source. Depends on TASK-PB.10.
+- [x] TASK-PB.14 — Differentiate online vs manual bookings in dashboard booking list: add "Online" / "Manual" badge column, filter by booking source. Depends on TASK-PB.10.
 
 ---
 

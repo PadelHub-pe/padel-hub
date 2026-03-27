@@ -28,6 +28,7 @@ export interface BookingRow {
   endTime: string;
   priceInCents: number;
   isPeakRate: boolean;
+  isManualBooking: boolean;
   status: BookingStatus;
   playerCount: number;
   customerName: string | null;
@@ -147,6 +148,13 @@ export function getBookingsColumns({
       },
     },
     {
+      accessorKey: "isManualBooking",
+      header: "ORIGEN",
+      cell: ({ row }) => (
+        <BookingSourceBadge isManual={row.original.isManualBooking} />
+      ),
+    },
+    {
       accessorKey: "status",
       header: "ESTADO",
       cell: ({ row }) => <BookingStatusBadge status={row.original.status} />,
@@ -212,4 +220,19 @@ function formatDuration(minutes: number): string {
   if (h > 0 && m > 0) return `${String(h)}h ${String(m)}m`;
   if (h > 0) return `${String(h)}h`;
   return `${String(m)}m`;
+}
+
+function BookingSourceBadge({ isManual }: { isManual: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        isManual
+          ? "bg-gray-100 text-gray-700"
+          : "bg-emerald-50 text-emerald-700",
+      )}
+    >
+      {isManual ? "Manual" : "Online"}
+    </span>
+  );
 }

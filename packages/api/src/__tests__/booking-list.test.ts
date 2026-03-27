@@ -235,6 +235,79 @@ describe("booking.list", () => {
   });
 
   // ===========================================================================
+  // Tests: booking.list — source filter (online / manual)
+  // ===========================================================================
+
+  describe("source filter", () => {
+    it("filters online bookings (isManualBooking = false)", async () => {
+      const db = createMockDb({ bookings: [] });
+      const caller = authedCaller(db);
+
+      const result = await caller.booking.list({
+        facilityId: FACILITY_ID,
+        source: "online",
+      });
+
+      expect(result.bookings).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it("filters manual bookings (isManualBooking = true)", async () => {
+      const db = createMockDb({ bookings: [] });
+      const caller = authedCaller(db);
+
+      const result = await caller.booking.list({
+        facilityId: FACILITY_ID,
+        source: "manual",
+      });
+
+      expect(result.bookings).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it("returns all bookings when source is omitted", async () => {
+      const b1 = makeBooking({ id: "b1", isManualBooking: true });
+      const b2 = makeBooking({ id: "b2", isManualBooking: false });
+      const db = createMockDb({ bookings: [b1, b2] });
+      const caller = authedCaller(db);
+
+      const result = await caller.booking.list({
+        facilityId: FACILITY_ID,
+      });
+
+      expect(result.bookings).toHaveLength(2);
+    });
+
+    it("includes isManualBooking in response", async () => {
+      const b1 = makeBooking({ id: "b1", isManualBooking: true });
+      const b2 = makeBooking({ id: "b2", isManualBooking: false });
+      const db = createMockDb({ bookings: [b1, b2] });
+      const caller = authedCaller(db);
+
+      const result = await caller.booking.list({
+        facilityId: FACILITY_ID,
+      });
+
+      expect(result.bookings[0]?.isManualBooking).toBe(true);
+      expect(result.bookings[1]?.isManualBooking).toBe(false);
+    });
+
+    it("combines source filter with other filters", async () => {
+      const db = createMockDb({ bookings: [] });
+      const caller = authedCaller(db);
+
+      const result = await caller.booking.list({
+        facilityId: FACILITY_ID,
+        source: "online",
+        status: ["confirmed"],
+        courtId: COURT_A_ID,
+      });
+
+      expect(result.total).toBe(0);
+    });
+  });
+
+  // ===========================================================================
   // Tests: booking.list — date range filter
   // ===========================================================================
 

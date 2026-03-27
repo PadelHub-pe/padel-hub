@@ -67,6 +67,7 @@ const listBookingsSchema = z.object({
   search: z.string().optional(),
   courtId: z.string().uuid().optional(),
   status: z.array(z.enum(bookingStatusValues)).optional(),
+  source: z.enum(["online", "manual"]).optional(),
   date: z.date().optional(),
   dateRange: z.object({ start: z.date(), end: z.date() }).optional(),
   sortBy: z.enum(["date", "time", "court", "price", "status"]).optional(),
@@ -231,6 +232,7 @@ export const bookingRouter = {
         search,
         courtId,
         status,
+        source,
         date,
         dateRange,
         sortBy,
@@ -248,6 +250,13 @@ export const bookingRouter = {
 
       if (courtId) {
         conditions.push(eq(bookings.courtId, courtId));
+      }
+
+      // Source filter: online (isManualBooking=false) vs manual (isManualBooking=true)
+      if (source === "online") {
+        conditions.push(eq(bookings.isManualBooking, false));
+      } else if (source === "manual") {
+        conditions.push(eq(bookings.isManualBooking, true));
       }
 
       // Multi-status filter: use inArray when array has items

@@ -28,6 +28,8 @@ interface Court {
   name: string;
 }
 
+export type BookingSource = "online" | "manual";
+
 interface BookingsFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -35,6 +37,8 @@ interface BookingsFiltersProps {
   onCourtChange: (value: string | undefined) => void;
   statuses: BookingStatus[];
   onStatusChange: (values: BookingStatus[]) => void;
+  source: BookingSource | undefined;
+  onSourceChange: (value: BookingSource | undefined) => void;
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
   onDateRangeChange: (from: Date | undefined, to: Date | undefined) => void;
@@ -51,6 +55,11 @@ const statusChips: { value: BookingStatus; label: string }[] = [
   { value: "open_match", label: "Partido Abierto" },
 ];
 
+const sourceChips: { value: BookingSource; label: string }[] = [
+  { value: "online", label: "Online" },
+  { value: "manual", label: "Manual" },
+];
+
 export function BookingsFilters({
   search,
   onSearchChange,
@@ -58,6 +67,8 @@ export function BookingsFilters({
   onCourtChange,
   statuses,
   onStatusChange,
+  source,
+  onSourceChange,
   dateFrom,
   dateTo,
   onDateRangeChange,
@@ -76,6 +87,7 @@ export function BookingsFilters({
     Boolean(search) ||
     Boolean(courtId) ||
     statuses.length > 0 ||
+    Boolean(source) ||
     Boolean(dateFrom);
 
   useEffect(() => {
@@ -167,27 +179,55 @@ export function BookingsFilters({
         )}
       </div>
 
-      {/* Status chips row */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-gray-500">Estado:</span>
-        {statusChips.map((chip) => {
-          const isActive = statuses.includes(chip.value);
-          return (
-            <button
-              key={chip.value}
-              type="button"
-              onClick={() => handleStatusToggle(chip.value)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                isActive
-                  ? "border-blue-600 bg-blue-50 text-blue-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50",
-              )}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
+      {/* Filter chips row */}
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Status chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-gray-500">Estado:</span>
+          {statusChips.map((chip) => {
+            const isActive = statuses.includes(chip.value);
+            return (
+              <button
+                key={chip.value}
+                type="button"
+                onClick={() => handleStatusToggle(chip.value)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  isActive
+                    ? "border-blue-600 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50",
+                )}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Source chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-gray-500">Origen:</span>
+          {sourceChips.map((chip) => {
+            const isActive = source === chip.value;
+            return (
+              <button
+                key={chip.value}
+                type="button"
+                onClick={() =>
+                  onSourceChange(isActive ? undefined : chip.value)
+                }
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  isActive
+                    ? "border-blue-600 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50",
+                )}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

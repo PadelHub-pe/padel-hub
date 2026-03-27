@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { parse } from "date-fns";
 
+import type { BookingSource } from "./bookings-filters";
 import { useFacilityContext } from "~/hooks";
 import { useTRPC } from "~/trpc/react";
 import { BookingDetailDrawer } from "./booking-detail-drawer";
@@ -84,6 +85,11 @@ export function BookingsView() {
   const search = searchParams.get("q") ?? "";
   const courtId = searchParams.get("court") ?? undefined;
   const statuses = parseStatuses(searchParams.get("status"));
+  const sourceParam = searchParams.get("source");
+  const source: BookingSource | undefined =
+    sourceParam === "online" || sourceParam === "manual"
+      ? sourceParam
+      : undefined;
   const dateFrom = parseDateParam(searchParams.get("from"));
   const dateTo = parseDateParam(searchParams.get("to"));
   const sortBy = parseSortBy(searchParams.get("sortBy"));
@@ -132,6 +138,7 @@ export function BookingsView() {
       search: search || undefined,
       courtId,
       status: statuses.length > 0 ? statuses : undefined,
+      source,
       dateRange,
       sortBy,
       sortOrder,
@@ -161,6 +168,13 @@ export function BookingsView() {
         status: values.length > 0 ? values.join(",") : undefined,
         page: undefined,
       });
+    },
+    [updateParams],
+  );
+
+  const handleSourceChange = useCallback(
+    (value: BookingSource | undefined) => {
+      updateParams({ source: value, page: undefined });
     },
     [updateParams],
   );
@@ -211,6 +225,8 @@ export function BookingsView() {
           onCourtChange={handleCourtChange}
           statuses={statuses}
           onStatusChange={handleStatusChange}
+          source={source}
+          onSourceChange={handleSourceChange}
           dateFrom={dateFrom}
           dateTo={dateTo}
           onDateRangeChange={handleDateRangeChange}
@@ -229,6 +245,7 @@ export function BookingsView() {
             statuses.length > 0 ||
             Boolean(courtId) ||
             Boolean(search) ||
+            Boolean(source) ||
             Boolean(dateFrom)
           }
         />
