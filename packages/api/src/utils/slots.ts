@@ -61,6 +61,8 @@ export interface SlotGenerationConfig {
   existingBookings: ExistingBooking[];
   allowedDurations: number[]; // e.g., [60, 90]
   facilityDefaults: SlotFacilityDefaults;
+  /** Minutes since midnight in facility timezone. When set, slots starting before this are excluded. */
+  nowMinutes?: number;
 }
 
 // =============================================================================
@@ -135,6 +137,7 @@ export function getAvailableSlots(
     existingBookings,
     allowedDurations,
     facilityDefaults,
+    nowMinutes,
   } = config;
 
   // Find operating hours for this day
@@ -165,6 +168,9 @@ export function getAvailableSlots(
       for (const duration of sortedDurations) {
         const endMin = startMin + duration;
         if (endMin > closeMin) continue;
+
+        // Skip past slots for today
+        if (nowMinutes != null && startMin < nowMinutes) continue;
 
         // Check each 30-min sub-slot for closed/blocked (facility-wide) zones
         let blocked = false;

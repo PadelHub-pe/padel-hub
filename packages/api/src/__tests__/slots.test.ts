@@ -631,6 +631,50 @@ describe("getAvailableSlots", () => {
       expect(slots).toEqual([]);
     });
 
+    it("filters out past slots when nowMinutes is provided", () => {
+      const config = makeConfig({
+        operatingHours: [
+          makeOperatingHours({
+            dayOfWeek: 1,
+            openTime: "08:00",
+            closeTime: "14:00",
+          }),
+        ],
+        allowedDurations: [60],
+        nowMinutes: 11 * 60 + 35, // 11:35
+      });
+      const slots = getAvailableSlots(config);
+
+      // Slots starting before 11:35 should be excluded
+      expect(findSlot(slots, "court-1", "08:00", 60)).toBeUndefined();
+      expect(findSlot(slots, "court-1", "09:00", 60)).toBeUndefined();
+      expect(findSlot(slots, "court-1", "10:00", 60)).toBeUndefined();
+      expect(findSlot(slots, "court-1", "11:00", 60)).toBeUndefined();
+      expect(findSlot(slots, "court-1", "11:30", 60)).toBeUndefined();
+
+      // Slots starting at or after 12:00 should be available
+      expect(findSlot(slots, "court-1", "12:00", 60)).toBeDefined();
+      expect(findSlot(slots, "court-1", "13:00", 60)).toBeDefined();
+    });
+
+    it("does not filter slots when nowMinutes is undefined (future date)", () => {
+      const config = makeConfig({
+        operatingHours: [
+          makeOperatingHours({
+            dayOfWeek: 1,
+            openTime: "08:00",
+            closeTime: "12:00",
+          }),
+        ],
+        allowedDurations: [60],
+        // nowMinutes not set — future date
+      });
+      const slots = getAvailableSlots(config);
+
+      expect(findSlot(slots, "court-1", "08:00", 60)).toBeDefined();
+      expect(findSlot(slots, "court-1", "09:00", 60)).toBeDefined();
+    });
+
     it("handles multiple blocked slots and bookings combined", () => {
       const config = makeConfig({
         operatingHours: [

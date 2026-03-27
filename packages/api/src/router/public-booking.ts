@@ -1,6 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { addDays, startOfDay } from "date-fns";
+import { addDays, format, startOfDay } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { and, desc, eq, gt, gte, lt, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -339,6 +340,15 @@ export const publicBookingRouter = {
       const { scheduleConfig, existingBookings, dateStr } =
         await fetchScheduleData(ctx.db, facility.id, input.date);
 
+      // Filter out past slots when querying today's availability
+      const LIMA_TZ = "America/Lima";
+      const limaNow = toZonedTime(new Date(), LIMA_TZ);
+      const todayStr = format(limaNow, "yyyy-MM-dd");
+      const nowMinutes =
+        dateStr === todayStr
+          ? limaNow.getHours() * 60 + limaNow.getMinutes()
+          : undefined;
+
       const slots = getAvailableSlots({
         date: dateStr,
         dayOfWeek,
@@ -358,6 +368,7 @@ export const publicBookingRouter = {
           defaultPriceInCents: facility.defaultPriceInCents,
           defaultPeakPriceInCents: facility.defaultPeakPriceInCents,
         },
+        nowMinutes,
       });
 
       return {
