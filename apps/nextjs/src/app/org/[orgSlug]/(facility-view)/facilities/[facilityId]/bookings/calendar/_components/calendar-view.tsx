@@ -18,11 +18,10 @@ import { CalendarLegend } from "./calendar-legend";
 import { getWeekStart } from "./calendar-utils";
 import { CalendarWeekGrid } from "./calendar-week-grid";
 import { MiniCalendar } from "./mini-calendar";
-import { QuickBookingForm } from "./quick-booking-form";
+import { CreateBookingDialog } from "../../_components/create-booking-dialog";
 
 interface QuickBookingSlot {
   courtId: string;
-  courtName: string;
   date: Date;
   startTime: string;
 }
@@ -57,7 +56,7 @@ export function CalendarView() {
     useState<QuickBookingSlot | null>(null);
   const [showMiniCalendar, setShowMiniCalendar] = useState(true);
 
-  // Fetch courts for quick booking form
+  // Fetch courts for booking handlers
   const { data: courts } = useSuspenseQuery(
     trpc.court.list.queryOptions({ facilityId }),
   );
@@ -178,19 +177,15 @@ export function CalendarView() {
   };
 
   const handleEmptySlotClick = (courtId: string, startTime: string) => {
-    const court = courts.find((c) => c.id === courtId);
-    if (court) {
-      setQuickBookingSlot({
-        courtId,
-        courtName: court.name,
-        date: currentDate,
-        startTime,
-      });
-    }
+    setQuickBookingSlot({
+      courtId,
+      date: currentDate,
+      startTime,
+    });
   };
 
   const handleAddBooking = () => {
-    // Open quick booking form with first court and current time or opening time
+    // Open booking dialog with first court and current time or opening time
     const firstCourt = courts[0];
     if (firstCourt && dayData) {
       const now = new Date();
@@ -204,7 +199,6 @@ export function CalendarView() {
 
       setQuickBookingSlot({
         courtId: firstCourt.id,
-        courtName: firstCourt.name,
         date: currentDate,
         startTime,
       });
@@ -241,7 +235,6 @@ export function CalendarView() {
       if (firstCourt) {
         setQuickBookingSlot({
           courtId: firstCourt.id,
-          courtName: firstCourt.name,
           date,
           startTime,
         });
@@ -384,19 +377,19 @@ export function CalendarView() {
         onBookingUpdated={handleBookingUpdated}
       />
 
-      {/* Quick booking form */}
-      {quickBookingSlot && (
-        <QuickBookingForm
-          open={true}
-          onClose={handleCloseQuickBooking}
-          facilityId={facilityId}
-          courtId={quickBookingSlot.courtId}
-          courtName={quickBookingSlot.courtName}
-          date={quickBookingSlot.date}
-          startTime={quickBookingSlot.startTime}
-          onBookingCreated={handleBookingCreated}
-        />
-      )}
+      {/* Booking creation dialog */}
+      <CreateBookingDialog
+        open={quickBookingSlot !== null}
+        onClose={handleCloseQuickBooking}
+        onBookingCreated={handleBookingCreated}
+        initialCourtId={quickBookingSlot?.courtId}
+        initialDate={
+          quickBookingSlot
+            ? format(quickBookingSlot.date, "yyyy-MM-dd")
+            : undefined
+        }
+        initialStartTime={quickBookingSlot?.startTime}
+      />
     </div>
   );
 }

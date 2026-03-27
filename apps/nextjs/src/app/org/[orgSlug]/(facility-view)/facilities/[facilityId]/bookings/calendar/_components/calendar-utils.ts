@@ -116,17 +116,6 @@ export function isToday(date: Date): boolean {
 }
 
 /**
- * Calculate end time by adding 90 minutes (1.5h) to start time
- */
-export function calculateEndTime(startTime: string): string {
-  const [hours, minutes] = startTime.split(":").map(Number);
-  const totalMinutes = (hours ?? 0) * 60 + (minutes ?? 0) + 90;
-  const endHour = Math.floor(totalMinutes / 60);
-  const endMinute = totalMinutes % 60;
-  return `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
-}
-
-/**
  * Check if a time slot is within a blocked slot for a given court
  */
 export function isTimeBlocked(

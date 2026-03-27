@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useMutation,
@@ -126,12 +126,18 @@ interface CreateBookingDialogProps {
   open: boolean;
   onClose: () => void;
   onBookingCreated: () => void;
+  initialCourtId?: string;
+  initialDate?: string;
+  initialStartTime?: string;
 }
 
 export function CreateBookingDialog({
   open,
   onClose,
   onBookingCreated,
+  initialCourtId,
+  initialDate,
+  initialStartTime,
 }: CreateBookingDialogProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -144,9 +150,9 @@ export function CreateBookingDialog({
   const form = useForm<CreateBookingFormValues>({
     resolver: standardSchemaResolver(createBookingSchema),
     defaultValues: {
-      courtId: "",
-      date: format(new Date(), "yyyy-MM-dd"),
-      startTime: "",
+      courtId: initialCourtId ?? "",
+      date: initialDate ?? format(new Date(), "yyyy-MM-dd"),
+      startTime: initialStartTime ?? "",
       duration: "90",
       customerName: "",
       customerPhone: "",
@@ -156,6 +162,24 @@ export function CreateBookingDialog({
       players: [],
     },
   });
+
+  // Reset form with fresh values when dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        courtId: initialCourtId ?? "",
+        date: initialDate ?? format(new Date(), "yyyy-MM-dd"),
+        startTime: initialStartTime ?? "",
+        duration: "90",
+        customerName: "",
+        customerPhone: "",
+        customerEmail: "",
+        paymentMethod: undefined,
+        notes: "",
+        players: [],
+      });
+    }
+  }, [open, initialCourtId, initialDate, initialStartTime, form]);
 
   const {
     fields: playerFields,
