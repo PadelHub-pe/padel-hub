@@ -18,7 +18,7 @@ export function PhotoCarousel({ photos, facilityName }: PhotoCarouselProps) {
   // Single photo — no carousel needed
   if (photos.length === 1) {
     return (
-      <div className="relative -mx-4 aspect-[4/3] overflow-hidden">
+      <div className="relative -mx-4 aspect-[4/3] overflow-hidden rounded-b-2xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={getImageUrl(firstPhoto, "gallery")}
@@ -62,7 +62,7 @@ function MultiPhotoCarousel({ photos, facilityName }: PhotoCarouselProps) {
   }, [emblaApi, handleSelect]);
 
   return (
-    <div className="relative -mx-4">
+    <div className="relative -mx-4 overflow-hidden rounded-b-2xl">
       {/* Carousel viewport */}
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex">

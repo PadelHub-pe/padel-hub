@@ -25,25 +25,29 @@ interface AmenityListProps {
 
 export function AmenityList({ amenities }: AmenityListProps) {
   return (
-    <div className="mt-4">
-      <h2 className="text-sm font-medium">Servicios</h2>
-      <div className="mt-2 flex flex-wrap gap-2">
+    <section>
+      <h2 className="font-display text-sm font-semibold tracking-wide uppercase">
+        Servicios
+      </h2>
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
         {amenities.map((amenity) => {
           const info = AMENITY_MAP[amenity];
           const label = info?.label ?? amenity;
           const icon = info?.icon ?? "✓";
 
           return (
-            <span
+            <div
               key={amenity}
-              className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs"
+              className="border-border flex items-center gap-2.5 rounded-lg border px-3 py-2"
             >
-              <span aria-hidden="true">{icon}</span>
-              {label}
-            </span>
+              <span className="text-base" aria-hidden="true">
+                {icon}
+              </span>
+              <span className="text-muted-foreground text-sm">{label}</span>
+            </div>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

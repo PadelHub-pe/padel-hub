@@ -14,18 +14,17 @@ export function FacilityHeader({
   courtCount,
 }: FacilityHeaderProps) {
   return (
-    <div className="mt-5 space-y-3">
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">
-          {name}
-        </h1>
+    <section className="space-y-2.5">
+      <h1 className="font-display text-2xl font-bold tracking-tight">{name}</h1>
+
+      <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         {(district ?? address) && (
-          <p className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
+          <span className="inline-flex items-center gap-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="size-4 shrink-0"
+              className="size-3.5 shrink-0"
             >
               <path
                 fillRule="evenodd"
@@ -34,13 +33,10 @@ export function FacilityHeader({
               />
             </svg>
             {[district, address].filter(Boolean).join(" · ")}
-          </p>
+          </span>
         )}
-      </div>
 
-      {/* Court count badge */}
-      <div className="flex items-center gap-2">
-        <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium">
+        <span className="text-primary inline-flex items-center gap-1 font-medium">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
@@ -57,12 +53,11 @@ export function FacilityHeader({
         </span>
       </div>
 
-      {/* Description */}
       {description && (
         <p className="text-muted-foreground text-sm leading-relaxed">
           {description}
         </p>
       )}
-    </div>
+    </section>
   );
 }
