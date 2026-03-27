@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Mobile App** (Expo): Player-facing app for court discovery, booking, and open match coordination
 - **Web Dashboard** (Next.js): Court owner dashboard for facility management, reservations, and analytics
+- **Public Bookings** (Next.js): Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]` — no account required, phone OTP verification
 - **Admin Panel** (Next.js): Internal PadelHub admin panel for managing access requests and organizations
 - **Landing Page** (Astro): B2B marketing page for facility owner lead generation ("Solicitar Acceso")
 
@@ -53,6 +54,7 @@ Organization ─┬─► OrganizationMember (role: org_admin | facility_manager
 pnpm dev              # Run all apps in watch mode
 pnpm dev:next         # Run only Next.js app (http://localhost:3000)
 pnpm dev:admin        # Run only Admin panel (http://localhost:3001)
+pnpm dev:bookings     # Run only Public Bookings app (http://localhost:3002)
 pnpm dev:landing      # Run only Astro landing page (http://localhost:4321)
 ```
 
@@ -100,7 +102,7 @@ pnpm test             # Run all tests with Vitest
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Test files**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current coverage**: `packages/api` (access-control, account, booking, booking-cancel, booking-list, booking-price, booking-status, calendar, dashboard, default-operating-hours, invite, last-admin, pricing, schedule-utils, schedule, setup, slugify, team), `packages/images` (upload, delete, URL builder), `packages/validators` (setup)
+- **Current coverage**: `packages/api` (access-control, account, booking, booking-cancel, booking-list, booking-price, booking-status, calendar, dashboard, default-operating-hours, invite, last-admin, otp-store, pricing, public-booking, public-booking-mutations, public-booking-otp, schedule-utils, schedule, setup, slots, slugify, team, verification-token), `packages/whatsapp` (otp, otp-dev-mode, notifications), `packages/images` (upload, delete, URL builder), `apps/nextjs` (facility-switch-path), `packages/validators` (setup)
 - **Conventions**: Helper factories (`makeMembership()`, `makeFacility()`), mock tRPC callers, constants for test IDs
 
 ### Other
@@ -116,7 +118,7 @@ pnpm turbo gen init   # Scaffold new package from templates
 Format: `type(scope): message` (lowercase, imperative mood)
 
 - **Types**: `feat`, `fix`, `refactor`, `chore`, `docs`
-- **Scopes**: `web`, `admin`, `landing`, `repo`, `auth`, `db`, `api`, `images`
+- **Scopes**: `web`, `bookings`, `admin`, `landing`, `repo`, `auth`, `db`, `api`, `images`, `whatsapp`
 - Examples: `feat(web): add booking calendar view`, `chore(repo): fix lint and format issues`
 
 ## Architecture
@@ -125,6 +127,7 @@ Format: `type(scope): message` (lowercase, imperative mood)
 /apps
   ├─ nextjs           # Court Owner Dashboard (web, port 3000)
   ├─ admin            # PadelHub Admin Panel (web, port 3001)
+  ├─ bookings         # Public Booking Page (web, port 3002)
   ├─ landing          # B2B Landing Page (Astro)
   └─ expo             # Player App (iOS + Android)
 /assets               # Brand assets (logos, favicons, OG images)
@@ -135,7 +138,8 @@ Format: `type(scope): message` (lowercase, imperative mood)
   ├─ email            # Email templates & sending (React Email + Resend)
   ├─ images           # Cloudflare Images integration (upload, delete, URL builder)
   ├─ ui               # Shared React components (shadcn-ui)
-  └─ validators       # Shared Zod validation schemas
+  ├─ validators       # Shared Zod validation schemas
+  └─ whatsapp         # WhatsApp OTP & notifications (Kapso SDK)
 /tooling
   ├─ eslint           # ESLint presets (base, react, nextjs)
   ├─ prettier         # Prettier configuration
@@ -251,6 +255,108 @@ apps/admin/src/app/
 - `organization_invites` - Token-based invites (role, facilityIds, expiresAt, status)
 
 **Seed data:** `owner@padelhub.pe` is seeded as a platform admin.
+
+### Public Bookings App (`apps/bookings`)
+
+Player-facing booking page deployed to `bookings.padelhub.pe`. Guest booking with WhatsApp OTP — no account required.
+
+- **Stack**: Next.js 16, React 19, tRPC client, Tailwind CSS v4
+- **Port**: 3002 (`pnpm dev:bookings`)
+- **Auth**: None — phone verification via WhatsApp OTP (Kapso SDK)
+- **Abuse prevention**: Cloudflare Turnstile (invisible CAPTCHA) + Upstash Redis rate limits + OTP
+
+**Route structure:**
+
+```
+apps/bookings/src/app/
+├─ [facilitySlug]/
+│   ├─ page.tsx                     # Facility landing (info, photos, date picker)
+│   ├─ _components/
+│   │   ├─ facility-landing.tsx     # Main landing component
+│   │   ├─ facility-header.tsx      # Name, address, district, court count
+│   │   ├─ photo-carousel.tsx       # Embla carousel for facility photos
+│   │   ├─ date-selector.tsx        # Date picker + "Reservar" CTA
+│   │   └─ amenity-list.tsx         # Amenity chips
+│   ├─ book/
+│   │   ├─ page.tsx                 # Court & time slot selection
+│   │   └─ _components/
+│   │       ├─ booking-page.tsx     # Duration tabs + slot grid
+│   │       └─ slot-grid.tsx        # Available slot cards
+│   ├─ confirm/
+│   │   ├─ page.tsx                 # Contact info + OTP verification
+│   │   └─ _components/
+│   │       ├─ confirm-page.tsx     # Multi-step: name → OTP → confirm
+│   │       ├─ booking-summary.tsx  # Price/time summary
+│   │       └─ otp-input.tsx        # 6-digit OTP input
+│   ├─ success/
+│   │   ├─ page.tsx                 # Booking confirmation
+│   │   └─ _components/
+│   │       ├─ success-page.tsx     # Booking code + details
+│   │       └─ calendar-link.tsx    # iCalendar export
+│   └─ mis-reservas/
+│       ├─ page.tsx                 # Guest booking history
+│       └─ _components/
+│           ├─ mis-reservas-page.tsx # Phone verify → booking list
+│           └─ booking-card.tsx     # Booking card with cancel
+└─ api/trpc/[trpc]/route.ts        # tRPC handler
+```
+
+**Key flows:**
+
+- **View availability** → Fully public, no auth required
+- **Make a booking** → Name + phone + WhatsApp OTP (once per device)
+- **View my bookings** → Same verified phone (token in localStorage, 30-day TTL)
+
+**OTP verification:**
+
+1. Player enters phone → `sendOtp` (rate-limited: 5/phone/hour)
+2. Kapso SDK sends WhatsApp AUTHENTICATION template with 6-digit code
+3. Code stored in Redis (10-min TTL), max 5 verification attempts
+4. On success → HMAC-signed token (`v1.{phone}.{expiresAt}.{signature}`)
+5. Token stored in `localStorage` per facility → subsequent bookings skip OTP
+
+**Slot generation** (`packages/api/src/utils/slots.ts`):
+
+Pure function `getAvailableSlots()` — computes available time windows from schedule data. Composes `getTimeZoneWithMarkup()` + `getRateForSlot()`. Inputs: operating hours, peak periods, blocked slots, existing bookings, allowed durations. Returns `AvailableSlot[]` with pricing.
+
+**Environment:**
+
+- Inherits root `.env` (`POSTGRES_URL`, `AUTH_SECRET`)
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` — Cloudflare Turnstile
+- `NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH` — Image delivery
+
+### WhatsApp Package (`packages/whatsapp`)
+
+WhatsApp integration via Kapso SDK for OTP delivery and booking notifications.
+
+- **Stack**: Kapso WhatsApp Cloud API SDK, `@t3-oss/env-core`, Zod
+- **Exports**: `@wifo/whatsapp` (sendOtp, sendBookingConfirmation, generateOtpCode, whatsappConfig)
+- **Dev mode**: When `KAPSO_API_KEY` is not set, messages log to console instead of sending
+
+**Public API** (exported from `@wifo/whatsapp`):
+
+```typescript
+import {
+  sendOtp,
+  sendBookingConfirmation,
+  generateOtpCode,
+  whatsappConfig,
+} from "@wifo/whatsapp";
+```
+
+**WhatsApp templates** (pre-approved in Kapso):
+
+- `booking_verification` — AUTHENTICATION template with COPY_CODE button (OTP delivery)
+- `booking_confirmation` — UTILITY template with booking details (court, date, time, code)
+
+**Environment**: `KAPSO_API_KEY` (optional — dev mode logs to console), `WHATSAPP_PHONE_NUMBER_ID`.
+
+**Integration points:**
+
+- `packages/api/src/router/public-booking.ts` — `sendOtp` in OTP procedures, `sendBookingConfirmation` after booking creation
+- `packages/api/src/lib/otp-store.ts` — Redis-backed OTP storage with in-memory fallback
+- `packages/api/src/lib/otp-rate-limit.ts` — Upstash sliding window rate limiter
+- `packages/api/src/lib/verification-token.ts` — HMAC-signed phone verification tokens
 
 ### Web Dashboard Route Structure
 
@@ -370,6 +476,8 @@ Cloudflare Images integration for direct browser uploads and server-side managem
            @wifo/validators  @wifo/email
                 ↓            ↑
            @wifo/ui     @wifo/images
+                             ↑
+                        @wifo/whatsapp
 ```
 
 ## Tech Stack
@@ -564,6 +672,7 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 | `pricing`   | getOverview, updateDefaultRates, updateCourtPricing, resetCourtPricing, calculateRevenue                              | protected        |
 | `dashboard` | getStats, getTodaySchedule (facility dashboard)                                                                       | protected        |
 | `account`   | getMyProfile, updateMyProfile, getSecurityInfo                                                                        | protected        |
+| `publicBooking` | getFacility, getAvailableSlots, calculatePrice, sendOtp, verifyOtp, createBooking, getMyBookings, cancelBooking   | public           |
 | `images`    | getUploadUrl, confirmUpload, delete, reorder                                                                          | protected        |
 | `auth`      | getSession                                                                                                            | public           |
 
@@ -644,15 +753,18 @@ Required in `.env` (copy from `.env.example`):
 Optional:
 
 - `ADMIN_SITE_PASSWORD` - Site-level password gate for admin panel
-- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis for rate limiting (falls back to in-memory)
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis for OTP storage + rate limiting (falls back to in-memory)
 - `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_IMAGES_TOKEN` - Cloudflare Images API credentials
 - `CLOUDFLARE_IMAGES_HASH` / `NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH` - Cloudflare Images delivery hash
+- `KAPSO_API_KEY` - Kapso WhatsApp API key for OTP & notifications (optional — dev mode logs to console)
+- `WHATSAPP_PHONE_NUMBER_ID` - WhatsApp Business phone number ID (Kapso)
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` - Cloudflare Turnstile for public booking bot protection
 
 ## Testing Conventions
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current suites**: `access-control` (104), `account` (11), `booking` (54), `booking-cancel` (28), `booking-list` (18), `booking-price` (13), `booking-status` (19), `calendar` (21), `dashboard` (11), `default-operating-hours` (2), `invite` (24), `last-admin` (8), `pricing` (27), `schedule-utils` (43), `schedule` (23), `setup` (37), `slugify` (15), `team` (32), `images` (21), `validators` (1) — 512 total
+- **Current suites**: `access-control` (104), `account` (11), `booking` (54), `booking-cancel` (28), `booking-list` (23), `booking-price` (13), `booking-status` (19), `calendar` (21), `dashboard` (11), `default-operating-hours` (2), `invite` (24), `last-admin` (8), `otp-store` (7), `pricing` (27), `public-booking` (18), `public-booking-mutations` (31), `public-booking-otp` (13), `schedule-utils` (43), `schedule` (23), `setup` (46), `slots` (27), `slugify` (15), `team` (32), `verification-token` (10), `whatsapp/otp` (8), `whatsapp/notifications` (3), `whatsapp/otp-dev-mode` (2), `images` (21), `nextjs/facility-switch-path` (14), `validators` (1) — 659 total
 - **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
 - **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()`, `makePeakPeriod()`, `makeOperatingHour()`, `makeBooking()`, `makeBookingPlayer()` — return typed objects with optional overrides
 - **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)
