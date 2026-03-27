@@ -7,14 +7,17 @@ import postgres from "postgres";
 import {
   accessRequests,
   account,
+  blockedSlots,
   bookingActivity,
   bookingPlayers,
   bookings,
   courts,
   facilities,
+  operatingHours,
   organizationInvites,
   organizationMembers,
   organizations,
+  peakPeriods,
   platformAdmins,
   user,
 } from "./schema";
@@ -99,7 +102,8 @@ async function seed() {
       }
     }
 
-    // Delete test organization (cascade will delete facilities, courts, bookings)
+    // Delete test organization (cascade will delete facilities, courts, bookings,
+    // operating hours, peak periods, blocked slots)
     const existingOrg = await db
       .select()
       .from(organizations)
@@ -126,6 +130,15 @@ async function seed() {
             .where(eq(bookingActivity.bookingId, booking.id));
         }
         await db.delete(bookings).where(eq(bookings.facilityId, facility.id));
+        await db
+          .delete(blockedSlots)
+          .where(eq(blockedSlots.facilityId, facility.id));
+        await db
+          .delete(peakPeriods)
+          .where(eq(peakPeriods.facilityId, facility.id));
+        await db
+          .delete(operatingHours)
+          .where(eq(operatingHours.facilityId, facility.id));
         await db.delete(courts).where(eq(courts.facilityId, facility.id));
         await db.delete(facilities).where(eq(facilities.id, facility.id));
       }
@@ -348,20 +361,35 @@ async function seed() {
 
     await db.insert(accessRequests).values({
       email: "contacto@padelmania.pe",
+      name: "Ricardo Palma",
+      phone: "+51998877665",
+      facilityName: "Padel Manía",
+      district: "Surco",
+      courtCount: 4,
       status: "pending",
     });
 
     await db.insert(accessRequests).values({
       email: "info@acepadel.pe",
+      name: "Valentina Reyes",
+      phone: "+51987654123",
+      facilityName: "Ace Padel Club",
+      district: "San Borja",
+      courtCount: 6,
       status: "pending",
     });
 
     await db.insert(accessRequests).values({
       email: "admin@matchpoint.pe",
+      name: "Carlos Rojas",
+      phone: "+51976543210",
+      facilityName: "Match Point Padel",
+      district: "La Molina",
+      courtCount: 3,
       status: "rejected",
       reviewedAt: new Date(),
       reviewedBy: userId,
-      notes: "No se pudo verificar información",
+      notes: "No se pudo verificar información del local",
     });
 
     console.log("✅ Created 3 access requests (2 pending, 1 rejected)\n");
@@ -393,6 +421,9 @@ async function seed() {
       photos: [
         "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=400&fit=crop",
       ],
+      defaultPriceInCents: 7000,
+      defaultPeakPriceInCents: 9000,
+      allowedDurationMinutes: [60, 90],
       isActive: true,
       onboardingCompletedAt: new Date(),
     });
@@ -412,6 +443,9 @@ async function seed() {
       photos: [
         "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&h=400&fit=crop",
       ],
+      defaultPriceInCents: 9000,
+      defaultPeakPriceInCents: 11500,
+      allowedDurationMinutes: [60, 90, 120],
       isActive: true,
       onboardingCompletedAt: new Date(),
     });
@@ -433,38 +467,149 @@ async function seed() {
     });
 
     console.log("✅ Created 3 facilities:");
-    console.log("   • Padel Club San Isidro (active)");
-    console.log("   • Padel Club Miraflores (active)");
+    console.log("   • Padel Club San Isidro (active, defaults S/.70/S/.90)");
+    console.log("   • Padel Club Miraflores (active, defaults S/.90/S/.115)");
     console.log("   • Padel Club La Molina (inactive)\n");
+
+    // ==========================================================================
+    // CREATE OPERATING HOURS
+    // ==========================================================================
+
+    // Helper to insert a week of operating hours
+    async function insertOperatingHours(
+      facilityId: string,
+      schedule: {
+        dayOfWeek: number;
+        openTime: string;
+        closeTime: string;
+        isClosed?: boolean;
+      }[],
+    ) {
+      for (const day of schedule) {
+        await db.insert(operatingHours).values({
+          id: randomUUID(),
+          facilityId,
+          dayOfWeek: day.dayOfWeek,
+          openTime: day.openTime,
+          closeTime: day.closeTime,
+          isClosed: day.isClosed ?? false,
+        });
+      }
+    }
+
+    // San Isidro: Mon-Fri 07:00-22:00, Sat 08:00-22:00, Sun 08:00-20:00
+    await insertOperatingHours(facility1Id, [
+      { dayOfWeek: 0, openTime: "08:00", closeTime: "20:00" }, // Sun
+      { dayOfWeek: 1, openTime: "07:00", closeTime: "22:00" }, // Mon
+      { dayOfWeek: 2, openTime: "07:00", closeTime: "22:00" }, // Tue
+      { dayOfWeek: 3, openTime: "07:00", closeTime: "22:00" }, // Wed
+      { dayOfWeek: 4, openTime: "07:00", closeTime: "22:00" }, // Thu
+      { dayOfWeek: 5, openTime: "07:00", closeTime: "22:00" }, // Fri
+      { dayOfWeek: 6, openTime: "08:00", closeTime: "22:00" }, // Sat
+    ]);
+
+    // Miraflores: Mon-Fri 07:00-23:00, Sat 07:00-23:00, Sun 08:00-21:00
+    await insertOperatingHours(facility2Id, [
+      { dayOfWeek: 0, openTime: "08:00", closeTime: "21:00" }, // Sun
+      { dayOfWeek: 1, openTime: "07:00", closeTime: "23:00" }, // Mon
+      { dayOfWeek: 2, openTime: "07:00", closeTime: "23:00" }, // Tue
+      { dayOfWeek: 3, openTime: "07:00", closeTime: "23:00" }, // Wed
+      { dayOfWeek: 4, openTime: "07:00", closeTime: "23:00" }, // Thu
+      { dayOfWeek: 5, openTime: "07:00", closeTime: "23:00" }, // Fri
+      { dayOfWeek: 6, openTime: "07:00", closeTime: "23:00" }, // Sat
+    ]);
+
+    console.log("✅ Created operating hours:");
+    console.log("   • San Isidro: Mon-Fri 07-22, Sat 08-22, Sun 08-20");
+    console.log("   • Miraflores: Mon-Sat 07-23, Sun 08-21\n");
+
+    // ==========================================================================
+    // CREATE PEAK PERIODS
+    // ==========================================================================
+
+    // San Isidro: Evening peak Mon-Fri, Weekend morning peak
+    await db.insert(peakPeriods).values({
+      id: randomUUID(),
+      facilityId: facility1Id,
+      name: "Hora Punta Noche",
+      daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
+      startTime: "18:00",
+      endTime: "22:00",
+      markupPercent: 50,
+      isActive: true,
+    });
+
+    await db.insert(peakPeriods).values({
+      id: randomUUID(),
+      facilityId: facility1Id,
+      name: "Fin de Semana",
+      daysOfWeek: [0, 6], // Sat-Sun
+      startTime: "09:00",
+      endTime: "13:00",
+      markupPercent: 30,
+      isActive: true,
+    });
+
+    // Miraflores: Evening peak Mon-Fri, Saturday premium
+    await db.insert(peakPeriods).values({
+      id: randomUUID(),
+      facilityId: facility2Id,
+      name: "Hora Punta",
+      daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
+      startTime: "18:00",
+      endTime: "23:00",
+      markupPercent: 40,
+      isActive: true,
+    });
+
+    await db.insert(peakPeriods).values({
+      id: randomUUID(),
+      facilityId: facility2Id,
+      name: "Sábado Premium",
+      daysOfWeek: [6], // Sat
+      startTime: "10:00",
+      endTime: "14:00",
+      markupPercent: 50,
+      isActive: true,
+    });
+
+    console.log("✅ Created peak periods:");
+    console.log(
+      "   • San Isidro: Noche L-V 18-22h (+50%), Fin de semana 09-13h (+30%)",
+    );
+    console.log(
+      "   • Miraflores: Noche L-V 18-23h (+40%), Sábado 10-14h (+50%)\n",
+    );
 
     // ==========================================================================
     // CREATE COURTS
     // ==========================================================================
 
+    // San Isidro courts — mix of custom and facility-default pricing
     const facility1Courts = [
       {
         name: "Cancha 1",
         type: "indoor" as const,
-        priceInCents: 8000,
-        peakPriceInCents: 10000,
+        priceInCents: 8000, // Custom: S/.80
+        peakPriceInCents: 10000, // Custom peak: S/.100
       },
       {
         name: "Cancha 2",
         type: "indoor" as const,
-        priceInCents: 8000,
-        peakPriceInCents: 10000,
+        priceInCents: null, // Uses facility default: S/.70
+        peakPriceInCents: null, // Uses facility default peak: S/.90
       },
       {
         name: "Cancha 3",
         type: "outdoor" as const,
-        priceInCents: 6000,
-        peakPriceInCents: 8000,
+        priceInCents: 6000, // Custom: S/.60
+        peakPriceInCents: null, // Uses facility default peak: S/.90
       },
       {
         name: "Cancha 4",
         type: "outdoor" as const,
-        priceInCents: 6000,
-        peakPriceInCents: 8000,
+        priceInCents: null, // Uses facility default
+        peakPriceInCents: null, // Uses facility default peak
         status: "maintenance" as const,
       },
     ];
@@ -484,24 +629,25 @@ async function seed() {
       });
     }
 
+    // Miraflores courts — mix of custom and facility-default pricing
     const facility2Courts = [
       {
         name: "Cancha Premium 1",
         type: "indoor" as const,
-        priceInCents: 10000,
-        peakPriceInCents: 12000,
+        priceInCents: 10000, // Custom: S/.100
+        peakPriceInCents: 12500, // Custom peak: S/.125
       },
       {
         name: "Cancha Premium 2",
         type: "indoor" as const,
-        priceInCents: 10000,
-        peakPriceInCents: 12000,
+        priceInCents: null, // Uses facility default: S/.90
+        peakPriceInCents: null, // Uses facility default peak: S/.115
       },
       {
         name: "Cancha Vista Mar",
         type: "outdoor" as const,
-        priceInCents: 9000,
-        peakPriceInCents: 11000,
+        priceInCents: 8500, // Custom: S/.85
+        peakPriceInCents: null, // Uses facility default peak: S/.115
       },
     ];
 
@@ -520,19 +666,10 @@ async function seed() {
       });
     }
 
+    // La Molina courts — inactive, no pricing needed yet
     const facility3Courts = [
-      {
-        name: "Cancha A",
-        type: "indoor" as const,
-        priceInCents: 7000,
-        peakPriceInCents: 9000,
-      },
-      {
-        name: "Cancha B",
-        type: "indoor" as const,
-        priceInCents: 7000,
-        peakPriceInCents: 9000,
-      },
+      { name: "Cancha A", type: "indoor" as const },
+      { name: "Cancha B", type: "indoor" as const },
     ];
 
     for (const court of facility3Courts) {
@@ -542,15 +679,59 @@ async function seed() {
         name: court.name,
         type: court.type,
         status: "inactive",
-        priceInCents: court.priceInCents,
-        peakPriceInCents: court.peakPriceInCents,
         isActive: false,
       });
     }
 
     const totalCourts =
       facility1Courts.length + facility2Courts.length + facility3Courts.length;
-    console.log(`✅ Created ${totalCourts} courts across all facilities\n`);
+    console.log(`✅ Created ${totalCourts} courts:`);
+    console.log(
+      "   • San Isidro: 2 indoor (1 custom, 1 default), 2 outdoor (1 in maintenance)",
+    );
+    console.log(
+      "   • Miraflores: 2 indoor (1 custom, 1 default), 1 outdoor custom",
+    );
+    console.log("   • La Molina: 2 indoor (inactive)\n");
+
+    // ==========================================================================
+    // CREATE BLOCKED SLOTS
+    // ==========================================================================
+
+    const tomorrow = addDays(new Date(), 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const dayAfterTomorrow = addDays(new Date(), 2);
+    dayAfterTomorrow.setHours(0, 0, 0, 0);
+
+    // Court-specific maintenance block
+    await db.insert(blockedSlots).values({
+      id: randomUUID(),
+      facilityId: facility1Id,
+      courtId: facility1CourtIds[3] ?? null, // Cancha 4
+      date: tomorrow,
+      startTime: "08:00",
+      endTime: "12:00",
+      reason: "maintenance",
+      notes: "Reparación de cristal lateral",
+      createdBy: userId,
+    });
+
+    // Facility-wide tournament block
+    await db.insert(blockedSlots).values({
+      id: randomUUID(),
+      facilityId: facility1Id,
+      courtId: null, // All courts
+      date: dayAfterTomorrow,
+      startTime: "14:00",
+      endTime: "20:00",
+      reason: "tournament",
+      notes: "Torneo interno Padel Group Lima",
+      createdBy: userId,
+    });
+
+    console.log("✅ Created blocked slots:");
+    console.log("   • Tomorrow: Cancha 4 maintenance 08-12h");
+    console.log("   • Day after tomorrow: All courts tournament 14-20h\n");
 
     // ==========================================================================
     // CREATE BOOKINGS WITH PLAYERS AND ACTIVITY
@@ -706,7 +887,7 @@ async function seed() {
 
     // ---- Facility 1 Bookings (San Isidro) ----
 
-    // Today: confirmed, 4/4 players (full)
+    // Today: confirmed, 4/4 players, Cancha 1 (custom S/.80)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-8X4K`,
@@ -734,7 +915,7 @@ async function seed() {
       ],
     );
 
-    // Today: confirmed, 3/4 players
+    // Today: confirmed, 3/4 players, Cancha 2 (facility default S/.70)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-9Y5L`,
@@ -746,7 +927,7 @@ async function seed() {
         status: "confirmed",
         customerName: "María Torres",
         customerEmail: "maria.t@email.com",
-        priceInCents: 8000,
+        priceInCents: 7000,
         isPeakRate: false,
       },
       [
@@ -761,7 +942,7 @@ async function seed() {
       ],
     );
 
-    // Today: in_progress, 4/4 players
+    // Today: in_progress, 4/4 players, Cancha 1 (custom peak S/.100)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-7Z3M`,
@@ -794,7 +975,7 @@ async function seed() {
       ],
     );
 
-    // Today: pending, 1/4 player
+    // Today: pending, 1/4 player, Cancha 3 (custom S/.60, peak uses facility default S/.90)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-6W2N`,
@@ -806,7 +987,7 @@ async function seed() {
         status: "pending",
         customerName: "Sofia Reyes",
         customerEmail: "sofia.r@email.com",
-        priceInCents: 8000,
+        priceInCents: 9000,
         isPeakRate: true,
       },
       [
@@ -819,7 +1000,7 @@ async function seed() {
       ],
     );
 
-    // Today: OPEN MATCH, 2/4 players (key new test case)
+    // Today: OPEN MATCH, 2/4 players, Cancha 2 (facility default peak S/.90)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-OM1A`,
@@ -831,7 +1012,7 @@ async function seed() {
         status: "open_match",
         customerName: "Miguel Torres",
         customerEmail: "player1@padelhub.pe",
-        priceInCents: 8000,
+        priceInCents: 9000,
         isPeakRate: true,
       },
       [
@@ -866,7 +1047,7 @@ async function seed() {
       ],
     );
 
-    // Tomorrow: confirmed, 4/4 players
+    // Tomorrow: confirmed, 4/4 players, evening peak
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-4U0Q`,
@@ -878,7 +1059,7 @@ async function seed() {
         status: "confirmed",
         customerName: "Elena Flores",
         customerEmail: "elena.f@email.com",
-        priceInCents: 10000,
+        priceInCents: 9000,
         isPeakRate: true,
       },
       [
@@ -933,7 +1114,7 @@ async function seed() {
         status: "completed",
         customerName: "Jorge Medina",
         customerEmail: "jorge.m@email.com",
-        priceInCents: 10000,
+        priceInCents: 9000,
         isPeakRate: true,
       },
       [
@@ -1017,7 +1198,7 @@ async function seed() {
         status: "cancelled",
         customerName: "Laura Ríos",
         customerEmail: "laura.r@email.com",
-        priceInCents: 8000,
+        priceInCents: 7000,
         isPeakRate: false,
         cancelledBy: "user",
         cancellationReason: "No puedo asistir por motivos personales",
@@ -1035,6 +1216,7 @@ async function seed() {
 
     // ---- Facility 2 Bookings (Miraflores) ----
 
+    // Today: confirmed, Cancha Premium 1 (custom S/.100)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-MF1A`,
@@ -1067,6 +1249,7 @@ async function seed() {
       ],
     );
 
+    // Today: confirmed, Cancha Premium 2 (facility default S/.90)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-MF2B`,
@@ -1078,7 +1261,7 @@ async function seed() {
         status: "confirmed",
         customerName: "Natalia Cruz",
         customerEmail: "natalia.c@email.com",
-        priceInCents: 10000,
+        priceInCents: 9000,
         isPeakRate: false,
       },
       [
@@ -1092,6 +1275,7 @@ async function seed() {
       ],
     );
 
+    // Today: pending, Cancha Vista Mar evening (custom S/.85, peak uses facility default S/.115)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-MF3C`,
@@ -1103,7 +1287,7 @@ async function seed() {
         status: "pending",
         customerName: "Fernando Gil",
         customerEmail: "fernando.g@email.com",
-        priceInCents: 11000,
+        priceInCents: 11500,
         isPeakRate: true,
       },
       [
@@ -1116,6 +1300,7 @@ async function seed() {
       ],
     );
 
+    // Past: completed, Cancha Premium 1 (custom S/.100)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-MF4D`,
@@ -1143,6 +1328,7 @@ async function seed() {
       ],
     );
 
+    // Past: completed, Cancha Premium 2 evening (facility default peak S/.115)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-MF5E`,
@@ -1154,7 +1340,7 @@ async function seed() {
         status: "completed",
         customerName: "Martín Rojas",
         customerEmail: "martin.r@email.com",
-        priceInCents: 12000,
+        priceInCents: 11500,
         isPeakRate: true,
       },
       [
@@ -1168,6 +1354,7 @@ async function seed() {
       ],
     );
 
+    // Past: completed, Cancha Vista Mar (custom S/.85)
     await createBookingWithPlayers(
       {
         code: `PH-${today.getFullYear()}-MF6F`,
@@ -1179,7 +1366,7 @@ async function seed() {
         status: "completed",
         customerName: "Valeria Soto",
         customerEmail: "valeria.s@email.com",
-        priceInCents: 9000,
+        priceInCents: 8500,
         isPeakRate: false,
       },
       [
@@ -1221,10 +1408,19 @@ async function seed() {
     console.log("   • 6 Users (org_admin, facility_manager, staff, 3 players)");
     console.log("   • 1 Organization (Padel Group Lima)");
     console.log("   • 3 Facilities:");
-    console.log("     - Padel Club San Isidro (active, 4 courts)");
-    console.log("     - Padel Club Miraflores (active, 3 courts)");
+    console.log(
+      "     - Padel Club San Isidro (active, 4 courts, defaults S/.70/S/.90)",
+    );
+    console.log(
+      "     - Padel Club Miraflores (active, 3 courts, defaults S/.90/S/.115)",
+    );
     console.log("     - Padel Club La Molina (inactive, 2 courts)");
-    console.log(`   • ${totalCourts} Courts total`);
+    console.log(
+      `   • ${totalCourts} Courts (mix of custom + facility-default pricing)`,
+    );
+    console.log("   • 14 Operating hours (7 days × 2 facilities)");
+    console.log("   • 4 Peak periods (evening + weekend per facility)");
+    console.log("   • 2 Blocked slots (maintenance + tournament)");
     console.log(`   • ${totalBookings} Bookings with players and activity`);
     console.log("   • 1 Open Match booking (2/4 players)");
     console.log("   • 1 Platform Admin (owner@padelhub.pe)");
