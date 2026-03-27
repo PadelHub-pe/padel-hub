@@ -8,62 +8,22 @@
 
 ## Completed
 
-### Public Booking Page (14 tasks)
+All prior tasks have been archived. See git history for details.
 
-Player-facing booking page at `bookings.padelhub.pe/[facilitySlug]`. `apps/bookings` Next.js app (port 3002), `packages/whatsapp` (Kapso SDK), `publicBooking` tRPC router (8 procedures), slot generation utility, OTP + verification token infrastructure, WhatsApp notifications. 147 new tests (slots: 27, public-booking: 18, public-booking-otp: 13, public-booking-mutations: 31, otp-store: 7, verification-token: 10, whatsapp: 13). Dashboard integration: booking link tab, online/manual badge filter, allowed durations setting.
+**Summary of completed work:**
 
-### Email Notification System
-
-Fully implemented `packages/email` (React Email + Resend): 4 templates, high-level senders, integrated across all apps.
-
-### Flow 1: Authentication & Access (8 tasks)
-
-Login (email/password + Google OAuth), invite acceptance, password reset, rate limiting, post-login pending invite prompt, brand assets, auth error hardening, 129 tests.
-
-### Flow 2: Organization Management (6 tasks)
-
-Facility card actions, deactivation dialog, empty state, URL-persisted filters, org switcher, "Agregar Local" button.
-
-### Image System (10 tasks)
-
-`@wifo/images` package, Cloudflare Images integration (Direct Creator Upload), URL builder, tRPC images router, ImageUpload/Preview/Gallery components, integrated into facility photos, court photos, and org logo. 21 tests.
-
-### Flow 3: Team & Roles - RBAC (8 tasks)
-
-Last admin protection, facility manager invite scoping, `usePermission` hook, role-based sidebar filtering, route-level access guards, team table polish, invite/edit dialog enhancements, 35 tests.
-
-### Flow 4: Facility Onboarding (11 tasks)
-
-Schema migration (slug + geocoding), setup progress API, default operating hours, district autocomplete + geocoding, courts wizard redesign (individual CRUD + pricing), schedule wizard enhancement ("Aplicar a todos"), photos & amenities step, completion screen + activation gate, setup banner with progress, resume from correct step, slug auto-generation. 52 tests (setup: 37, slugify: 15).
-
-### Flow 6: Schedule & Pricing (9 tasks)
-
-Zone calculation utility, facility default pricing schema, enhanced operating hours editor (30-min increments, "Aplicar a todos", validation), peak period full CRUD (create/edit/delete with overlap detection, day shortcuts, max 5 limit), editable rate cards with facility defaults, court default/custom pricing system, revenue calculator (slider + monthly toggle), block time slots UI. 120 tests (schedule-utils: 48, schedule: 30, pricing: 42).
-
-### Flow 7: Booking Management (7 tasks)
-
-On-access status resolver, server-side price calculation, enhanced list API (multi-status, date range, sorting), cancel validations + state machine, comprehensive booking router tests (453 total), UI spec alignment, real dashboard stats. 143 tests (booking: 143).
-
-### Flow 8: Calendar (7 tasks)
-
-Calendar router fixes + tests, day view grid enhancements (zone backgrounds, blocked slots, court headers), booking block + popover polish, URL sync + keyboard shortcuts, legend/stats bar rework with zone colors + role-based display, week view enhancements (court dots, weekend bg, stripes, time indicator, quick booking), quick booking fixes + mini calendar dots. 474 total tests.
-
-### Flow 9: Settings (7 tasks)
-
-Phone column + account API extensions, profile tab (phone + avatar upload), password change modal, RBAC scoped settings tabs, facility team tab, unsaved changes warning + sidebar sync.
-
-### Flow 10: Navigation & Context Switching (8 tasks)
-
-Sidebar alignment, breadcrumbs, mobile nav, role-based landing, route guards, sign-out confirmation, facility switcher enhancements, 404 page.
-
-### Web Dashboard Brand Assets (5 tasks)
-
-Replace placeholder "P" boxes and missing metadata with actual PadelHub brand assets from `/assets/`.
-
-### E2E Testing — Playwright MCP (10 tasks)
-
-Smoke test suite, 9 test suites (Auth, Org, RBAC, Onboarding, Schedule, Booking, Calendar, Settings, Navigation), RBAC matrix, mobile responsive, full suite run.
-
-### BUG-005: Hydration mismatch on bookings page (4 subtasks)
-
-Fix Radix UI auto-generated ID mismatches in `bookings-filters.tsx` — deferred mount pattern for Select and Popover components.
+- Public Booking Page (14 tasks) — `apps/bookings`, `packages/whatsapp`, `publicBooking` router, slot generation, OTP + verification tokens, WhatsApp notifications, 147 tests
+- Email Notification System — `packages/email` (React Email + Resend), 4 templates
+- Flow 1: Authentication & Access (8 tasks) — Login, invite acceptance, password reset, 129 tests
+- Flow 2: Organization Management (6 tasks) — Facility cards, filters, org switcher
+- Image System (10 tasks) — `packages/images`, Cloudflare Images, 21 tests
+- Flow 3: Team & Roles - RBAC (8 tasks) — Permissions, route guards, 35 tests
+- Flow 4: Facility Onboarding (11 tasks) — Setup wizard, courts, schedule, photos, 52 tests
+- Flow 6: Schedule & Pricing (9 tasks) — Zone calculation, peak periods, pricing, 120 tests
+- Flow 7: Booking Management (7 tasks) — Status resolver, cancel logic, 143 tests
+- Flow 8: Calendar (7 tasks) — Day/week views, quick booking, 474 total tests
+- Flow 9: Settings (7 tasks) — Profile, password, RBAC tabs
+- Flow 10: Navigation & Context Switching (8 tasks) — Sidebar, breadcrumbs, mobile nav
+- Web Dashboard Brand Assets (5 tasks) — Logo, favicon, OG images
+- E2E Testing — Playwright MCP (10 tasks) — 9 test suites + smoke tests
+- BUG-005 fix (4 subtasks) — Hydration mismatch deferred mount

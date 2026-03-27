@@ -665,7 +665,7 @@ const [schedule, setSchedule] = useState({ days: [...], defaultPrice: 5000 });
 | `org`       | getMyOrganizations, getFacilities, getStats, updateFacilityStatus, getFacilityManagers, getDistricts, createFacility, getOrgProfile, updateOrgProfile, getTeamMembers, inviteMember, updateMember, removeMember, cancelInvite, resendInvite | protected        |
 | `invite`    | validate, accept, acceptExisting, getPendingInvites                                                                   | public/protected |
 | `facility`  | getProfile, updateProfile, getSetupStatus, saveCourts, saveSchedule, completeSetup                                    | protected        |
-| `court`     | list, getById, create, update, delete                                                                                 | protected        |
+| `court`     | list, getById, getStats, create, update, updateStatus, delete                                                         | protected        |
 | `booking`   | list, getById, confirm, cancel, updateStatus, createManual, getStats, addPlayer, removePlayer, getActivity, searchUsers, getSlotInfo, calculatePrice | protected        |
 | `calendar`  | getDayView, getWeekView, getDayStats, getMonthBookingDates                                                            | protected        |
 | `schedule`  | operating hours (get/update), peak periods (get/create/update/delete), blocked slots (get/list/checkConflicts/block/delete), getDayOverview | protected |
@@ -764,7 +764,7 @@ Optional:
 
 - **Framework**: Vitest with `describe`/`it`/`expect`
 - **Location**: Co-located in `packages/*/src/__tests__/*.test.ts`
-- **Current suites**: `access-control` (104), `account` (11), `booking` (54), `booking-cancel` (28), `booking-list` (23), `booking-price` (13), `booking-status` (19), `calendar` (21), `dashboard` (11), `default-operating-hours` (2), `invite` (24), `last-admin` (8), `otp-store` (7), `pricing` (27), `public-booking` (18), `public-booking-mutations` (31), `public-booking-otp` (13), `schedule-utils` (43), `schedule` (23), `setup` (46), `slots` (27), `slugify` (15), `team` (32), `verification-token` (10), `whatsapp/otp` (8), `whatsapp/notifications` (3), `whatsapp/otp-dev-mode` (2), `images` (21), `nextjs/facility-switch-path` (14), `validators` (1) — 659 total
+- **Current suites**: `access-control` (104), `account` (11), `booking` (54), `booking-cancel` (28), `booking-list` (23), `booking-price` (13), `booking-status` (19), `calendar` (21), `dashboard` (11), `default-operating-hours` (2), `invite` (24), `last-admin` (8), `otp-store` (7), `pricing` (27), `public-booking` (18), `public-booking-mutations` (31), `public-booking-otp` (13), `schedule-utils` (43), `schedule` (23), `setup` (46), `slots` (29), `slugify` (15), `team` (32), `verification-token` (10), `whatsapp/otp` (8), `whatsapp/notifications` (3), `whatsapp/otp-dev-mode` (2), `images` (21), `nextjs/facility-switch-path` (14), `validators` (1) — 661 total
 - **Mocking**: `vi.mock()` for external modules, `vi.fn()` for DB methods, `vi.stubGlobal()` for fetch
 - **Factory helpers**: `makeMembership()`, `makeInvite()`, `makeMemberWithUser()`, `makeOrg()`, `makePeakPeriod()`, `makeOperatingHour()`, `makeBooking()`, `makeBookingPlayer()` — return typed objects with optional overrides
 - **tRPC testing**: Use `createCallerFactory(router)` to create server-side callers with mock context (`{ db, session, authApi }`)
