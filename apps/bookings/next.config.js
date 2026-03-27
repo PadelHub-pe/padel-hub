@@ -16,6 +16,19 @@ const config = {
     "@wifo/validators",
   ],
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "imagedelivery.net",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
+
   poweredByHeader: false,
 
   async headers() {
