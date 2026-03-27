@@ -11,6 +11,7 @@ import { Button } from "@wifo/ui/button";
 
 import type { SlotItem } from "./slot-grid";
 import { useTRPC } from "~/trpc/react";
+import { CourtSelector } from "./court-selector";
 import { DurationTabs } from "./duration-tabs";
 import { SlotGrid } from "./slot-grid";
 
@@ -51,6 +52,7 @@ export function BookingPage({ facilitySlug }: BookingPageProps) {
 
   const durations = facility.allowedDurationMinutes ?? [60, 90];
   const [selectedDuration, setSelectedDuration] = useState(durations[0] ?? 60);
+  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<SlotItem | null>(null);
 
   // Filter slots by selected duration
@@ -59,7 +61,31 @@ export function BookingPage({ facilitySlug }: BookingPageProps) {
     [slotsData.slots, selectedDuration],
   );
 
+  // Filter to selected court for step 2
+  const courtSlots = useMemo(
+    () =>
+      selectedCourtId
+        ? filteredSlots.filter((s) => s.courtId === selectedCourtId)
+        : [],
+    [filteredSlots, selectedCourtId],
+  );
+
+  const selectedCourtName = selectedCourtId
+    ? (filteredSlots.find((s) => s.courtId === selectedCourtId)?.courtName ??
+      null)
+    : null;
+
   const formattedDate = format(date, "EEEE d 'de' MMMM", { locale: es });
+
+  function handleSelectCourt(courtId: string) {
+    setSelectedCourtId(courtId);
+    setSelectedSlot(null);
+  }
+
+  function handleBackToCourts() {
+    setSelectedCourtId(null);
+    setSelectedSlot(null);
+  }
 
   function handleContinue() {
     if (!selectedSlot) return;
@@ -73,32 +99,59 @@ export function BookingPage({ facilitySlug }: BookingPageProps) {
   }
 
   return (
-    <main className="container pb-24">
+    <main className="container pb-24 pt-4">
       {/* Back link */}
-      <Link
-        href={`/${facilitySlug}`}
-        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          className="shrink-0"
+      {selectedCourtId ? (
+        <button
+          type="button"
+          onClick={handleBackToCourts}
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
-          <path
-            d="M10 12L6 8l4-4"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        Volver
-      </Link>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="shrink-0"
+          >
+            <path
+              d="M10 12L6 8l4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Cambiar cancha
+        </button>
+      ) : (
+        <Link
+          href={`/${facilitySlug}`}
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="shrink-0"
+          >
+            <path
+              d="M10 12L6 8l4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Volver
+        </Link>
+      )}
 
       {/* Header */}
-      <h1 className="font-display mt-4 text-xl font-bold">{facility.name}</h1>
+      <h1 className="font-display mt-4 text-xl font-bold">
+        {selectedCourtId ? selectedCourtName : facility.name}
+      </h1>
       <p className="text-muted-foreground mt-1 text-sm capitalize">
         {formattedDate}
       </p>
@@ -118,19 +171,30 @@ export function BookingPage({ facilitySlug }: BookingPageProps) {
         </div>
       )}
 
-      {/* Slot grid */}
-      <div className="mt-5">
-        <SlotGrid
-          slots={filteredSlots}
-          selectedSlot={selectedSlot}
-          onSelect={setSelectedSlot}
-        />
-      </div>
+      {/* Step 1: Court selection */}
+      {!selectedCourtId && (
+        <div className="mt-5">
+          <p className="mb-3 text-sm font-medium">Elige una cancha</p>
+          <CourtSelector slots={filteredSlots} onSelect={handleSelectCourt} />
+        </div>
+      )}
+
+      {/* Step 2: Slot selection for chosen court */}
+      {selectedCourtId && (
+        <div className="mt-5">
+          <p className="mb-3 text-sm font-medium">Elige un horario</p>
+          <SlotGrid
+            slots={courtSlots}
+            selectedSlot={selectedSlot}
+            onSelect={setSelectedSlot}
+          />
+        </div>
+      )}
 
       {/* Fixed bottom CTA */}
       {selectedSlot && (
-        <div className="bg-background/95 fixed inset-x-0 bottom-0 border-t p-4 backdrop-blur-sm">
-          <div className="container">
+        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur-sm">
+          <div className="mx-auto max-w-[480px] px-4 py-3">
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
                 {selectedSlot.courtName} · {selectedSlot.startTime} –{" "}

@@ -73,18 +73,21 @@ export function SlotGrid({ slots, selectedSlot, onSelect }: SlotGridProps) {
   }
 
   const groups = groupByCourt(slots);
+  const singleCourt = groups.length === 1;
 
   return (
     <div className="space-y-6">
       {groups.map((group) => (
         <div key={group.courtId}>
-          {/* Court header */}
-          <div className="mb-2 flex items-center gap-2">
-            <h3 className="text-sm font-semibold">{group.courtName}</h3>
-            <Badge variant="outline" className="text-xs capitalize">
-              {group.courtType}
-            </Badge>
-          </div>
+          {/* Court header — hidden when showing a single court */}
+          {!singleCourt && (
+            <div className="mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-semibold">{group.courtName}</h3>
+              <Badge variant="outline" className="text-xs capitalize">
+                {group.courtType}
+              </Badge>
+            </div>
+          )}
 
           {/* Time slot chips */}
           <div className="grid grid-cols-2 gap-2">

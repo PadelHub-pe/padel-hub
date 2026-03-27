@@ -14,20 +14,11 @@ export function BookingPageSkeleton() {
         <div className="bg-muted h-8 w-16 animate-pulse rounded-full" />
       </div>
 
-      {/* Slot grid skeleton */}
-      <div className="mt-6 space-y-6">
-        {[1, 2].map((i) => (
-          <div key={i}>
-            <div className="bg-muted h-5 w-24 animate-pulse rounded" />
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {[1, 2, 3, 4].map((j) => (
-                <div
-                  key={j}
-                  className="bg-muted h-16 animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
-          </div>
+      {/* Court cards skeleton */}
+      <div className="mt-6 space-y-3">
+        <div className="bg-muted h-4 w-32 animate-pulse rounded" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-muted h-[72px] animate-pulse rounded-xl" />
         ))}
       </div>
     </main>
