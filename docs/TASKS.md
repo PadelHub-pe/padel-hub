@@ -155,7 +155,7 @@ Remove `ProblemSolution` import and usage. Delete `ProblemSolution.astro` file.
 
 ---
 
-### TASK-08: Responsive polish, lint, and visual QA
+### TASK-08: Responsive polish, lint, and visual QA ✅
 
 **Type**: chore
 **Scope**: `apps/landing/`

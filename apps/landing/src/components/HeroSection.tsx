@@ -89,7 +89,7 @@ export default function HeroSection() {
       </div>
 
       {/* === Content === */}
-      <div className="relative z-10 px-8 pt-40 pb-24">
+      <div className="relative z-10 px-4 pt-28 pb-16 sm:px-8 sm:pt-40 sm:pb-24">
         {/* Toggle Pill */}
         <div className="mx-auto mb-10 flex justify-center">
           <div
@@ -240,7 +240,7 @@ export default function HeroSection() {
                     <ArrowIcon />
                   </a>
                   <a
-                    href="#como-funciona"
+                    href="#organizaciones"
                     className="inline-flex items-center gap-2 rounded-[14px] border-[1.5px] border-gray-300 bg-white px-8 py-4 text-base font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50"
                   >
                     Ver como funciona

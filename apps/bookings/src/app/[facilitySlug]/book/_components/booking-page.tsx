@@ -99,7 +99,7 @@ export function BookingPage({ facilitySlug }: BookingPageProps) {
   }
 
   return (
-    <main className="container pb-24 pt-4">
+    <main className="container pt-4 pb-24">
       {/* Back link */}
       {selectedCourtId ? (
         <button
