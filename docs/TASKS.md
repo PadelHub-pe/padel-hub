@@ -8,7 +8,7 @@
 
 ---
 
-### TASK-01: Add player hero images from PR #1
+### TASK-01: Add player hero images from PR #1 ✅
 
 **Type**: config
 **Scope**: `apps/landing/public/images/`
