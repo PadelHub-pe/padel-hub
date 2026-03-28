@@ -145,7 +145,7 @@ Footer
 
 ---
 
-### TASK-14: Update admin panel for request types
+### TASK-14: Update admin panel for request types ✅
 
 **Type**: feature
 **Scope**: `apps/admin/`
