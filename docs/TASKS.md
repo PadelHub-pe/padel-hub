@@ -71,7 +71,7 @@ Include a CTA at the bottom: "Buscar Canchas" button linking to `bookings.padelh
 
 ---
 
-### TASK-04: Create PlayerTestimonials section
+### ~~TASK-04: Create PlayerTestimonials section~~ [x]
 
 **Type**: feature
 **Scope**: `apps/landing/src/components/`
