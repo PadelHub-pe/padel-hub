@@ -36,7 +36,7 @@ Add a `type` enum (`player` | `owner`) to `access_requests` to support both faci
 
 ---
 
-### TASK-10: Prepare facility directory data
+### TASK-10: Prepare facility directory data ✅
 
 **Type**: data
 **Scope**: `apps/landing/src/data/`
