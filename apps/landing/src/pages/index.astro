@@ -3,7 +3,9 @@ import Layout from "~/layouts/Layout.astro";
 import Navbar from "~/components/Navbar.astro";
 import HeroSection from "~/components/HeroSection";
 import SocialProof from "~/components/SocialProof.astro";
-import ProblemSolution from "~/components/ProblemSolution.astro";
+import PlayerHowItWorks from "~/components/PlayerHowItWorks.astro";
+import PlayerTestimonials from "~/components/PlayerTestimonials.astro";
+import AudienceDivider from "~/components/AudienceDivider.astro";
 import Features from "~/components/Features.astro";
 import HowItWorks from "~/components/HowItWorks.astro";
 import ComparisonTable from "~/components/ComparisonTable.astro";
@@ -18,7 +20,9 @@ export const prerender = true;
   <main>
     <HeroSection client:load />
     <SocialProof />
-    <ProblemSolution />
+    <PlayerHowItWorks />
+    <PlayerTestimonials />
+    <AudienceDivider />
     <Features />
     <HowItWorks />
     <ComparisonTable />

@@ -127,7 +127,7 @@ Example: A centered badge or heading like "Para propietarios de canchas" with a 
 
 ---
 
-### TASK-07: Assemble page and remove ProblemSolution
+### TASK-07: Assemble page and remove ProblemSolution ✅
 
 **Type**: refactor
 **Scope**: `apps/landing/src/pages/index.astro`
