@@ -60,7 +60,7 @@ export default function AccessRequestForm() {
   }
 
   const inputClassName =
-    "focus:border-primary focus:bg-primary/6 w-full rounded-[14px] border-[1.5px] border-white/12 bg-white/6 px-5 py-4 text-[15px] text-white transition-all outline-none placeholder:text-gray-500";
+    "focus:border-primary focus:bg-primary/6 w-full rounded-[14px] border-[1.5px] border-white/12 bg-white/6 px-5 py-4 text-[15px] text-white transition-all outline-none placeholder:text-gray-400";
 
   return (
     <div>
@@ -106,13 +106,13 @@ export default function AccessRequestForm() {
       {state === "error" && (
         <p className="mb-4 text-center text-sm text-red-400">{errorMessage}</p>
       )}
-      <div className="text-center text-[13px] text-gray-500">
+      <div className="text-center text-[13px] text-gray-400">
         <svg
           width="14"
           height="14"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#6B7280"
+          stroke="#9CA3AF"
           strokeWidth="2"
           className="mr-1 inline-block align-middle"
         >

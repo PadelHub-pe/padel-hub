@@ -11,7 +11,7 @@ const {
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang="es" data-audience="player">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -37,6 +37,15 @@ const {
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <title>{title}</title>
+    <script is:inline>
+      (function () {
+        var orgAnchors = ["solicitar", "organizaciones", "features", "comparacion"];
+        var hash = location.hash.replace("#", "");
+        if (orgAnchors.indexOf(hash) !== -1) {
+          document.documentElement.dataset.audience = "org";
+        }
+      })();
+    </script>
   </head>
   <body class="bg-white text-gray-900 overflow-x-hidden font-sans">
     <slot />
@@ -45,4 +54,64 @@ const {
 
 <style is:global>
   @import "../styles/global.css";
+</style>
+
+<!-- Audience & navbar CSS — kept outside Tailwind pipeline to avoid tree-shaking -->
+<style is:global>
+  /* Audience-driven section visibility */
+  html[data-audience="player"] [data-for="org"] {
+    display: none;
+  }
+  html[data-audience="org"] [data-for="player"] {
+    display: none;
+  }
+
+  /* Navbar scroll state */
+  html[data-scrolled] #navbar {
+    background-color: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid #e5e7eb;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  /* Nav link colors: player audience, not scrolled (dark hero) */
+  html[data-audience="player"]:not([data-scrolled]) .nav-link {
+    color: rgb(255 255 255 / 0.85);
+  }
+  html[data-audience="player"]:not([data-scrolled]) .nav-link:hover {
+    color: white;
+  }
+
+  /* Nav link colors: org audience or scrolled (light bg) */
+  html[data-audience="org"]:not([data-scrolled]) .nav-link,
+  html[data-scrolled] .nav-link {
+    color: #4b5563;
+  }
+  html[data-audience="org"]:not([data-scrolled]) .nav-link:hover,
+  html[data-scrolled] .nav-link:hover {
+    color: #111827;
+  }
+
+  /* Logo swap: default = colored logo; player + not scrolled = white logo */
+  #navbar-logo-reversed {
+    display: none;
+  }
+  html[data-audience="player"]:not([data-scrolled]) #navbar-logo-default {
+    display: none;
+  }
+  html[data-audience="player"]:not([data-scrolled]) #navbar-logo-reversed {
+    display: block;
+  }
+
+  /* Buscar Canchas button: glass variant on dark hero */
+  html[data-audience="player"]:not([data-scrolled]) .nav-btn-search {
+    background-color: rgb(255 255 255 / 0.1);
+    border-color: rgb(255 255 255 / 0.2);
+    color: white;
+  }
+  html[data-audience="player"]:not([data-scrolled]) .nav-btn-search:hover {
+    background-color: rgb(255 255 255 / 0.18);
+  }
 </style>

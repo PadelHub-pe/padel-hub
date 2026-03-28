@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Audience = "player" | "org";
 
@@ -52,6 +52,23 @@ export default function HeroSection() {
   const [date, setDate] = useState("");
 
   const isPlayer = audience === "player";
+
+  // Sync audience to <html> data attribute for CSS-driven section visibility
+  useEffect(() => {
+    document.documentElement.dataset.audience = audience;
+  }, [audience]);
+
+  // Listen for audience-switch events from navbar links
+  useEffect(() => {
+    function handleSwitch(e: Event) {
+      const { audience: newAudience } = (
+        e as CustomEvent<{ audience: Audience }>
+      ).detail;
+      setAudience(newAudience);
+    }
+    window.addEventListener("audience-switch", handleSwitch);
+    return () => window.removeEventListener("audience-switch", handleSwitch);
+  }, []);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -119,7 +136,7 @@ export default function HeroSection() {
               type="button"
               onClick={() => setAudience("org")}
               className={`relative z-10 cursor-pointer rounded-full border-none bg-transparent px-5 py-2.5 text-sm font-semibold transition-colors duration-300 sm:px-6 ${
-                !isPlayer ? "text-gray-900" : "text-white/60 hover:text-white"
+                !isPlayer ? "text-gray-900" : "text-white/75 hover:text-white"
               }`}
             >
               Tengo un Club
@@ -146,7 +163,7 @@ export default function HeroSection() {
                 ideal
               </h1>
 
-              <p className="mx-auto mb-10 max-w-[500px] text-lg leading-relaxed text-white/70">
+              <p className="mx-auto mb-10 max-w-[500px] text-lg leading-relaxed text-white/85">
                 Descubre y reserva canchas en Lima. Compara precios, horarios y
                 encuentra la cancha perfecta para ti.
               </p>
@@ -185,7 +202,7 @@ export default function HeroSection() {
               </form>
 
               {/* Trust indicators */}
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/60">
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/80">
                 <span className="flex items-center gap-2">
                   <CheckIcon />
                   Gratuito para jugadores
