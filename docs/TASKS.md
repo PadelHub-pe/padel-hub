@@ -1,6 +1,185 @@
 # Tasks
 
-## Current: Dual-Audience Landing Page
+## Current: Player-Facing Landing Page Redesign
+
+**Goal**: Redesign the player side of the landing page from a misleading "book online" experience into a real facility directory with WhatsApp contact + player waitlist for the mobile app launch.
+
+**Context**: The bookings app (`bookings.padelhub.pe`) requires a direct facility link — there's no discovery/browse page. The current player-side landing promises court search that doesn't exist. Instead, we'll show the 17 real Lima facilities from `padel_lima_research.json` (PR #1) with WhatsApp booking CTAs, and onboarded facilities get a "Reservar Online" link. A waitlist collects player info for the future mobile app.
+
+**Data source**: Static JSON import at build time (Astro SSG). Research data has 17 facilities: 6 with phone, 8 with Instagram, 7 with neither (fallback to Google Maps).
+
+---
+
+### TASK-09: Add `type` discriminator to `access_requests` schema
+
+**Type**: db
+**Scope**: `packages/db`, `packages/api`, `apps/landing`, `apps/admin`
+
+Add a `type` enum (`player` | `owner`) to `access_requests` to support both facility owner access requests and player waitlist signups in the same table.
+
+**Schema changes:**
+- Add `access_request_type` pgEnum: `["player", "owner"]`
+- Add `type` column to `accessRequests` table (default `"owner"` for backwards compat)
+- Update `CreateAccessRequestSchema` to include `type`
+- Change unique constraint from `email` alone to `(email, type)` — same person can be both a player and an owner
+
+**API changes:**
+- Update `apps/landing/src/pages/api/access-request.ts` to accept and store `type`
+- Update duplicate check to be `email + type` scoped
+
+**Admin panel:**
+- Add `type` column to access requests table
+- Add type filter (Todos / Jugadores / Propietarios)
+- Player-type requests don't need the approve flow (no org creation) — just informational
+
+**Tests**: Update existing access-request tests if any, add test for type discrimination.
+
+---
+
+### TASK-10: Prepare facility directory data
+
+**Type**: data
+**Scope**: `apps/landing/src/data/`
+
+Copy and curate `padel_lima_research.json` from PR #1 branch (`origin/chore/add-website`) into the landing page for static import.
+
+**Steps:**
+- Copy JSON to `apps/landing/src/data/facilities.ts` as a typed TypeScript export
+- Define a `DirectoryFacility` interface with the fields we need: `id`, `name`, `district`, `address`, `courtCount`, `courtType` (indoor/outdoor/mixto), `phone`, `whatsappUrl`, `instagramUrl`, `googleMapsUrl`, `imageUrl`, `amenities`, `hours`
+- Transform the raw research JSON into this clean shape
+- Add `bookingSlug: string | null` field — set for facilities that are onboarded on PadelHub (currently none in prod, but the seed data facilities for dev)
+- Curate contact fallbacks: phone → WhatsApp CTA, else Instagram → Instagram CTA, else Google Maps → "Ver en Maps"
+
+**Output**: `apps/landing/src/data/facilities.ts` exporting `facilities: DirectoryFacility[]` and the type.
+
+---
+
+### TASK-11: Build FacilityDirectory section
+
+**Type**: feature
+**Scope**: `apps/landing/src/components/`
+
+Create `FacilityDirectory.astro` — a card grid showing all Lima padel facilities.
+
+**Card design:**
+- Facility image (top, with fallback placeholder)
+- Name, district badge, court count + type (e.g., "4 canchas · outdoor")
+- Amenity chips (top 3-4)
+- CTA button (priority order):
+  1. `bookingSlug` → "Reservar Online" (green, links to `bookings.padelhub.pe/{slug}`)
+  2. `whatsappUrl` → "Reservar por WhatsApp" (green WhatsApp icon, pre-filled message)
+  3. `instagramUrl` → "Contactar por Instagram" (secondary style)
+  4. `googleMapsUrl` → "Ver en Google Maps" (tertiary/link style)
+
+**Layout:**
+- Section heading: "Canchas de Pádel en Lima" with subtitle
+- District filter pills (All, Surco, Miraflores, etc.) — CSS-only or minimal JS
+- Responsive grid: 1 col mobile, 2 cols tablet, 3 cols desktop
+- All 17 facilities visible (no pagination needed for 17 items)
+
+**WhatsApp pre-filled message**: `Hola, vengo de PadelHub. Quisiera reservar una cancha en {facilityName}.`
+
+**Files**: `src/components/FacilityDirectory.astro` (or React island if district filter needs JS)
+
+---
+
+### TASK-12: Build PlayerWaitlist section and API
+
+**Type**: feature
+**Scope**: `apps/landing/src/components/`, `apps/landing/src/pages/api/`
+
+Create a waitlist signup section for players to register interest in the mobile app.
+
+**UI (`PlayerWaitlist.astro` + `WaitlistForm.tsx` React island):**
+- Heading: "Sé de los primeros en usar la app" or similar
+- Subtitle: "Estamos construyendo la app de PadelHub para que reserves canchas, encuentres jugadores y más. Déjanos tus datos y te avisaremos cuando esté lista."
+- Form fields: name (required), email (required), phone (optional)
+- Success state: "¡Te anotamos! Te avisaremos cuando lancemos la app."
+- Trust line: "Sin spam. Solo te avisaremos del lanzamiento."
+
+**API update:**
+- Update `/api/access-request` endpoint to accept `type: "player" | "owner"` (default `"owner"`)
+- Player submissions: no confirmation email needed (or a different simpler one)
+- Duplicate check scoped to `email + type`
+
+**Files**: `src/components/PlayerWaitlist.astro`, `src/components/WaitlistForm.tsx`, update `src/pages/api/access-request.ts`
+
+---
+
+### TASK-13: Restructure player-side landing layout
+
+**Type**: refactor
+**Scope**: `apps/landing/src/`
+
+Reorganize the player side of the landing page to replace misleading content with the facility directory and waitlist.
+
+**HeroSection changes:**
+- Remove the fake search form (district dropdown, date picker, "Buscar Canchas")
+- New player hero CTA: "Ver Canchas" (scrolls to `#canchas` directory section)
+- Update headline/subtitle to match the new value prop (directory, not booking platform)
+- Keep the audience toggle pill (Soy Jugador / Tengo un Club)
+
+**Section order (player view):**
+```
+Navbar
+HeroSection (updated player tab)
+FacilityDirectory (id="canchas") ← NEW, replaces PlayerHowItWorks + PlayerTestimonials
+PlayerWaitlist ← NEW
+AudienceDivider
+Features (org)
+HowItWorks (org)
+ComparisonTable (org)
+CtaSection (org)
+Footer
+```
+
+**Remove/repurpose:**
+- `PlayerHowItWorks.astro` — remove (promises flow that doesn't exist)
+- `PlayerTestimonials.astro` — remove (fake testimonials)
+- `PlayerCta.astro` — remove (links to non-existent search)
+- `SocialProof.astro` — update stats to be honest (e.g., "17 canchas mapeadas", "10 distritos")
+
+**Navbar updates:**
+- "Buscar Canchas" → "Ver Canchas" (scrolls to #canchas)
+- Keep "Solicitar Acceso" for org audience
+
+---
+
+### TASK-14: Update admin panel for request types
+
+**Type**: feature
+**Scope**: `apps/admin/`
+
+Update the admin access requests view to handle the new `type` field.
+
+**Changes:**
+- Add "Tipo" column to the data table (badge: "Jugador" / "Propietario")
+- Add type filter tabs or dropdown (Todos / Jugadores / Propietarios)
+- Player requests: no approve/reject flow — just a list for future outreach
+- Owner requests: keep existing approve/reject flow unchanged
+- Update `admin.listAccessRequests` tRPC procedure to accept optional `type` filter
+
+---
+
+### TASK-15: Polish, lint, and QA
+
+**Type**: chore
+**Scope**: `apps/landing/`, `apps/admin/`
+**Depends on**: TASK-09 through TASK-14
+
+- Run `pnpm lint`, `pnpm format:fix`, `pnpm typecheck`
+- Test all breakpoints (375px, 768px, 1280px)
+- Verify facility cards render correctly with all CTA variants
+- Test WhatsApp links open correctly with pre-filled message
+- Test waitlist form submission + duplicate handling
+- Test admin panel type filter
+- Verify org-side sections unchanged
+- Run `pnpm test` — all existing tests pass
+- `pnpm db:push` — schema migration works
+
+---
+
+## Previous: Dual-Audience Landing Page ✅
 
 **Goal**: Transform the B2B-only landing page into a dual-audience experience with tabs for Players and Organizations, cherry-picking player content from PR #1.
 
