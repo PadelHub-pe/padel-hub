@@ -1,0 +1,32 @@
+---
+import { facilities, districts } from "../data/facilities";
+import FacilityGrid from "./FacilityGrid";
+---
+
+<section class="bg-white px-8 py-24" id="canchas">
+  <div class="mx-auto max-w-[1200px]">
+    <!-- Header -->
+    <div class="mx-auto mb-12 max-w-[600px] text-center">
+      <div
+        class="mb-4 text-[13px] font-semibold tracking-[2px] text-secondary-800 uppercase"
+      >
+        Directorio
+      </div>
+      <h2
+        class="mb-4 font-display text-3xl font-bold tracking-tight text-gray-900 lg:text-[40px]"
+      >
+        Canchas de Padel en Lima
+      </h2>
+      <p class="text-[17px] text-gray-500">
+        Encuentra y contacta las mejores canchas de padel en Lima. Reserva
+        directamente por WhatsApp o visita su Instagram.
+      </p>
+    </div>
+
+    <FacilityGrid
+      client:visible
+      facilities={facilities}
+      districts={districts}
+    />
+  </div>
+</section>

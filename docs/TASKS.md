@@ -54,7 +54,7 @@ Copy and curate `padel_lima_research.json` from PR #1 branch (`origin/chore/add-
 
 ---
 
-### TASK-11: Build FacilityDirectory section
+### TASK-11: Build FacilityDirectory section ✅
 
 **Type**: feature
 **Scope**: `apps/landing/src/components/`

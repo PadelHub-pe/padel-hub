@@ -3,6 +3,7 @@ import Layout from "~/layouts/Layout.astro";
 import Navbar from "~/components/Navbar.astro";
 import HeroSection from "~/components/HeroSection";
 import SocialProof from "~/components/SocialProof.astro";
+import FacilityDirectory from "~/components/FacilityDirectory.astro";
 import PlayerHowItWorks from "~/components/PlayerHowItWorks.astro";
 import PlayerTestimonials from "~/components/PlayerTestimonials.astro";
 import PlayerCta from "~/components/PlayerCta.astro";
@@ -22,6 +23,7 @@ export const prerender = true;
     <HeroSection client:load />
     <SocialProof />
     <div data-for="player">
+      <FacilityDirectory />
       <PlayerHowItWorks />
       <PlayerTestimonials />
       <PlayerCta />
