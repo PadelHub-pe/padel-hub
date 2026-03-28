@@ -20,7 +20,7 @@ Copy padel court photos from PR #1's `apps/website/public/images/` branch into t
 
 ---
 
-### TASK-02: Build the HeroSection React island with audience tabs
+### TASK-02: Build the HeroSection React island with audience tabs ✅
 
 **Type**: feature
 **Scope**: `apps/landing/src/components/`
