@@ -104,7 +104,7 @@ Example: A centered badge or heading like "Para propietarios de canchas" with a 
 
 ---
 
-### TASK-06: Update SocialProof, Navbar, and HowItWorks
+### TASK-06: Update SocialProof, Navbar, and HowItWorks ✅
 
 **Type**: refactor
 **Scope**: `apps/landing/src/components/`
