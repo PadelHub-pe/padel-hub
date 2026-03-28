@@ -83,7 +83,7 @@ Create `FacilityDirectory.astro` — a card grid showing all Lima padel faciliti
 
 ---
 
-### TASK-12: Build PlayerWaitlist section and API
+### TASK-12: Build PlayerWaitlist section and API ✅
 
 **Type**: feature
 **Scope**: `apps/landing/src/components/`, `apps/landing/src/pages/api/`
