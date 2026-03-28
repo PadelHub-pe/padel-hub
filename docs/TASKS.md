@@ -161,7 +161,7 @@ Update the admin access requests view to handle the new `type` field.
 
 ---
 
-### TASK-15: Polish, lint, and QA
+### TASK-15: Polish, lint, and QA ✅
 
 **Type**: chore
 **Scope**: `apps/landing/`, `apps/admin/`
