@@ -10,7 +10,7 @@
 
 ---
 
-### TASK-09: Add `type` discriminator to `access_requests` schema
+### TASK-09: Add `type` discriminator to `access_requests` schema ✅
 
 **Type**: db
 **Scope**: `packages/db`, `packages/api`, `apps/landing`, `apps/admin`

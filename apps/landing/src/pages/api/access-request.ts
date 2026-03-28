@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 
-import { eq } from "@wifo/db";
+import { and, eq } from "@wifo/db";
 import { db } from "@wifo/db/client";
 import { accessRequests } from "@wifo/db/schema";
 import { sendAccessRequestConfirmation } from "@wifo/email";
@@ -10,6 +10,7 @@ const requestSchema = z.object({
   email: z.email({ error: "Email invalido" }),
   name: z.string().min(2, "Nombre invalido"),
   phone: z.string().optional(),
+  type: z.enum(["player", "owner"]).default("owner"),
 });
 
 export const POST: APIRoute = async ({ request }) => {
@@ -27,13 +28,15 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { email, name, phone } = parsed.data;
+    const { email, name, phone, type } = parsed.data;
 
-    // Check for duplicate
+    // Check for duplicate (scoped to email + type)
     const existing = await db
       .select({ id: accessRequests.id })
       .from(accessRequests)
-      .where(eq(accessRequests.email, email))
+      .where(
+        and(eq(accessRequests.email, email), eq(accessRequests.type, type)),
+      )
       .limit(1);
 
     if (existing.length > 0) {
@@ -45,12 +48,14 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    await db.insert(accessRequests).values({ email, name, phone });
+    await db.insert(accessRequests).values({ email, name, phone, type });
 
-    // Send confirmation email (don't fail the request if email fails)
-    const result = await sendAccessRequestConfirmation({ email });
-    if (!result.success) {
-      console.error("[access-request] Email send failed:", result.error);
+    // Send confirmation email only for owner requests
+    if (type === "owner") {
+      const result = await sendAccessRequestConfirmation({ email });
+      if (!result.success) {
+        console.error("[access-request] Email send failed:", result.error);
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {

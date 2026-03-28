@@ -21,11 +21,20 @@ const STATUS_TABS = [
   { label: "Rechazadas", value: "rejected" as const },
 ];
 
+const TYPE_TABS = [
+  { label: "Todos", value: undefined },
+  { label: "Jugadores", value: "player" as const },
+  { label: "Propietarios", value: "owner" as const },
+];
+
 export function AccessRequestsView() {
   const trpc = useTRPC();
   const [statusFilter, setStatusFilter] = useState<
     "pending" | "approved" | "rejected" | undefined
   >(undefined);
+  const [typeFilter, setTypeFilter] = useState<"player" | "owner" | undefined>(
+    undefined,
+  );
   const [search, setSearch] = useState("");
   const [approveTarget, setApproveTarget] = useState<AccessRequestRow | null>(
     null,
@@ -38,6 +47,7 @@ export function AccessRequestsView() {
   const { data: requestsData } = useSuspenseQuery(
     trpc.admin.listAccessRequests.queryOptions({
       status: statusFilter,
+      type: typeFilter,
       search: search || undefined,
     }),
   );
@@ -73,6 +83,22 @@ export function AccessRequestsView() {
               className={cn(
                 "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                 statusFilter === tab.value
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:text-gray-900",
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 rounded-lg border bg-white p-1">
+          {TYPE_TABS.map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => setTypeFilter(tab.value)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                typeFilter === tab.value
                   ? "bg-blue-100 text-blue-700"
                   : "text-gray-600 hover:text-gray-900",
               )}

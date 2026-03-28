@@ -9,11 +9,25 @@ export interface AccessRequestRow {
   email: string;
   name: string | null;
   phone: string | null;
+  type: "player" | "owner";
   status: "pending" | "approved" | "rejected";
   createdAt: Date;
   reviewerName: string | null;
   notes: string | null;
 }
+
+const TYPE_LABELS: Record<string, string> = {
+  player: "Jugador",
+  owner: "Propietario",
+};
+
+const TYPE_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  player: "secondary",
+  owner: "default",
+};
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendiente",
@@ -48,6 +62,15 @@ export function getAccessRequestColumns(
       cell: ({ row }) => row.original.name ?? "-",
     },
     {
+      accessorKey: "type",
+      header: "Tipo",
+      cell: ({ row }) => (
+        <Badge variant={TYPE_VARIANT[row.original.type]}>
+          {TYPE_LABELS[row.original.type]}
+        </Badge>
+      ),
+    },
+    {
       accessorKey: "status",
       header: "Estado",
       cell: ({ row }) => (
@@ -72,7 +95,8 @@ export function getAccessRequestColumns(
       id: "actions",
       header: "",
       cell: ({ row }) => {
-        if (row.original.status !== "pending") return null;
+        if (row.original.status !== "pending" || row.original.type === "player")
+          return null;
         return (
           <div className="flex gap-2">
             <button

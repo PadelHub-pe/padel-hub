@@ -712,25 +712,35 @@ export const accessRequestStatusEnum = pgEnum("access_request_status", [
   "rejected",
 ]);
 
+export const accessRequestTypeEnum = pgEnum("access_request_type", [
+  "player",
+  "owner",
+]);
+
 /**
  * Access Requests - B2B landing page "Solicitar Acceso" submissions
  */
-export const accessRequests = pgTable("access_requests", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  name: varchar("name", { length: 200 }),
-  facilityName: varchar("facility_name", { length: 200 }),
-  district: varchar("district", { length: 100 }),
-  courtCount: integer("court_count"),
-  phone: varchar("phone", { length: 20 }),
-  status: accessRequestStatusEnum("status").notNull().default("pending"),
-  reviewedAt: timestamp("reviewed_at"),
-  reviewedBy: text("reviewed_by").references(() => user.id, {
-    onDelete: "set null",
-  }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const accessRequests = pgTable(
+  "access_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: varchar("email", { length: 255 }).notNull(),
+    type: accessRequestTypeEnum("type").notNull().default("owner"),
+    name: varchar("name", { length: 200 }),
+    facilityName: varchar("facility_name", { length: 200 }),
+    district: varchar("district", { length: 100 }),
+    courtCount: integer("court_count"),
+    phone: varchar("phone", { length: 20 }),
+    status: accessRequestStatusEnum("status").notNull().default("pending"),
+    reviewedAt: timestamp("reviewed_at"),
+    reviewedBy: text("reviewed_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [unique("access_requests_email_type_unique").on(t.email, t.type)],
+);
 
 export const accessRequestsRelations = relations(accessRequests, ({ one }) => ({
   reviewer: one(user, {
@@ -764,6 +774,7 @@ export const platformAdminsRelations = relations(platformAdmins, ({ one }) => ({
 
 export const CreateAccessRequestSchema = createInsertSchema(accessRequests, {
   email: z.string().email("Email inválido"),
+  type: z.enum(["player", "owner"]).default("owner"),
   name: z.string().max(200).optional(),
   facilityName: z.string().max(200).optional(),
   district: z.string().max(100).optional(),

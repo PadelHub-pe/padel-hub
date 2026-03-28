@@ -51,6 +51,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         status: z.enum(["pending", "approved", "rejected"]).optional(),
+        type: z.enum(["player", "owner"]).optional(),
         search: z.string().max(100).optional(),
         limit: z.number().int().min(1).max(100).default(50),
         offset: z.number().int().min(0).default(0),
@@ -61,6 +62,10 @@ export const adminRouter = createTRPCRouter({
 
       if (input.status) {
         conditions.push(eq(accessRequests.status, input.status));
+      }
+
+      if (input.type) {
+        conditions.push(eq(accessRequests.type, input.type));
       }
 
       if (input.search) {
@@ -128,6 +133,13 @@ export const adminRouter = createTRPCRouter({
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Solicitud no encontrada",
+          });
+        }
+
+        if (request.type === "player") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Las solicitudes de jugadores no requieren aprobación",
           });
         }
 
@@ -251,6 +263,13 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Solicitud no encontrada",
+        });
+      }
+
+      if (request.type === "player") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Las solicitudes de jugadores no requieren aprobación",
         });
       }
 
