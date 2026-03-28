@@ -4,10 +4,8 @@ import Navbar from "~/components/Navbar.astro";
 import HeroSection from "~/components/HeroSection";
 import SocialProof from "~/components/SocialProof.astro";
 import FacilityDirectory from "~/components/FacilityDirectory.astro";
-import PlayerHowItWorks from "~/components/PlayerHowItWorks.astro";
-import PlayerTestimonials from "~/components/PlayerTestimonials.astro";
-import PlayerCta from "~/components/PlayerCta.astro";
 import PlayerWaitlist from "~/components/PlayerWaitlist.astro";
+import AudienceDivider from "~/components/AudienceDivider.astro";
 import Features from "~/components/Features.astro";
 import HowItWorks from "~/components/HowItWorks.astro";
 import ComparisonTable from "~/components/ComparisonTable.astro";
@@ -24,17 +22,13 @@ export const prerender = true;
     <SocialProof />
     <div data-for="player">
       <FacilityDirectory />
-      <PlayerHowItWorks />
-      <PlayerTestimonials />
-      <PlayerCta />
       <PlayerWaitlist />
+      <AudienceDivider />
     </div>
-    <div data-for="org">
-      <Features />
-      <HowItWorks />
-      <ComparisonTable />
-      <CtaSection />
-    </div>
+    <Features />
+    <HowItWorks />
+    <ComparisonTable />
+    <CtaSection />
   </main>
   <Footer />
 </Layout>

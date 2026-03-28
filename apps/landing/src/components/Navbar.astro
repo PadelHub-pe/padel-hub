@@ -55,9 +55,10 @@
         >Iniciar sesion</a
       >
       <a
-        href="https://bookings.padelhub.pe"
+        href="#canchas"
+        id="nav-canchas"
         class="nav-btn-search hidden rounded-[10px] border border-secondary bg-secondary-50 px-5 py-2.5 text-sm font-semibold text-secondary-800 no-underline transition-all hover:-translate-y-px hover:shadow-lg md:inline-block"
-        >Buscar Canchas</a
+        >Ver Canchas</a
       >
       <a
         href="#solicitar"
@@ -98,6 +99,24 @@
       }),
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // "Ver Canchas" navbar link should switch to player audience and scroll to directory
+  document.getElementById("nav-canchas")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    const html = document.documentElement;
+    if (html.dataset.audience !== "player") {
+      window.dispatchEvent(
+        new CustomEvent("audience-switch", {
+          detail: { audience: "player" },
+        }),
+      );
+    }
+    setTimeout(() => {
+      document
+        .getElementById("canchas")
+        ?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   });
 
   // "Solicitar Acceso" navbar link should also switch to org audience

@@ -106,7 +106,7 @@ Create a waitlist signup section for players to register interest in the mobile 
 
 ---
 
-### TASK-13: Restructure player-side landing layout
+### TASK-13: Restructure player-side landing layout ✅
 
 **Type**: refactor
 **Scope**: `apps/landing/src/`

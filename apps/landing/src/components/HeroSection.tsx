@@ -2,19 +2,6 @@ import { useEffect, useState } from "react";
 
 type Audience = "player" | "org";
 
-const DISTRICTS = [
-  { label: "Miraflores", slug: "miraflores" },
-  { label: "San Isidro", slug: "san-isidro" },
-  { label: "Santiago de Surco", slug: "surco" },
-  { label: "La Molina", slug: "la-molina" },
-  { label: "San Borja", slug: "san-borja" },
-  { label: "Barranco", slug: "barranco" },
-  { label: "Magdalena", slug: "magdalena" },
-  { label: "Pueblo Libre", slug: "pueblo-libre" },
-  { label: "Jesus Maria", slug: "jesus-maria" },
-  { label: "Lince", slug: "lince" },
-];
-
 function CheckIcon() {
   return (
     <svg
@@ -48,8 +35,6 @@ function ArrowIcon() {
 
 export default function HeroSection() {
   const [audience, setAudience] = useState<Audience>("player");
-  const [district, setDistrict] = useState("");
-  const [date, setDate] = useState("");
 
   const isPlayer = audience === "player";
 
@@ -69,15 +54,6 @@ export default function HeroSection() {
     window.addEventListener("audience-switch", handleSwitch);
     return () => window.removeEventListener("audience-switch", handleSwitch);
   }, []);
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (district) params.set("distrito", district);
-    if (date) params.set("fecha", date);
-    const query = params.toString();
-    window.location.href = `https://bookings.padelhub.pe${query ? `?${query}` : ""}`;
-  }
 
   return (
     <section className="relative overflow-hidden">
@@ -156,64 +132,39 @@ export default function HeroSection() {
           >
             <div className="mx-auto max-w-[700px] text-center">
               <h1 className="font-display mb-6 text-4xl leading-[1.1] font-extrabold tracking-tight text-white lg:text-[56px]">
-                Encuentra tu cancha de{" "}
+                Todas las canchas de{" "}
                 <span className="from-secondary bg-gradient-to-r to-[#34D399] bg-clip-text text-transparent">
                   padel
                 </span>{" "}
-                ideal
+                en Lima
               </h1>
 
               <p className="mx-auto mb-10 max-w-[500px] text-lg leading-relaxed text-white/85">
-                Descubre y reserva canchas en Lima. Compara precios, horarios y
-                encuentra la cancha perfecta para ti.
+                El directorio mas completo de canchas de padel en Lima.
+                Encuentra tu cancha, consulta horarios y reserva por WhatsApp.
               </p>
 
-              {/* Search form */}
-              <form
-                onSubmit={handleSearch}
-                className="mx-auto mb-8 flex max-w-[600px] flex-col gap-3 sm:flex-row"
+              <a
+                href="#canchas"
+                className="bg-secondary hover:bg-secondary-600 mb-8 inline-flex items-center gap-2 rounded-[14px] px-8 py-4 text-base font-semibold text-white shadow-[0_2px_8px_rgba(16,185,129,0.25)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.35)]"
               >
-                <select
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="flex-1 cursor-pointer rounded-[14px] border-[1.5px] border-white/15 bg-white/10 px-5 py-4 text-[15px] text-white backdrop-blur-sm transition-all outline-none [&>option]:text-gray-900"
-                >
-                  <option value="">Todos los distritos</option>
-                  {DISTRICTS.map((d) => (
-                    <option key={d.slug} value={d.slug}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="flex-1 rounded-[14px] border-[1.5px] border-white/15 bg-white/10 px-5 py-4 text-[15px] text-white [color-scheme:dark] backdrop-blur-sm transition-all outline-none"
-                />
-
-                <button
-                  type="submit"
-                  className="bg-secondary hover:bg-secondary-600 cursor-pointer rounded-[14px] border-none px-7 py-4 text-[15px] font-semibold whitespace-nowrap text-white shadow-[0_2px_8px_rgba(16,185,129,0.25)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.35)]"
-                >
-                  Buscar Canchas
-                </button>
-              </form>
+                Ver Canchas
+                <ArrowIcon />
+              </a>
 
               {/* Trust indicators */}
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/80">
                 <span className="flex items-center gap-2">
                   <CheckIcon />
-                  Gratuito para jugadores
+                  17 canchas en Lima
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckIcon />
-                  10+ canchas en Lima
+                  10 distritos
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckIcon />
-                  Sin comision
+                  Contacto directo
                 </span>
               </div>
             </div>
