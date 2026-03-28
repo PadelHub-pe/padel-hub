@@ -51,7 +51,7 @@ Create `HeroSection.tsx` — a React component with `client:load` hydration that
 
 ---
 
-### TASK-03: Create PlayerHowItWorks section
+### ~~TASK-03: Create PlayerHowItWorks section~~ ✅
 
 **Type**: feature
 **Scope**: `apps/landing/src/components/`
