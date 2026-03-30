@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -17,6 +17,25 @@ import {
 import { useTRPC } from "~/trpc/react";
 
 export default function RegisterCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <LoadingSpinner className="mx-auto h-8 w-8 text-blue-600" />
+            <p className="mt-4 text-sm text-gray-600">
+              Procesando tu invitación...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <RegisterCallbackContent />
+    </Suspense>
+  );
+}
+
+function RegisterCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const trpc = useTRPC();
