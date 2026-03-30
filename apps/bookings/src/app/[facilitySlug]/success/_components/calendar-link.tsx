@@ -42,6 +42,7 @@ export function CalendarLink(props: CalendarLinkProps) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
+      aria-label="Agregar al calendario de Google"
       className="border-border hover:bg-muted inline-flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors"
     >
       <svg

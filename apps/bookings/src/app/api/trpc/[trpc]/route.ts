@@ -4,11 +4,13 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter, createTRPCContext } from "@wifo/api";
 
 import { auth } from "~/auth/server";
+import { env } from "~/env";
 
-const ALLOWED_ORIGINS = new Set([
-  "https://bookings.padelhub.pe",
-  "http://localhost:3002",
-]);
+const ALLOWED_ORIGINS = new Set(
+  env.NODE_ENV === "production"
+    ? ["https://bookings.padelhub.pe"]
+    : ["https://bookings.padelhub.pe", "http://localhost:3002"],
+);
 
 function setCorsHeaders(req: NextRequest, res: Response) {
   const origin = req.headers.get("origin") ?? "";

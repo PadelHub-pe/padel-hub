@@ -108,7 +108,7 @@ export function SuccessPage({ facilitySlug }: SuccessPageProps) {
       </div>
 
       {/* Booking details */}
-      {booking && (
+      {booking ? (
         <div className="mt-4 rounded-lg border p-4">
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
@@ -153,6 +153,10 @@ export function SuccessPage({ facilitySlug }: SuccessPageProps) {
             </div>
           </div>
         </div>
+      ) : (
+        <p className="text-muted-foreground mt-4 text-center text-sm">
+          Para ver los detalles de tu reserva, visita &quot;Mis Reservas&quot;.
+        </p>
       )}
 
       {/* Actions */}

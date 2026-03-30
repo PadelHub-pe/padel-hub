@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { Turnstile } from "@marsidev/react-turnstile";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -11,6 +17,7 @@ import { Button } from "@wifo/ui/button";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 
+import { env } from "~/env";
 import { useTRPC } from "~/trpc/react";
 import { BookingSummary } from "./booking-summary";
 import { OtpInput } from "./otp-input";
@@ -25,6 +32,7 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   // Parse query params
   const courtId = searchParams.get("courtId") ?? "";
@@ -60,6 +68,15 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
     }),
   );
 
+  // Turnstile
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileSiteKey = env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  const handleTurnstileSuccess = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
   // Form state
   const [step, setStep] = useState<Step>("contact");
   const [customerName, setCustomerName] = useState("");
@@ -85,17 +102,30 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
       setError("Ingresa tu nombre");
       return;
     }
-    if (!phone.trim() || phone.length < 9) {
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (!/^\d{7,15}$/.test(cleanPhone)) {
       setError("Ingresa un número de teléfono válido");
+      return;
+    }
+    if (turnstileSiteKey && !turnstileToken) {
+      setError("Espera a que se complete la verificación de seguridad");
       return;
     }
 
     setError("");
     try {
-      await sendOtpMutation.mutateAsync({ phone: phone.replace(/\D/g, "") });
+      await sendOtpMutation.mutateAsync({
+        phone: phone.replace(/\D/g, ""),
+        turnstileToken: turnstileToken || "dev-bypass",
+      });
+      // Reset Turnstile for the next use (createBooking)
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setStep("otp");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al enviar el código");
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     }
   }
 
@@ -112,9 +142,35 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
         return;
       }
 
-      // OTP verified — create booking
-      setStep("confirming");
+      // Wait for Turnstile token if not ready yet
+      if (turnstileSiteKey && !turnstileToken) {
+        setOtpError(
+          "Espera a que se complete la verificación de seguridad e intenta de nuevo.",
+        );
+        return;
+      }
 
+      // Re-validate slot availability before booking
+      setStep("confirming");
+      const freshSlots = await queryClient.fetchQuery(
+        trpc.publicBooking.getAvailableSlots.queryOptions({
+          slug: facilitySlug,
+          date,
+        }),
+      );
+      const slotStillAvailable = freshSlots.slots.some(
+        (s) =>
+          s.courtId === courtId &&
+          s.startTime === startTime &&
+          s.endTime === endTime,
+      );
+      if (!slotStillAvailable) {
+        setOtpError("Este horario ya no está disponible. Selecciona otro.");
+        setStep("otp");
+        return;
+      }
+
+      // Create booking
       const booking = await createBookingMutation.mutateAsync({
         facilityId: facility.id,
         courtId,
@@ -123,6 +179,7 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
         endTime,
         customerName: customerName.trim(),
         verificationToken: result.token,
+        turnstileToken: turnstileToken || "dev-bypass",
       });
 
       if (booking) {
@@ -152,17 +209,26 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
     } catch (e) {
       setOtpError(e instanceof Error ? e.message : "Error al crear la reserva");
       setStep("otp");
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     }
   }
 
   async function handleResendOtp() {
     setOtpError("");
     try {
-      await sendOtpMutation.mutateAsync({ phone: phone.replace(/\D/g, "") });
+      await sendOtpMutation.mutateAsync({
+        phone: phone.replace(/\D/g, ""),
+        turnstileToken: turnstileToken || "dev-bypass",
+      });
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     } catch (e) {
       setOtpError(
         e instanceof Error ? e.message : "Error al reenviar el código",
       );
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     }
   }
 
@@ -247,6 +313,7 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
               className="mt-1"
               autoComplete="tel"
               inputMode="tel"
+              maxLength={15}
             />
             <p className="text-muted-foreground mt-1 text-xs">
               Te enviaremos un código de verificación por WhatsApp.
@@ -315,6 +382,16 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
           <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
           <p className="text-muted-foreground text-sm">Creando tu reserva...</p>
         </div>
+      )}
+
+      {/* Turnstile invisible widget */}
+      {turnstileSiteKey && (
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={turnstileSiteKey}
+          onSuccess={handleTurnstileSuccess}
+          options={{ size: "invisible" }}
+        />
       )}
     </main>
   );

@@ -102,6 +102,7 @@ export function SlotGrid({ slots, selectedSlot, onSelect }: SlotGridProps) {
                 <button
                   key={`${slot.courtId}-${slot.startTime}-${slot.endTime}`}
                   onClick={() => onSelect(slot)}
+                  aria-label={`${slot.courtName}, ${slot.startTime} a ${slot.endTime}, ${formatPrice(slot.priceInCents)}${slot.isPeakRate ? " (hora punta)" : ""}`}
                   className={cn(
                     "flex flex-col items-start rounded-lg border p-3 text-left transition-colors",
                     isSelected

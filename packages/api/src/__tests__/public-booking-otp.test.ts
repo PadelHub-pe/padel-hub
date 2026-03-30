@@ -20,6 +20,7 @@ const {
   mockVerifyOtpCode,
   mockCheckOtpSendRateLimit,
   mockCreateVerificationToken,
+  mockVerifyTurnstileToken,
 } = vi.hoisted(() => ({
   mockGenerateOtpCode: vi.fn().mockReturnValue("123456"),
   mockSendOtp: vi.fn().mockResolvedValue({ success: true }),
@@ -27,6 +28,7 @@ const {
   mockVerifyOtpCode: vi.fn().mockResolvedValue("valid" as const),
   mockCheckOtpSendRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
   mockCreateVerificationToken: vi.fn().mockReturnValue("signed-token-123"),
+  mockVerifyTurnstileToken: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock("@wifo/whatsapp", () => ({
@@ -46,6 +48,10 @@ vi.mock("../lib/otp-rate-limit", () => ({
 
 vi.mock("../lib/verification-token", () => ({
   createVerificationToken: mockCreateVerificationToken,
+}));
+
+vi.mock("../lib/turnstile", () => ({
+  verifyTurnstileToken: mockVerifyTurnstileToken,
 }));
 
 // ---------------------------------------------------------------------------
@@ -75,6 +81,7 @@ beforeEach(() => {
   mockVerifyOtpCode.mockResolvedValue("valid");
   mockCheckOtpSendRateLimit.mockResolvedValue({ allowed: true });
   mockCreateVerificationToken.mockReturnValue("signed-token-123");
+  mockVerifyTurnstileToken.mockResolvedValue(true);
 });
 
 // ===========================================================================
@@ -86,18 +93,19 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     const result = await caller.publicBooking.sendOtp({
-      phone: "51987654321",
+      phone: "987654321",
+      turnstileToken: "test-token",
     });
 
     expect(result.success).toBe(true);
     expect(result.expiresInSeconds).toBe(600);
 
     // Verify the flow: rate check → generate → store → send
-    expect(mockCheckOtpSendRateLimit).toHaveBeenCalledWith("51987654321");
+    expect(mockCheckOtpSendRateLimit).toHaveBeenCalledWith("987654321");
     expect(mockGenerateOtpCode).toHaveBeenCalledOnce();
-    expect(mockStoreOtpCode).toHaveBeenCalledWith("51987654321", "123456");
+    expect(mockStoreOtpCode).toHaveBeenCalledWith("987654321", "123456");
     expect(mockSendOtp).toHaveBeenCalledWith({
-      phone: "51987654321",
+      phone: "987654321",
       code: "123456",
     });
   });
@@ -110,7 +118,10 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     await expect(
-      caller.publicBooking.sendOtp({ phone: "51987654321" }),
+      caller.publicBooking.sendOtp({
+        phone: "987654321",
+        turnstileToken: "test-token",
+      }),
     ).rejects.toThrow("Demasiados intentos");
 
     // Should not generate or send anything
@@ -126,7 +137,10 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     await expect(
-      caller.publicBooking.sendOtp({ phone: "51987654321" }),
+      caller.publicBooking.sendOtp({
+        phone: "987654321",
+        turnstileToken: "test-token",
+      }),
     ).rejects.toThrow("No se pudo enviar el código");
 
     // Code was still stored (will expire naturally)
@@ -137,7 +151,10 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     await expect(
-      caller.publicBooking.sendOtp({ phone: "1234" }),
+      caller.publicBooking.sendOtp({
+        phone: "1234",
+        turnstileToken: "test-token",
+      }),
     ).rejects.toThrow();
   });
 
@@ -145,7 +162,10 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     await expect(
-      caller.publicBooking.sendOtp({ phone: "+51987654321" }),
+      caller.publicBooking.sendOtp({
+        phone: "+51987654321",
+        turnstileToken: "test-token",
+      }),
     ).rejects.toThrow();
   });
 
@@ -153,7 +173,10 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     await expect(
-      caller.publicBooking.sendOtp({ phone: "1234567890123456" }),
+      caller.publicBooking.sendOtp({
+        phone: "1234567890123456",
+        turnstileToken: "test-token",
+      }),
     ).rejects.toThrow();
   });
 
@@ -165,7 +188,10 @@ describe("publicBooking.sendOtp", () => {
     const caller = publicCaller();
 
     await expect(
-      caller.publicBooking.sendOtp({ phone: "51987654321" }),
+      caller.publicBooking.sendOtp({
+        phone: "987654321",
+        turnstileToken: "test-token",
+      }),
     ).rejects.toThrow("3600 segundos");
   });
 });
@@ -180,14 +206,14 @@ describe("publicBooking.verifyOtp", () => {
     const caller = publicCaller();
 
     const result = await caller.publicBooking.verifyOtp({
-      phone: "51987654321",
+      phone: "987654321",
       code: "123456",
     });
 
     expect(result.verified).toBe(true);
     expect(result).toHaveProperty("token", "signed-token-123");
-    expect(mockVerifyOtpCode).toHaveBeenCalledWith("51987654321", "123456");
-    expect(mockCreateVerificationToken).toHaveBeenCalledWith("51987654321");
+    expect(mockVerifyOtpCode).toHaveBeenCalledWith("987654321", "123456");
+    expect(mockCreateVerificationToken).toHaveBeenCalledWith("987654321");
   });
 
   it("returns verified=false when code is invalid", async () => {
@@ -195,7 +221,7 @@ describe("publicBooking.verifyOtp", () => {
     const caller = publicCaller();
 
     const result = await caller.publicBooking.verifyOtp({
-      phone: "51987654321",
+      phone: "987654321",
       code: "999999",
     });
 
@@ -210,7 +236,7 @@ describe("publicBooking.verifyOtp", () => {
 
     await expect(
       caller.publicBooking.verifyOtp({
-        phone: "51987654321",
+        phone: "987654321",
         code: "123456",
       }),
     ).rejects.toThrow("Código expirado o no encontrado");
@@ -222,7 +248,7 @@ describe("publicBooking.verifyOtp", () => {
 
     await expect(
       caller.publicBooking.verifyOtp({
-        phone: "51987654321",
+        phone: "987654321",
         code: "123456",
       }),
     ).rejects.toThrow("Demasiados intentos fallidos");
@@ -233,7 +259,7 @@ describe("publicBooking.verifyOtp", () => {
 
     await expect(
       caller.publicBooking.verifyOtp({
-        phone: "51987654321",
+        phone: "987654321",
         code: "12345", // 5 digits instead of 6
       }),
     ).rejects.toThrow();

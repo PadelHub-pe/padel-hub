@@ -7,11 +7,17 @@ import { Redis } from "@upstash/redis";
 
 let redis: Redis | null | undefined;
 
+let didWarnRedis = false;
+
 function getRedis(): Redis | null {
   if (redis !== undefined) return redis;
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
+    if (!didWarnRedis) {
+      console.warn("[OTP] Redis not configured — OTP rate limiting disabled");
+      didWarnRedis = true;
+    }
     redis = null;
     return null;
   }

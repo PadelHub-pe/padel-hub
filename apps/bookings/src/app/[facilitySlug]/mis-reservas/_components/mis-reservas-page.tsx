@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
 import { Button } from "@wifo/ui/button";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
 
+import { env } from "~/env";
 import { useTRPC } from "~/trpc/react";
 import { OtpInput } from "../../confirm/_components/otp-input";
 import { BookingCard } from "./booking-card";
@@ -60,6 +63,15 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
   const [error, setError] = useState("");
   const [otpError, setOtpError] = useState("");
 
+  // Turnstile
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileSiteKey = env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  const handleTurnstileSuccess = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
   // Mutations
   const sendOtpMutation = useMutation(
     trpc.publicBooking.sendOtp.mutationOptions(),
@@ -70,17 +82,28 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
 
   async function handleSendOtp() {
     const cleaned = phone.replace(/\D/g, "");
-    if (!cleaned || cleaned.length < 9) {
+    if (!/^\d{7,15}$/.test(cleaned)) {
       setError("Ingresa un número de teléfono válido");
+      return;
+    }
+    if (turnstileSiteKey && !turnstileToken) {
+      setError("Espera a que se complete la verificación de seguridad");
       return;
     }
 
     setError("");
     try {
-      await sendOtpMutation.mutateAsync({ phone: cleaned });
+      await sendOtpMutation.mutateAsync({
+        phone: cleaned,
+        turnstileToken: turnstileToken || "dev-bypass",
+      });
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setStep("otp");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al enviar el código");
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     }
   }
 
@@ -113,11 +136,18 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
     setOtpError("");
     const cleaned = phone.replace(/\D/g, "");
     try {
-      await sendOtpMutation.mutateAsync({ phone: cleaned });
+      await sendOtpMutation.mutateAsync({
+        phone: cleaned,
+        turnstileToken: turnstileToken || "dev-bypass",
+      });
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     } catch (e) {
       setOtpError(
         e instanceof Error ? e.message : "Error al reenviar el código",
       );
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     }
   }
 
@@ -182,6 +212,7 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
               className="mt-1"
               autoComplete="tel"
               inputMode="tel"
+              maxLength={15}
             />
             <p className="text-muted-foreground mt-1 text-xs">
               Te enviaremos un código de verificación por WhatsApp.
@@ -251,6 +282,16 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
           token={token}
           onLogout={handleLogout}
           onTokenExpired={handleTokenExpired}
+        />
+      )}
+
+      {/* Turnstile invisible widget */}
+      {turnstileSiteKey && step !== "verified" && (
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={turnstileSiteKey}
+          onSuccess={handleTurnstileSuccess}
+          options={{ size: "invisible" }}
         />
       )}
     </main>

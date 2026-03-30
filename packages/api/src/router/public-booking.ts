@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { addDays, format, startOfDay } from "date-fns";
@@ -31,6 +32,7 @@ import { logBookingActivity } from "../lib/booking-activity";
 import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
 import { checkOtpSendRateLimit } from "../lib/otp-rate-limit";
 import { storeOtpCode, verifyOtpCode } from "../lib/otp-store";
+import { verifyTurnstileToken } from "../lib/turnstile";
 import {
   createVerificationToken,
   validateVerificationToken,
@@ -66,11 +68,12 @@ const calculatePriceSchema = z.object({
 });
 
 const sendOtpSchema = z.object({
-  phone: z.string().regex(/^\d{8,15}$/, "Número de teléfono inválido"),
+  phone: z.string().regex(/^\d{7,15}$/, "Ingresa un número de teléfono válido"),
+  turnstileToken: z.string().min(1, "Verificación requerida"),
 });
 
 const verifyOtpSchema = z.object({
-  phone: z.string().regex(/^\d{8,15}$/, "Número de teléfono inválido"),
+  phone: z.string().regex(/^\d{7,15}$/, "Ingresa un número de teléfono válido"),
   code: z.string().length(6, "El código debe tener 6 dígitos"),
 });
 
@@ -83,6 +86,7 @@ const createBookingSchema = z
     endTime: z.string().regex(/^\d{2}:\d{2}$/),
     customerName: z.string().min(1, "Nombre es requerido").max(100),
     verificationToken: z.string().min(1),
+    turnstileToken: z.string().min(1, "Verificación requerida"),
   })
   .refine((d) => d.startTime < d.endTime, {
     message: "La hora de inicio debe ser anterior a la hora de fin",
@@ -146,11 +150,12 @@ function calculateBookingPrice(
 }
 
 /**
- * Generate a unique booking code in format PH-YYYY-XXXX
+ * Generate a unique booking code in format PH-YYYY-XXXXXX
+ * Uses crypto.randomBytes for unpredictable codes (~16.7M combinations).
  */
 function generateBookingCode(): string {
   const year = new Date().getFullYear();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const random = randomBytes(4).toString("hex").substring(0, 6).toUpperCase();
   return `PH-${year}-${random}`;
 }
 
@@ -441,9 +446,18 @@ export const publicBookingRouter = {
    * Rate-limited to 5 sends per phone per hour.
    */
   sendOtp: publicProcedure.input(sendOtpSchema).mutation(async ({ input }) => {
-    const { phone } = input;
+    const { phone, turnstileToken } = input;
 
-    // 1. Rate limit
+    // 1. Verify Turnstile (bot protection)
+    const turnstileValid = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileValid) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Verificación de seguridad fallida. Intenta nuevamente.",
+      });
+    }
+
+    // 2. Rate limit
     const rateLimit = await checkOtpSendRateLimit(phone);
     if (!rateLimit.allowed) {
       throw new TRPCError({
@@ -511,10 +525,19 @@ export const publicBookingRouter = {
       const { facilityId, courtId, date, startTime, endTime, customerName } =
         input;
 
-      // 1. Validate verification token → extract phone
+      // 1. Verify Turnstile (bot protection)
+      const turnstileValid = await verifyTurnstileToken(input.turnstileToken);
+      if (!turnstileValid) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Verificación de seguridad fallida. Intenta nuevamente.",
+        });
+      }
+
+      // 2. Validate verification token → extract phone
       const customerPhone = requireVerifiedPhone(input.verificationToken);
 
-      // 2. Verify facility exists and is active
+      // 3. Verify facility exists and is active
       const facility = await ctx.db.query.facilities.findFirst({
         where: and(
           eq(facilities.id, facilityId),
@@ -529,7 +552,7 @@ export const publicBookingRouter = {
         });
       }
 
-      // 3. Verify court belongs to facility
+      // 4. Verify court belongs to facility
       const court = await ctx.db.query.courts.findFirst({
         where: and(eq(courts.id, courtId), eq(courts.facilityId, facilityId)),
       });
@@ -541,28 +564,7 @@ export const publicBookingRouter = {
         });
       }
 
-      // 4. Check for overlapping active bookings
-      const dayStart = startOfDay(date);
-      const dayEnd = startOfDay(addDays(date, 1));
-      const overlapping = await ctx.db.query.bookings.findFirst({
-        where: and(
-          eq(bookings.courtId, courtId),
-          gte(bookings.date, dayStart),
-          lt(bookings.date, dayEnd),
-          ne(bookings.status, "cancelled"),
-          lt(bookings.startTime, endTime),
-          gt(bookings.endTime, startTime),
-        ),
-      });
-
-      if (overlapping) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: `La cancha ya tiene una reserva de ${overlapping.startTime.slice(0, 5)} a ${overlapping.endTime.slice(0, 5)}`,
-        });
-      }
-
-      // 5. Calculate price (server-side)
+      // 5. Calculate price (server-side — outside transaction for read-only queries)
       const dayOfWeek = getLimaDayOfWeek(date);
       const { scheduleConfig, dateStr } = await fetchScheduleData(
         ctx.db,
@@ -590,48 +592,78 @@ export const publicBookingRouter = {
         facilityDefaults,
       );
 
-      // 6. Generate unique booking code
-      let code = generateBookingCode();
-      let attempts = 0;
-      while (attempts < 10) {
-        const existing = await ctx.db.query.bookings.findFirst({
-          where: eq(bookings.code, code),
+      // 6. Transaction: overlap check + code generation + insert
+      //    Prevents double-booking race condition.
+      const booking = await ctx.db.transaction(async (tx) => {
+        // Check for overlapping active bookings
+        const dayStart = startOfDay(date);
+        const dayEnd = startOfDay(addDays(date, 1));
+        const overlapping = await tx.query.bookings.findFirst({
+          where: and(
+            eq(bookings.courtId, courtId),
+            gte(bookings.date, dayStart),
+            lt(bookings.date, dayEnd),
+            ne(bookings.status, "cancelled"),
+            lt(bookings.startTime, endTime),
+            gt(bookings.endTime, startTime),
+          ),
         });
-        if (!existing) break;
-        code = generateBookingCode();
-        attempts++;
-      }
 
-      // 7. Insert booking
-      const [booking] = await ctx.db
-        .insert(bookings)
-        .values({
-          code,
-          courtId,
-          facilityId,
-          date,
-          startTime,
-          endTime,
-          priceInCents,
-          isPeakRate,
-          customerName,
-          customerPhone,
-          isManualBooking: false,
-          status: "confirmed",
-          confirmedAt: new Date(),
-        })
-        .returning();
+        if (overlapping) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `La cancha ya tiene una reserva de ${overlapping.startTime.slice(0, 5)} a ${overlapping.endTime.slice(0, 5)}`,
+          });
+        }
 
+        // Generate unique booking code
+        let code = generateBookingCode();
+        let codeAttempts = 0;
+        while (codeAttempts < 10) {
+          const existing = await tx.query.bookings.findFirst({
+            where: eq(bookings.code, code),
+          });
+          if (!existing) break;
+          code = generateBookingCode();
+          codeAttempts++;
+        }
+
+        // Insert booking
+        const [newBooking] = await tx
+          .insert(bookings)
+          .values({
+            code,
+            courtId,
+            facilityId,
+            date,
+            startTime,
+            endTime,
+            priceInCents,
+            isPeakRate,
+            customerName,
+            customerPhone,
+            isManualBooking: false,
+            status: "confirmed",
+            confirmedAt: new Date(),
+          })
+          .returning();
+
+        if (newBooking) {
+          // Add customer as owner player at position 1
+          await tx.insert(bookingPlayers).values({
+            bookingId: newBooking.id,
+            role: "owner",
+            position: 1,
+            guestName: customerName,
+            guestPhone: customerPhone,
+          });
+        }
+
+        return newBooking;
+      });
+
+      // 7. Post-transaction: activity log + WhatsApp (non-critical)
       if (booking) {
-        // Add customer as owner player at position 1
-        await ctx.db.insert(bookingPlayers).values({
-          bookingId: booking.id,
-          role: "owner",
-          position: 1,
-          guestName: customerName,
-          guestPhone: customerPhone,
-        });
-
         await logBookingActivity({
           db: ctx.db,
           bookingId: booking.id,
@@ -639,8 +671,6 @@ export const publicBookingRouter = {
           description: `Reserva online creada por ${customerName}`,
           performedBy: null,
         });
-
-        // Send WhatsApp confirmation (errors logged internally, not thrown)
         const dd = date.getUTCDate().toString().padStart(2, "0");
         const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
         const yyyy = date.getUTCFullYear().toString();

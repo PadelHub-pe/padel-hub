@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/require-await */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { publicBookingRouter } from "../router/public-booking";
@@ -13,13 +13,15 @@ const {
   mockLogBookingActivity,
   mockResolveAndPersistBookingStatuses,
   mockSendBookingConfirmation,
+  mockVerifyTurnstileToken,
 } = vi.hoisted(() => ({
-  mockValidateVerificationToken: vi.fn().mockReturnValue("51987654321"),
+  mockValidateVerificationToken: vi.fn().mockReturnValue("987654321"),
   mockLogBookingActivity: vi.fn().mockResolvedValue(undefined),
   mockResolveAndPersistBookingStatuses: vi.fn().mockResolvedValue([]),
   mockSendBookingConfirmation: vi
     .fn()
     .mockResolvedValue({ success: true, messageId: "msg-123" }),
+  mockVerifyTurnstileToken: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock("../lib/verification-token", () => ({
@@ -48,6 +50,10 @@ vi.mock("../lib/otp-store", () => ({
 }));
 vi.mock("../lib/otp-rate-limit", () => ({
   checkOtpSendRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
+}));
+
+vi.mock("../lib/turnstile", () => ({
+  verifyTurnstileToken: mockVerifyTurnstileToken,
 }));
 
 // ---------------------------------------------------------------------------
@@ -100,7 +106,7 @@ function makeBooking(overrides?: Record<string, unknown>) {
     isPeakRate: false,
     status: "confirmed",
     customerName: "Juan Pérez",
-    customerPhone: "51987654321",
+    customerPhone: "987654321",
     customerEmail: null,
     isManualBooking: false,
     cancelledBy: null,
@@ -159,6 +165,7 @@ function createMockDb(config: {
   let bookingFindFirstCallCount = 0;
 
   const mockDb: any = {
+    transaction: vi.fn().mockImplementation(async (fn: any) => fn(mockDb)),
     query: {
       facilities: {
         findFirst: vi.fn().mockResolvedValue(facility),
@@ -201,7 +208,7 @@ function createMockDb(config: {
             facilityId: FACILITY_ID,
             status: "confirmed",
             customerName: "Juan Pérez",
-            customerPhone: "51987654321",
+            customerPhone: "987654321",
             priceInCents: 10000,
             isPeakRate: false,
             isManualBooking: false,
@@ -244,13 +251,14 @@ function publicCaller(db: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockValidateVerificationToken.mockReturnValue("51987654321");
+  mockValidateVerificationToken.mockReturnValue("987654321");
   mockLogBookingActivity.mockResolvedValue(undefined);
   mockResolveAndPersistBookingStatuses.mockResolvedValue([]);
   mockSendBookingConfirmation.mockResolvedValue({
     success: true,
     messageId: "msg-123",
   });
+  mockVerifyTurnstileToken.mockResolvedValue(true);
 });
 
 // ===========================================================================
@@ -266,6 +274,7 @@ describe("publicBooking.createBooking", () => {
     endTime: "11:00",
     customerName: "Juan Pérez",
     verificationToken: "v1.51987654321.9999999999.abc123",
+    turnstileToken: "test-token",
   };
 
   it("creates a booking and returns confirmation", async () => {
@@ -276,7 +285,7 @@ describe("publicBooking.createBooking", () => {
 
     expect(result).toHaveProperty("id");
     expect(result).toHaveProperty("code");
-    expect(result!.customerPhone).toBe("51987654321");
+    expect(result!.customerPhone).toBe("987654321");
     expect(result!.isManualBooking).toBe(false);
   });
 
@@ -411,7 +420,7 @@ describe("publicBooking.createBooking", () => {
     await caller.publicBooking.createBooking(validInput);
 
     expect(mockSendBookingConfirmation).toHaveBeenCalledWith({
-      phone: "51987654321",
+      phone: "987654321",
       customerName: "Juan Pérez",
       facilityName: "Club Test",
       courtName: "Cancha 1",
@@ -554,10 +563,10 @@ describe("publicBooking.cancelBooking", () => {
   });
 
   it("throws FORBIDDEN when phone does not match booking", async () => {
-    mockValidateVerificationToken.mockReturnValue("51999999999");
+    mockValidateVerificationToken.mockReturnValue("999999999");
     const existingBooking = makeBooking({
       status: "confirmed",
-      customerPhone: "51987654321",
+      customerPhone: "987654321",
     });
     const db = createMockDb({ overlappingBooking: existingBooking });
     const caller = publicCaller(db);

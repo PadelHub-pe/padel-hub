@@ -102,6 +102,7 @@ export function OtpInput({
           maxLength={1}
           value={value}
           disabled={disabled}
+          aria-label={`Dígito ${i + 1} del código`}
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={i === 0 ? handlePaste : undefined}

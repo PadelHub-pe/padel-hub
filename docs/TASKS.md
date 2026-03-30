@@ -1,6 +1,268 @@
 # Tasks
 
-## Current: Web Dashboard Production Readiness
+## Previous: Public Bookings Production Readiness ✅
+
+**Goal**: Harden `apps/bookings` (public booking page) for production — bot protection, race conditions, error handling, SEO, and edge cases.
+
+**Context**: Audit across 5 dimensions (security/abuse, API integrity, error handling, SEO, UI edge cases) found 12 actionable items. Verification tokens (HMAC-SHA256), input validation (Zod), security headers, WhatsApp notifications, loading states, and mobile responsiveness are already solid.
+
+---
+
+### TASK-31: Implement Cloudflare Turnstile on booking mutations ✅
+
+**Type**: feat
+**Scope**: `apps/bookings`, `packages/api`
+**Severity**: CRITICAL
+
+Turnstile env vars (`TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`) are defined in `src/env.ts` but **never used anywhere**. All public mutations (`sendOtp`, `createBooking`) have zero bot protection.
+
+**Client-side (`apps/bookings`):**
+- Install `@marsidev/react-turnstile` (lightweight React wrapper)
+- Add invisible Turnstile widget to `confirm-page.tsx` (renders before OTP send)
+- Pass `turnstileToken` in `sendOtp` and `createBooking` mutation inputs
+- Reset widget on error/retry
+
+**Server-side (`packages/api/src/router/public-booking.ts`):**
+- Add `turnstileToken: z.string().min(1)` to `sendOtp` and `createBooking` input schemas
+- Create `packages/api/src/lib/turnstile.ts` — validates token against Cloudflare siteverify API
+- Call `verifyTurnstileToken(token)` before processing each mutation
+- Skip validation if `TURNSTILE_SECRET_KEY` not set (dev mode)
+
+**Tests**: Mock `verifyTurnstileToken` in existing public-booking tests.
+
+---
+
+### TASK-32: Fix double-booking race condition with DB transaction ✅
+
+**Type**: fix
+**Scope**: `packages/api/src/router/public-booking.ts`
+**Severity**: CRITICAL
+
+The `createBooking` mutation checks for overlapping bookings, then inserts — with no transaction. Two concurrent requests can both pass the overlap check and both insert, creating a double booking.
+
+**Fix:**
+- Wrap the overlap check + insert in `ctx.db.transaction(async (tx) => { ... })`
+- Use `SELECT ... FOR UPDATE` semantics by querying inside the transaction
+- Move the overlap check, price calculation, code generation, and insert all inside the transaction
+- If overlap found inside transaction, throw `CONFLICT` error
+
+**Alternative (defense-in-depth):** Add a partial unique index on `bookings(court_id, date, start_time) WHERE status != 'cancelled'` — prevents double-booking even if app logic has bugs. This requires a Drizzle migration.
+
+**Tests**: Add test for concurrent booking attempts (mock DB to simulate race).
+
+---
+
+### TASK-33: Add error boundaries for bookings app ✅
+
+**Type**: fix
+**Scope**: `apps/bookings/src/app/`
+**Severity**: CRITICAL
+
+No `error.tsx` files exist. Any `useSuspenseQuery` failure (network error, API error) crashes the page with a white screen.
+
+**Create `src/app/error.tsx`:**
+- `"use client"` directive
+- Spanish error message: "Algo salió mal"
+- Description: "Ocurrió un error inesperado. Intenta nuevamente."
+- "Reintentar" button calling `reset()`
+- "Volver al inicio" link
+- Simple, mobile-friendly layout (no heavy dependencies)
+
+**Create `src/app/global-error.tsx`:**
+- Catches root layout errors (renders its own `<html>`, `<body>`)
+- Minimal UI — no external CSS/fonts
+- "Reintentar" button
+
+**Create `src/app/[facilitySlug]/error.tsx`:**
+- Facility-specific error boundary
+- "Volver" button that navigates to facility root
+
+---
+
+### TASK-34: Fix OTP rate limiter fail-open behavior ✅
+
+**Type**: fix
+**Scope**: `packages/api/src/lib/otp-rate-limit.ts`, `packages/api/src/lib/otp-store.ts`
+**Severity**: CRITICAL
+
+When Redis is unavailable:
+- `checkOtpSendRateLimit()` returns `{ allowed: true }` — all rate limits bypassed silently
+- OTP store falls back to in-memory `Map` with no cleanup — memory leak over time
+
+**Fix for `otp-rate-limit.ts`:**
+- Log a one-time warning when Redis is unavailable: `console.warn("[OTP] Redis not configured — rate limiting disabled")`
+- Use a `didWarn` flag to avoid log spam
+
+**Fix for `otp-store.ts`:**
+- Add TTL-based cleanup to the in-memory fallback: on each `storeOtpCode` call, evict expired entries
+- Cap the Map size (e.g., 1000 entries) — reject new OTPs if exceeded (fail-closed)
+- Log warning when using in-memory fallback
+
+**Tests**: Update `otp-store.test.ts` for eviction behavior.
+
+---
+
+### TASK-35: Add robots.txt and sitemap for bookings app ✅
+
+**Type**: feat
+**Scope**: `apps/bookings/src/app/`
+**Severity**: HIGH
+
+No SEO files exist. The bookings app is public-facing and should be indexed.
+
+**Create `src/app/robots.ts`:**
+```typescript
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: { userAgent: "*", allow: "/" },
+    sitemap: "https://bookings.padelhub.pe/sitemap.xml",
+  };
+}
+```
+
+**Create `src/app/sitemap.ts`:**
+- Dynamic sitemap — queries all active facilities from DB
+- Each facility slug gets an entry: `https://bookings.padelhub.pe/{slug}`
+- `changeFrequency: "daily"`, `priority: 0.8`
+
+---
+
+### TASK-36: Re-validate slot availability on confirm page ✅
+
+**Type**: fix
+**Scope**: `apps/bookings/src/app/[facilitySlug]/confirm/_components/confirm-page.tsx`
+**Severity**: HIGH
+
+User selects a slot on `/book`, navigates to `/confirm`, and the slot could be booked by someone else during that time. The confirm page does NOT re-check availability.
+
+**Fix:**
+- After OTP verification succeeds (before calling `createBooking`), call `getAvailableSlots` to verify the selected slot is still available
+- If slot is gone, show a clear error: "Este horario ya no está disponible. Selecciona otro."
+- Add a "Ver horarios" button that navigates back to `/book`
+
+**Note**: The server-side `createBooking` already checks for overlaps (TASK-32 strengthens this), but the client-side check provides better UX — the user sees a clear message instead of a generic error.
+
+---
+
+### TASK-37: Use crypto for booking code generation ✅
+
+**Type**: fix
+**Scope**: `packages/api/src/router/public-booking.ts`
+**Severity**: HIGH
+
+`generateBookingCode()` uses `Math.random().toString(36).substring(2, 6)` — predictable and weak entropy. Only ~1.68M combinations per year.
+
+**Fix:**
+```typescript
+import { randomBytes } from "crypto";
+
+function generateBookingCode(): string {
+  const year = new Date().getFullYear();
+  const random = randomBytes(4).toString("hex").substring(0, 6).toUpperCase();
+  return `PH-${year}-${random}`;
+}
+```
+
+This gives 16^6 = ~16.7M combinations — 10x improvement with cryptographic randomness.
+
+**Tests**: Existing retry logic tests should still pass. Add test verifying code format.
+
+---
+
+### TASK-38: Remove localhost from production CORS whitelist ✅
+
+**Type**: fix
+**Scope**: `apps/bookings/src/app/api/trpc/[trpc]/route.ts`
+**Severity**: HIGH
+
+`ALLOWED_ORIGINS` hardcodes `http://localhost:3002` alongside the production origin. This should be environment-aware.
+
+**Fix:**
+- Use `process.env.NODE_ENV` to conditionally include localhost
+- Production: only `https://bookings.padelhub.pe`
+- Development: add `http://localhost:3002`
+
+---
+
+### TASK-39: Tighten phone validation to Peru format ✅
+
+**Type**: fix
+**Scope**: `packages/api/src/router/public-booking.ts`, `apps/bookings/src/app/[facilitySlug]/confirm/_components/confirm-page.tsx`
+**Severity**: MEDIUM
+
+Phone regex `/^\d{8,15}$/` accepts any 8-15 digits. Peru mobile numbers are 9 digits starting with 9.
+
+**Server-side fix:**
+- Change `sendOtp` and `verifyOtp` phone schema to `/^9\d{8}$/` (Peru mobile)
+- Update error message: "Ingresa un número de celular válido (9 dígitos)"
+
+**Client-side fix:**
+- Update phone input validation in `confirm-page.tsx` and `mis-reservas-page.tsx` to match
+- Add `maxLength={9}` to phone input
+- Show inline validation message
+
+**Tests**: Update OTP tests with Peru-format phone numbers.
+
+---
+
+### TASK-40: Add accessibility improvements (aria-labels) ✅
+
+**Type**: fix
+**Scope**: `apps/bookings/src/app/[facilitySlug]/`
+**Severity**: MEDIUM
+
+Several interactive elements lack screen reader support.
+
+**OTP input (`otp-input.tsx`):**
+- Add `aria-label={`Dígito ${index + 1} del código`}` to each input
+
+**Slot grid (`slot-grid.tsx`):**
+- Add `aria-label` to slot buttons: `{courtName}, {startTime} - {endTime}, S/ {price}`
+
+**Date selector (`date-selector.tsx`):**
+- Add `aria-label` to date buttons: `{dayName} {dayNumber} de {month}`
+
+**Calendar link (`calendar-link.tsx`):**
+- Add `aria-label="Agregar al calendario de Google"` to the link
+
+---
+
+### TASK-41: Handle missing sessionStorage on success page ✅
+
+**Type**: fix
+**Scope**: `apps/bookings/src/app/[facilitySlug]/success/_components/success-page.tsx`
+**Severity**: MEDIUM
+
+If user bookmarks the success page or sessionStorage is cleared, booking details are lost. Currently shows a minimal fallback but could query the backend.
+
+**Fix:**
+- If `sessionStorage` has no data for the booking code, call `getMyBookings` with the verification token (if available in localStorage) and find the booking by code
+- If no token available, show the booking code with a message: "Para ver los detalles de tu reserva, visita 'Mis Reservas'"
+- Link to `/mis-reservas`
+
+---
+
+### TASK-42: Lint, typecheck, and final QA ✅
+
+**Type**: chore
+**Scope**: `apps/bookings/`, `packages/api/`
+**Depends on**: TASK-31 through TASK-41
+
+- Run `pnpm lint` — fix any new lint issues
+- Run `pnpm format:fix` — fix formatting
+- Run `pnpm typecheck` — verify no type errors
+- Run `pnpm test` — all existing tests pass (661+)
+- Run `pnpm lint:ws` — workspace dependency lint
+- Verify Turnstile widget renders in dev (with test keys)
+- Verify error boundaries render correctly
+- Verify robots.txt serves correctly
+- Test booking flow end-to-end
+
+---
+
+## Previous: Web Dashboard Production Readiness ✅
 
 **Goal**: Harden `apps/nextjs` (court owner dashboard) for production — error handling, security headers, CORS, logging, performance, and SEO.
 

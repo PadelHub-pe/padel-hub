@@ -14,12 +14,17 @@ const MAX_VERIFY_ATTEMPTS = 5;
 // ---------------------------------------------------------------------------
 
 let redis: Redis | null | undefined;
+let didWarnRedis = false;
 
 function getRedis(): Redis | null {
   if (redis !== undefined) return redis;
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
+    if (!didWarnRedis) {
+      console.warn("[OTP] Redis not configured — using in-memory OTP store");
+      didWarnRedis = true;
+    }
     redis = null;
     return null;
   }
@@ -31,7 +36,16 @@ function getRedis(): Redis | null {
 // In-memory fallback (dev only)
 // ---------------------------------------------------------------------------
 
+const MEM_STORE_MAX_SIZE = 1000;
 const memStore = new Map<string, { value: string; expiresAt: number }>();
+
+/** Evict expired entries from the in-memory store. */
+function memEvictExpired(): void {
+  const now = Date.now();
+  for (const [key, entry] of memStore) {
+    if (entry.expiresAt < now) memStore.delete(key);
+  }
+}
 
 function memGet(key: string): string | null {
   const entry = memStore.get(key);
@@ -44,6 +58,15 @@ function memGet(key: string): string | null {
 }
 
 function memSet(key: string, value: string, ttlMs: number): void {
+  // Evict expired entries before adding new ones
+  if (memStore.size >= MEM_STORE_MAX_SIZE) {
+    memEvictExpired();
+  }
+  // Reject if still over capacity (fail-closed)
+  if (memStore.size >= MEM_STORE_MAX_SIZE && !memStore.has(key)) {
+    console.warn("[OTP] In-memory store at capacity, rejecting new entry");
+    return;
+  }
   memStore.set(key, { value, expiresAt: Date.now() + ttlMs });
 }
 

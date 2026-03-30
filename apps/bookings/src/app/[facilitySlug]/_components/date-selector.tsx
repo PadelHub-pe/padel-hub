@@ -50,6 +50,8 @@ export function DateSelector({
               key={date.toISOString()}
               type="button"
               onClick={() => onSelectDate(date)}
+              aria-label={format(date, "EEEE d 'de' MMMM", { locale: es })}
+              aria-pressed={isSelected}
               className={cn(
                 "flex w-14 flex-none flex-col items-center rounded-xl border py-2 transition-colors",
                 isSelected
