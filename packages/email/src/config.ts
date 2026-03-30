@@ -4,7 +4,7 @@ const env = emailEnv();
 
 const baseUrl =
   env.VERCEL_ENV === "production"
-    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+    ? "https://app.padelhub.pe"
     : env.VERCEL_ENV === "preview"
       ? `https://${env.VERCEL_URL}`
       : "http://localhost:3000";
