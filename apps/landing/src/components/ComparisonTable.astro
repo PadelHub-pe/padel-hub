@@ -43,21 +43,21 @@ const rows = [
       class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:rounded-[28px]"
     >
       <!-- Header row -->
-      <div class="grid grid-cols-[1fr_auto_auto] border-b border-gray-100 bg-gray-50 sm:grid-cols-3">
+      <div class="grid grid-cols-[2fr_1fr_1fr] border-b border-gray-100 bg-gray-50 sm:grid-cols-3">
         <div
-          class="p-3 px-3 text-[11px] font-semibold tracking-wider text-gray-500 uppercase sm:p-4 sm:px-6 sm:text-[13px]"
+          class="p-3 px-4 text-[11px] font-semibold tracking-wider text-gray-500 uppercase sm:p-4 sm:px-6 sm:text-[13px]"
         >
           Caracteristica
         </div>
         <div
-          class="bg-primary/[0.08] p-3 px-3 text-center text-[11px] font-semibold tracking-wider text-primary uppercase sm:p-4 sm:px-6 sm:text-[13px]"
+          class="bg-primary/[0.08] p-3 px-2 text-center text-[11px] font-semibold tracking-wider text-primary uppercase sm:p-4 sm:px-6 sm:text-[13px]"
         >
           PadelHub
         </div>
         <div
-          class="p-3 px-3 text-center text-[11px] font-semibold tracking-wider text-gray-500 uppercase sm:p-4 sm:px-6 sm:text-[13px]"
+          class="p-3 px-2 text-center text-[11px] font-semibold tracking-wider text-gray-500 uppercase sm:p-4 sm:px-6 sm:text-[13px]"
         >
-          Software tradicional
+          Tradicional
         </div>
       </div>
 
@@ -66,21 +66,21 @@ const rows = [
         rows.map((row, i) => (
           <div
             class:list={[
-              "grid grid-cols-[1fr_auto_auto] sm:grid-cols-3",
+              "grid grid-cols-[2fr_1fr_1fr] sm:grid-cols-3",
               i < rows.length - 1 && "border-b border-gray-100",
             ]}
           >
-            <div class="flex items-center p-3 px-3 text-xs font-medium text-gray-700 sm:p-4 sm:px-6 sm:text-sm">
+            <div class="flex items-center p-3 px-4 text-[13px] font-medium text-gray-700 sm:p-4 sm:px-6 sm:text-sm">
               {row.feature}
             </div>
-            <div class="flex w-20 items-center justify-center bg-primary/[0.04] p-3 font-semibold text-primary sm:w-auto sm:p-4 sm:px-6">
+            <div class="flex items-center justify-center bg-primary/[0.04] p-3 font-semibold text-primary sm:p-4 sm:px-6">
               {row.padelhub ? (
                 <span class="text-lg text-secondary">✓</span>
               ) : (
                 <span class="text-sm text-gray-300">✗</span>
               )}
             </div>
-            <div class="flex w-20 items-center justify-center p-3 text-sm sm:w-auto sm:p-4 sm:px-6">
+            <div class="flex items-center justify-center p-3 text-sm sm:p-4 sm:px-6">
               {row.traditional ? (
                 <span class="text-lg text-secondary">✓</span>
               ) : (
