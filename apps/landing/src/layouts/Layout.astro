@@ -16,13 +16,26 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#3B82F6" />
+    <link rel="canonical" href={Astro.url} />
 
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_PE" />
-    <meta property="og:image" content="/images/og-image.png" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:image" content={new URL("/images/og-image.png", Astro.site ?? Astro.url).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL("/images/og-image.png", Astro.site ?? Astro.url).href} />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,6 +49,9 @@ const {
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <title>{title}</title>
     <script is:inline>
       (function () {
@@ -48,6 +64,12 @@ const {
     </script>
   </head>
   <body class="bg-white text-gray-900 overflow-x-hidden font-sans">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only fixed top-4 left-4 z-[100] rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-lg focus:outline-none"
+    >
+      Saltar al contenido
+    </a>
     <slot />
   </body>
 </html>

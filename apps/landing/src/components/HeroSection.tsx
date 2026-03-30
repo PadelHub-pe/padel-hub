@@ -141,7 +141,7 @@ export default function HeroSection() {
 
               <p className="mx-auto mb-10 max-w-[500px] text-lg leading-relaxed text-white/85">
                 El directorio mas completo de canchas de padel en Lima.
-                Encuentra tu cancha, consulta horarios y reserva por WhatsApp.
+                Encuentra tu cancha, consulta horarios y reserva.
               </p>
 
               <a

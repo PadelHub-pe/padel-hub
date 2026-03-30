@@ -45,9 +45,14 @@ export default function WaitlistForm() {
 
   if (state === "success") {
     return (
-      <div className="mx-auto max-w-[480px] text-center">
+      <div
+        className="mx-auto max-w-[480px] text-center"
+        role="alert"
+        aria-live="polite"
+      >
         <div className="bg-secondary/20 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl text-3xl">
           <svg
+            aria-hidden="true"
             width="32"
             height="32"
             viewBox="0 0 24 24"
@@ -86,6 +91,7 @@ export default function WaitlistForm() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Tu nombre"
             required
+            aria-label="Tu nombre"
             className={inputClassName}
           />
           <input
@@ -93,6 +99,7 @@ export default function WaitlistForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Celular (opcional)"
+            aria-label="Celular"
             className={inputClassName}
           />
         </div>
@@ -103,6 +110,7 @@ export default function WaitlistForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@correo.com"
             required
+            aria-label="Tu email"
             className={inputClassName}
           />
           <button
@@ -115,7 +123,9 @@ export default function WaitlistForm() {
         </div>
       </form>
       {state === "error" && (
-        <p className="mb-3 text-center text-sm text-red-500">{errorMessage}</p>
+        <p className="mb-3 text-center text-sm text-red-500" role="alert">
+          {errorMessage}
+        </p>
       )}
       <p className="text-center text-[13px] text-gray-400">
         <svg

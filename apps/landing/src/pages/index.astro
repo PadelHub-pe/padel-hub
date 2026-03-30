@@ -17,13 +17,13 @@ export const prerender = true;
 
 <Layout>
   <Navbar />
-  <main>
+  <main id="main-content">
     <HeroSection client:load />
     <SocialProof />
     <div data-for="player">
       <FacilityDirectory />
       <PlayerWaitlist />
-      <AudienceDivider />
+      <!-- <AudienceDivider /> -->
     </div>
     <div data-for="org">
       <Features />

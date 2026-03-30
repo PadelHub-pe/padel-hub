@@ -1,6 +1,101 @@
 # Tasks
 
-## Current: Player-Facing Landing Page Redesign
+## Current: Landing Page Production Readiness
+
+**Goal**: Fix SEO, accessibility, performance, and asset issues in `apps/landing` before production launch.
+
+**Context**: Audit found missing SEO fundamentals (robots.txt, sitemap, canonical URLs, Twitter cards), a 1.4MB hero image, form inputs without labels, incomplete favicon linking, and unused deployed assets.
+
+---
+
+### TASK-16: SEO fundamentals ✅
+
+**Type**: fix
+**Scope**: `apps/landing/src/layouts/Layout.astro`, `apps/landing/public/`
+
+Add missing SEO elements to the landing page:
+
+**Layout.astro meta tags:**
+- Add `<link rel="canonical" href={Astro.url} />` to all pages
+- Add `<meta property="og:url" content={Astro.url} />`
+- Add `<meta property="og:image:width" content="1200" />` and `og:image:height` (630)
+- Add `<meta property="og:image:type" content="image/png" />`
+- Add `<meta name="robots" content="index, follow" />`
+- Add Twitter card tags: `twitter:card` (summary_large_image), `twitter:title`, `twitter:description`, `twitter:image`
+
+**Static files:**
+- Create `public/robots.txt` — allow all, reference sitemap URL
+- Create `public/sitemap.xml` — 3 pages: `/` (priority 1.0), `/terminos` (0.3), `/privacidad` (0.3)
+
+---
+
+### TASK-17: Accessibility — form labels and screen reader support ✅
+
+**Type**: fix
+**Scope**: `apps/landing/src/components/WaitlistForm.tsx`, `AccessRequestForm.tsx`, `Navbar.astro`
+
+**Form inputs** (WaitlistForm + AccessRequestForm):
+- Add `aria-label` to every `<input>` (e.g., `aria-label="Tu nombre"`, `aria-label="Tu email"`, `aria-label="Tu teléfono"`)
+- Add `role="alert"` and `aria-live="polite"` to success/error message containers
+
+**Skip-to-content:**
+- Add a visually-hidden skip link at the top of `Layout.astro`: `<a href="#main-content" class="sr-only focus:not-sr-only ...">Saltar al contenido</a>`
+- Add `id="main-content"` to the `<main>` element
+
+---
+
+### TASK-18: Optimize hero images ✅
+
+**Type**: fix
+**Scope**: `apps/landing/public/images/`
+
+- Compress `hero-players-1.jpg` from 1.4MB to under 300KB (use quality 80, resize if needed — current 2400x1600 is oversized for a background)
+- Remove `hero-players-2.jpg` (821KB, unused in code)
+
+---
+
+### TASK-19: Complete favicon and web manifest ✅
+
+**Type**: fix
+**Scope**: `apps/landing/src/layouts/Layout.astro`, `apps/landing/public/`
+
+**Layout.astro:**
+- Add links for `favicon-192.png` and `favicon-512.png` (already in `/public/` but not referenced in HTML)
+- Add `<meta name="theme-color" content="#3B82F6" />` (brand blue)
+- Add `<link rel="manifest" href="/site.webmanifest" />`
+
+**Create `public/site.webmanifest`:**
+```json
+{
+  "name": "PadelHub",
+  "short_name": "PadelHub",
+  "icons": [
+    { "src": "/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#3B82F6",
+  "background_color": "#ffffff",
+  "display": "browser"
+}
+```
+
+---
+
+### TASK-20: Remove unused public assets ✅
+
+**Type**: chore
+**Scope**: `apps/landing/public/`
+
+Remove files deployed to `/public/` but never referenced in code:
+- `public/images/logomark.svg`
+- `public/images/logomark-reversed.svg`
+- `public/images/padelhub-horizontal-fullcolor.png`
+
+These are available in `/assets/` if ever needed again.
+
+---
+
+## Previous: Player-Facing Landing Page Redesign ✅
 
 **Goal**: Redesign the player side of the landing page from a misleading "book online" experience into a real facility directory with WhatsApp contact + player waitlist for the mobile app launch.
 

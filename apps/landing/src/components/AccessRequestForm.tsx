@@ -44,8 +44,15 @@ export default function AccessRequestForm() {
 
   if (state === "success") {
     return (
-      <div className="mx-auto max-w-[480px] text-center">
-        <div className="bg-secondary/20 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl text-3xl">
+      <div
+        className="mx-auto max-w-[480px] text-center"
+        role="alert"
+        aria-live="polite"
+      >
+        <div
+          className="bg-secondary/20 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
+          aria-hidden="true"
+        >
           ✅
         </div>
         <h3 className="font-display mb-2 text-xl font-semibold text-white">
@@ -75,6 +82,7 @@ export default function AccessRequestForm() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Tu nombre completo"
             required
+            aria-label="Tu nombre completo"
             className={inputClassName}
           />
           <input
@@ -82,6 +90,7 @@ export default function AccessRequestForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Teléfono (opcional)"
+            aria-label="Teléfono"
             className={inputClassName}
           />
         </div>
@@ -92,6 +101,7 @@ export default function AccessRequestForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@correo.com"
             required
+            aria-label="Tu email"
             className={inputClassName}
           />
           <button
@@ -104,7 +114,9 @@ export default function AccessRequestForm() {
         </div>
       </form>
       {state === "error" && (
-        <p className="mb-4 text-center text-sm text-red-400">{errorMessage}</p>
+        <p className="mb-4 text-center text-sm text-red-400" role="alert">
+          {errorMessage}
+        </p>
       )}
       <div className="text-center text-[13px] text-gray-400">
         <svg
