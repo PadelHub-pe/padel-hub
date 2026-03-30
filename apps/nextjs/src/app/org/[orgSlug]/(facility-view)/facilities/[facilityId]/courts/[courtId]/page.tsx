@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { CourtView } from "./_components/court-view";
 
 interface CourtDetailPageProps {
@@ -11,6 +12,13 @@ export default async function CourtDetailPage({
   params,
 }: CourtDetailPageProps) {
   const { facilityId, courtId } = await params;
+
+  const caller = await api();
+  try {
+    await caller.court.getById({ facilityId, id: courtId });
+  } catch {
+    notFound();
+  }
 
   prefetch(trpc.court.getById.queryOptions({ facilityId, id: courtId }));
 

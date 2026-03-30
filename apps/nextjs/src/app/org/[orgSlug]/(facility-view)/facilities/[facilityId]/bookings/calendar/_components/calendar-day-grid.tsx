@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { BookingTooltip } from "./booking-tooltip";
 import { CalendarBookingBlock } from "./calendar-booking-block";
@@ -76,7 +76,7 @@ function getBlockedReasonLabel(reason: string): string {
   }
 }
 
-export function CalendarDayGrid({
+export const CalendarDayGrid = memo(function CalendarDayGrid({
   currentDate,
   courts,
   bookings,
@@ -101,7 +101,6 @@ export function CalendarDayGrid({
   // Auto-scroll to current time on mount
   useEffect(() => {
     scrollTargetRef.current?.scrollIntoView({ block: "center" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (operatingHours.isClosed) {
@@ -332,7 +331,7 @@ export function CalendarDayGrid({
       </div>
     </div>
   );
-}
+});
 
 /** Small blocked/ban icon */
 function BlockedIcon({ className }: { className?: string }) {

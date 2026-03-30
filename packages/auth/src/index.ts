@@ -49,7 +49,7 @@ export function initAuth<
           });
         } else {
           console.log(
-            `[AUTH] Password reset requested for ${resetUser.email}: ${url}`,
+            `[AUTH] Password reset requested for ${resetUser.email} (no sender configured)`,
           );
         }
       },
@@ -76,8 +76,8 @@ export function initAuth<
     ],
     trustedOrigins: ["expo://"],
     onAPIError: {
-      onError(error, ctx) {
-        console.error("BETTER AUTH API ERROR", error, ctx);
+      onError(error) {
+        console.error("BETTER AUTH API ERROR", error);
       },
     },
   } satisfies BetterAuthOptions;

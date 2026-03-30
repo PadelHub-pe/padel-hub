@@ -1,17 +1,56 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
 import { Badge } from "@wifo/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wifo/ui/tabs";
 
-import { BookingLinkTab } from "./booking-link-tab";
-import { FacilityInfoTab } from "./facility-info-tab";
-import { FacilityPhotosTab } from "./facility-photos-tab";
-import { FacilityTeamTab } from "./facility-team-tab";
-import { NotificationsTab } from "./notifications-tab";
 import { ProfileTab } from "./profile-tab";
-import { SecurityTab } from "./security-tab";
+
+function TabSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-6 w-48 rounded bg-gray-200" />
+      <div className="h-4 w-72 rounded bg-gray-200" />
+      <div className="h-64 rounded-lg bg-gray-100" />
+    </div>
+  );
+}
+
+const BookingLinkTab = dynamic(
+  () =>
+    import("./booking-link-tab").then((m) => ({ default: m.BookingLinkTab })),
+  { loading: TabSkeleton },
+);
+const FacilityInfoTab = dynamic(
+  () =>
+    import("./facility-info-tab").then((m) => ({ default: m.FacilityInfoTab })),
+  { loading: TabSkeleton },
+);
+const FacilityPhotosTab = dynamic(
+  () =>
+    import("./facility-photos-tab").then((m) => ({
+      default: m.FacilityPhotosTab,
+    })),
+  { loading: TabSkeleton },
+);
+const FacilityTeamTab = dynamic(
+  () =>
+    import("./facility-team-tab").then((m) => ({ default: m.FacilityTeamTab })),
+  { loading: TabSkeleton },
+);
+const NotificationsTab = dynamic(
+  () =>
+    import("./notifications-tab").then((m) => ({
+      default: m.NotificationsTab,
+    })),
+  { loading: TabSkeleton },
+);
+const SecurityTab = dynamic(
+  () => import("./security-tab").then((m) => ({ default: m.SecurityTab })),
+  { loading: TabSkeleton },
+);
 
 type OrgRole = "org_admin" | "facility_manager" | "staff";
 

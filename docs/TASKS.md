@@ -1,6 +1,225 @@
 # Tasks
 
-## Current: Landing Page Production Readiness
+## Current: Web Dashboard Production Readiness
+
+**Goal**: Harden `apps/nextjs` (court owner dashboard) for production — error handling, security headers, CORS, logging, performance, and SEO.
+
+**Context**: Audit across 4 dimensions (config, security, error handling, performance) found 10 actionable items. Auth, input validation, RBAC, image optimization, and data fetching are already solid.
+
+---
+
+### TASK-21: Add error boundaries (error.tsx + global-error.tsx) ✅
+
+**Type**: fix
+**Scope**: `apps/nextjs/src/app/`
+**Severity**: CRITICAL
+
+Zero error boundaries exist. Runtime errors crash the page with no recovery UI.
+
+**Create `src/app/error.tsx`:**
+- `"use client"` directive (required for error boundaries)
+- Shows PadelHub branding (logomark)
+- Spanish error message: "Algo salió mal"
+- Description: "Ocurrió un error inesperado. Intenta nuevamente."
+- "Reintentar" button that calls `reset()`
+- "Volver al inicio" link to `/org`
+- Dark background matching `not-found.tsx` style
+
+**Create `src/app/global-error.tsx`:**
+- `"use client"` directive
+- Catches root layout errors (renders its own `<html>` and `<body>`)
+- Minimal UI (no external CSS/fonts — layout may be broken)
+- "Reintentar" button that calls `reset()`
+
+**Reference**: Match the visual style of the existing `src/app/not-found.tsx`.
+
+---
+
+### TASK-22: Add security headers to next.config.js ✅
+
+**Type**: fix
+**Scope**: `apps/nextjs/next.config.js`
+**Severity**: CRITICAL
+
+No security headers configured. Missing HSTS, clickjacking protection, MIME sniffing protection, and referrer policy.
+
+**Add `headers()` function to the Next.js config:**
+```
+Source: "/(.*)"
+Headers:
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: DENY
+- Referrer-Policy: strict-origin-when-cross-origin
+- Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+- Permissions-Policy: camera=(), microphone=(), geolocation=()
+- X-DNS-Prefetch-Control: on
+```
+
+**Do NOT add CSP yet** — it requires careful allow-listing of inline styles (Tailwind), fonts (Google Fonts), images (Cloudflare, Unsplash), and maps (OpenStreetMap iframes). CSP is a separate follow-up task.
+
+---
+
+### TASK-23: Restrict CORS in tRPC route handler ✅
+
+**Type**: fix
+**Scope**: `apps/nextjs/src/app/api/trpc/[trpc]/route.ts`
+**Severity**: CRITICAL
+
+Currently sets `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Headers: *`. The dashboard only makes same-origin requests from the Next.js frontend to its own `/api/trpc` endpoint — no cross-origin access is needed.
+
+**Fix:**
+- Remove the `setCorsHeaders` function and all calls to it
+- Remove the `OPTIONS` handler export
+- Keep only the `GET` and `POST` handler exports
+
+If cross-origin access is needed later (e.g., for the mobile app), add it back with explicit origin allow-listing.
+
+---
+
+### TASK-24: Sanitize sensitive logging ✅
+
+**Type**: fix
+**Scope**: `packages/auth/src/index.ts`, `apps/nextjs/src/app/api/trpc/[trpc]/route.ts`
+**Severity**: HIGH
+
+**Auth package (`packages/auth/src/index.ts`):**
+- Line 51-53: Password reset fallback logs the full reset URL to console. This is a dev-only path (production provides `onSendResetPassword` callback), but the URL contains the reset token. Change to log only `[AUTH] Password reset requested for ${resetUser.email}` without the URL.
+- Line 80: `console.error("BETTER AUTH API ERROR", error, ctx)` logs the full context object which may contain session data or request details. Change to `console.error("BETTER AUTH API ERROR", error)` — omit `ctx`.
+
+**tRPC route handler (`apps/nextjs/src/app/api/trpc/[trpc]/route.ts`):**
+- Line 38: `console.error(\`>>> tRPC Error on '${path}'\`, error)` logs the full error object including stack traces. In production, log only the error message and code. In development, keep the full stack.
+- Use `process.env.NODE_ENV === "production"` check to control verbosity.
+
+---
+
+### TASK-25: Add robots.txt to prevent search engine indexing ✅
+
+**Type**: fix
+**Scope**: `apps/nextjs/src/app/`
+**Severity**: MEDIUM
+
+The dashboard is an authenticated B2B app — it should not be indexed by search engines. Middleware already allows `robots.txt` through, but no file exists.
+
+**Create `src/app/robots.ts`:**
+```typescript
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: { userAgent: "*", disallow: "/" },
+  };
+}
+```
+
+---
+
+### TASK-26: Fix rate limiter fail-open behavior ✅
+
+**Type**: fix
+**Scope**: `apps/nextjs/src/lib/rate-limit.ts`, `apps/nextjs/src/middleware.ts`
+**Severity**: HIGH
+
+When Redis is unavailable, `getAuthLimiter()` returns `null` and `checkRateLimit()` silently skips rate limiting. For production, this should at minimum log a warning.
+
+**Changes to `src/lib/rate-limit.ts`:**
+- When `getRedis()` returns null (missing credentials), log a one-time warning: `console.warn("[RATE-LIMIT] Redis not configured — auth rate limiting disabled")`
+- Use a `didWarn` flag to avoid spamming logs
+
+**Changes to `src/middleware.ts`:**
+- No changes needed — the current behavior (skip rate limiting if limiter unavailable) is acceptable for a low-traffic B2B dashboard. The auth layer itself (session cookies, password hashing) is the primary protection.
+
+**Note**: Full fail-closed behavior (503 on Redis failure) would be too aggressive for this app's scale.
+
+---
+
+### TASK-27: Add notFound() handling for dynamic route params ✅
+
+**Type**: fix
+**Scope**: `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/courts/[courtId]/page.tsx`, `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/bookings/[bookingId]/page.tsx`
+**Severity**: HIGH
+**Depends on**: TASK-21
+
+Currently, invalid `courtId` and `bookingId` params prefetch a query that will fail, then `useSuspenseQuery` throws client-side. With TASK-21's error boundaries this shows a generic error — but a proper 404 is better UX.
+
+**For both pages, add server-side validation:**
+1. After `prefetch()`, call the same query with `await` via `api()` caller
+2. If the tRPC call throws (not found), call `notFound()` from `next/navigation`
+3. Wrap in try/catch since tRPC throws `TRPCError`
+
+**Pattern:**
+```typescript
+const caller = await api();
+try {
+  await caller.court.getById({ facilityId, id: courtId });
+} catch {
+  notFound();
+}
+```
+
+**Note**: `orgSlug` and `facilityId` already have redirect-based validation in their layout files — those are fine as-is since they handle access control (redirect to assigned facility, not 404).
+
+---
+
+### TASK-28: Add dynamic imports for heavy components ✅
+
+**Type**: refactor
+**Scope**: `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/settings/_components/facility-settings-view.tsx`
+**Severity**: MEDIUM
+
+Settings page eagerly imports 7 tab components (`BookingLinkTab`, `FacilityInfoTab`, `FacilityPhotosTab`, `FacilityTeamTab`, `NotificationsTab`, `ProfileTab`, `SecurityTab`) but only shows 1 tab at a time. Heavy dependencies like `qrcode.react` (in BookingLinkTab) and `@dnd-kit/*` (in FacilityPhotosTab) are bundled into the initial load.
+
+**Fix:**
+- Use `next/dynamic` for each tab component with a skeleton loading fallback
+- Example:
+  ```typescript
+  const BookingLinkTab = dynamic(
+    () => import("./booking-link-tab").then((m) => ({ default: m.BookingLinkTab })),
+    { loading: () => <TabSkeleton /> },
+  );
+  ```
+- Create a simple `TabSkeleton` component (animated pulse placeholder matching tab content height)
+- Apply to all 7 tab imports
+
+---
+
+### TASK-29: Add React.memo to calendar grid components ✅
+
+**Type**: refactor
+**Scope**: `apps/nextjs/src/app/org/[orgSlug]/(facility-view)/facilities/[facilityId]/bookings/calendar/_components/`
+**Severity**: MEDIUM
+
+`CalendarDayGrid` and `CalendarWeekGrid` render many child elements (time slots × courts). Parent state changes (e.g., tooltip open/close, date navigation) cause full re-renders of the grid even when booking data hasn't changed.
+
+**Changes to `calendar-day-grid.tsx`:**
+- Wrap the component export in `React.memo()`
+- The component already receives stable props (bookings, courts, blockedSlots are from React Query cache)
+
+**Changes to `calendar-week-grid.tsx`:**
+- Wrap the component export in `React.memo()`
+
+**Changes to `calendar-view.tsx`:**
+- Wrap `onBookingClick` and `onEmptySlotClick` callbacks in `useCallback` so they don't break memo
+
+---
+
+### TASK-30: Lint, typecheck, and final QA ✅
+
+**Type**: chore
+**Scope**: `apps/nextjs/`, `packages/auth/`
+**Depends on**: TASK-21 through TASK-29
+
+- Run `pnpm lint` — fix any new lint issues
+- Run `pnpm format:fix` — fix formatting
+- Run `pnpm typecheck` — verify no type errors
+- Run `pnpm test` — all existing tests pass
+- Run `pnpm lint:ws` — workspace dependency lint
+- Verify error boundaries render correctly (trigger an error in dev)
+- Verify security headers present in response (check with `curl -I`)
+- Verify robots.txt serves `Disallow: /`
+
+---
+
+## Previous: Landing Page Production Readiness ✅
 
 **Goal**: Fix SEO, accessibility, performance, and asset issues in `apps/landing` before production launch.
 

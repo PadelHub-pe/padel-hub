@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -63,7 +63,7 @@ function isWeekend(dayOfWeek: number): boolean {
   return dayOfWeek === 0 || dayOfWeek === 6;
 }
 
-export function CalendarWeekGrid({
+export const CalendarWeekGrid = memo(function CalendarWeekGrid({
   weekStart,
   days,
   bookings,
@@ -324,4 +324,4 @@ export function CalendarWeekGrid({
       </div>
     </div>
   );
-}
+});

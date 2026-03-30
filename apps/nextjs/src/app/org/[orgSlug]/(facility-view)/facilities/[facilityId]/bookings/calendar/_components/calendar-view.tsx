@@ -109,13 +109,13 @@ export function CalendarView() {
     [updateUrl, currentDate],
   );
 
-  const handleBookingClick = (bookingId: string) => {
+  const handleBookingClick = useCallback((bookingId: string) => {
     setSelectedBookingId(bookingId);
-  };
+  }, []);
 
-  const handleClosePopover = () => {
+  const handleClosePopover = useCallback(() => {
     setSelectedBookingId(null);
-  };
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -176,13 +176,16 @@ export function CalendarView() {
     }
   };
 
-  const handleEmptySlotClick = (courtId: string, startTime: string) => {
-    setQuickBookingSlot({
-      courtId,
-      date: currentDate,
-      startTime,
-    });
-  };
+  const handleEmptySlotClick = useCallback(
+    (courtId: string, startTime: string) => {
+      setQuickBookingSlot({
+        courtId,
+        date: currentDate,
+        startTime,
+      });
+    },
+    [currentDate],
+  );
 
   const handleAddBooking = () => {
     // Open booking dialog with first court and current time or opening time

@@ -4,6 +4,7 @@ import { Redis } from "@upstash/redis";
 import { env } from "~/env";
 
 let authLimiter: Ratelimit | null | undefined;
+let didWarnNoRedis = false;
 
 function getRedis(): Redis | null {
   const url = env.UPSTASH_REDIS_REST_URL;
@@ -17,6 +18,12 @@ export function getAuthLimiter(): Ratelimit | null {
   if (authLimiter !== undefined) return authLimiter;
   const redis = getRedis();
   if (!redis) {
+    if (!didWarnNoRedis) {
+      console.warn(
+        "[RATE-LIMIT] Redis not configured — auth rate limiting disabled",
+      );
+      didWarnNoRedis = true;
+    }
     authLimiter = null;
     return null;
   }

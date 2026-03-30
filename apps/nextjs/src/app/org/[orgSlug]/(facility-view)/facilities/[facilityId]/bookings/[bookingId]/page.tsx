@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { BookingDetailView } from "./_components/booking-detail-view";
 
 interface BookingDetailPageProps {
@@ -11,6 +12,13 @@ export default async function BookingDetailPage({
   params,
 }: BookingDetailPageProps) {
   const { facilityId, bookingId } = await params;
+
+  const caller = await api();
+  try {
+    await caller.booking.getById({ facilityId, id: bookingId });
+  } catch {
+    notFound();
+  }
 
   prefetch(trpc.booking.getById.queryOptions({ facilityId, id: bookingId }));
 
