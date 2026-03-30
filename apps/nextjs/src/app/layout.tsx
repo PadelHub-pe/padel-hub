@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Geist_Mono, Sora } from "next/font/google";
 
 import { cn } from "@wifo/ui";
-import { ThemeProvider, ThemeToggle } from "@wifo/ui/theme";
+import { ThemeProvider } from "@wifo/ui/theme";
 import { Toaster } from "@wifo/ui/toast";
 
 import { env } from "~/env";
@@ -42,10 +42,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
-  ],
+  themeColor: "white",
 };
 
 const dmSans = DM_Sans({
@@ -72,11 +69,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           geistMono.variable,
         )}
       >
-        <ThemeProvider>
+        <ThemeProvider forcedTheme="light">
           <TRPCReactProvider>{props.children}</TRPCReactProvider>
-          <div className="absolute right-4 bottom-4">
-            <ThemeToggle />
-          </div>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -105,39 +105,53 @@ const ThemeContext = React.createContext<ThemeContextProps | undefined>(
   undefined,
 );
 
-export function ThemeProvider({ children }: React.PropsWithChildren) {
-  const [themeMode, setThemeMode] = React.useState(getStoredThemeMode);
+export function ThemeProvider({
+  children,
+  forcedTheme,
+}: React.PropsWithChildren<{ forcedTheme?: ResolvedTheme }>) {
+  const [themeMode, setThemeMode] = React.useState<ThemeMode>(
+    forcedTheme ?? getStoredThemeMode,
+  );
 
   React.useEffect(() => {
+    if (forcedTheme) {
+      updateThemeClass(forcedTheme);
+      return;
+    }
     if (themeMode !== "auto") return;
     return setupPreferredListener();
-  }, [themeMode]);
+  }, [themeMode, forcedTheme]);
 
-  const resolvedTheme = themeMode === "auto" ? getSystemTheme() : themeMode;
+  const resolvedTheme =
+    forcedTheme ?? (themeMode === "auto" ? getSystemTheme() : themeMode);
 
   const setTheme = (newTheme: ThemeMode) => {
+    if (forcedTheme) return;
     setThemeMode(newTheme);
     setStoredThemeMode(newTheme);
     updateThemeClass(newTheme);
   };
 
   const toggleMode = () => {
+    if (forcedTheme) return;
     setTheme(getNextTheme(themeMode));
   };
 
   return (
     <ThemeContext
       value={{
-        themeMode,
+        themeMode: forcedTheme ?? themeMode,
         resolvedTheme,
         setTheme,
         toggleMode,
       }}
     >
-      <script
-        dangerouslySetInnerHTML={{ __html: themeDetectorScript }}
-        suppressHydrationWarning
-      />
+      {!forcedTheme && (
+        <script
+          dangerouslySetInnerHTML={{ __html: themeDetectorScript }}
+          suppressHydrationWarning
+        />
+      )}
       {children}
     </ThemeContext>
   );
