@@ -2,12 +2,7 @@
  * Facility directory data for the player-facing landing page.
  *
  * Source: padel_lima_research.json (PR #1, origin/chore/add-website)
- * 17 Lima padel facilities curated from market research.
- *
- * Contact CTA priority:
- *   1. whatsappUrl  (6 facilities with phone numbers)
- *   2. instagramUrl (4 facilities with IG only)
- *   3. googleMapsUrl (7 facilities — always present as fallback)
+ * 13 Lima padel facilities — all with WhatsApp contact.
  */
 
 export interface DirectoryFacility {
@@ -71,8 +66,8 @@ export const facilities: DirectoryFacility[] = [
       "Pje. Recabarraca s/n, Altura cdra. 3 Av. Domingo Orué, Surquillo 15047",
     courtCount: 5,
     courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 916 994 25",
+    whatsappUrl: toWhatsAppUrl("+51 916 994 25"),
     instagramUrl: "https://www.instagram.com/onepadelperu/",
     googleMapsUrl: toGoogleMapsUrl(-12.107056, -77.023392),
     imageUrl:
@@ -88,8 +83,8 @@ export const facilities: DirectoryFacility[] = [
     address: "Av. San Luis 2347, San Borja 15037 (Centro Naval)",
     courtCount: 3,
     courtType: "indoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 980 003 31",
+    whatsappUrl: toWhatsAppUrl("+51 980 003 31"),
     instagramUrl: "https://www.instagram.com/onepadelperu/",
     googleMapsUrl: toGoogleMapsUrl(-12.0964674, -76.9952983),
     imageUrl:
@@ -106,8 +101,8 @@ export const facilities: DirectoryFacility[] = [
       "C. Los Antares 298 / Cruce Av. Velasco Astete con Benavides, Santiago de Surco 15038",
     courtCount: 8,
     courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 921 633 79",
+    whatsappUrl: toWhatsAppUrl("+51 921 633 79"),
     instagramUrl: "https://www.instagram.com/onepadelperu/",
     googleMapsUrl: toGoogleMapsUrl(-12.126721, -76.987887),
     imageUrl:
@@ -130,8 +125,8 @@ export const facilities: DirectoryFacility[] = [
     address: "Jirón Venegas 896, Santiago de Surco 15049",
     courtCount: null,
     courtType: "indoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 932 208 43",
+    whatsappUrl: toWhatsAppUrl("+51 932 208 43"),
     instagramUrl: null,
     googleMapsUrl: toGoogleMapsUrl(-12.140787, -77.012598),
     imageUrl:
@@ -141,37 +136,20 @@ export const facilities: DirectoryFacility[] = [
     bookingSlug: null,
   },
   {
-    id: "mad-padel-la-molina",
-    name: "Mad Padel - La Molina",
+    id: "top-padel-la-molina",
+    name: "Top Padel - La Molina",
     district: "La Molina",
     address: "Av. Melgarejo 147, La Molina 15026",
     courtCount: 6,
     courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 940 513 92",
+    whatsappUrl: toWhatsAppUrl("+51 940 513 92"),
     instagramUrl: null,
     googleMapsUrl: toGoogleMapsUrl(-12.074734, -76.936277),
     imageUrl:
       "https://res.cloudinary.com/playtomic/image/upload/c_limit,w_1600/v1/pro/tenants/696571d6-98d6-4d84-8e00-5a69b16edbb4/madpadellamolina_0003",
     amenities: ["Estacionamiento", "Tienda", "Cafeteria", "Terraza"],
     hours: "Lun-Dom 6:00-23:59",
-    bookingSlug: null,
-  },
-  {
-    id: "igma-padel",
-    name: "IGMA Pádel Center",
-    district: "Santiago de Surco",
-    address: "Yoy Lima Box Park, Santiago de Surco 15023",
-    courtCount: 6,
-    courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
-    instagramUrl: "https://www.instagram.com/igmapadel/",
-    googleMapsUrl: toGoogleMapsUrl(-12.089824, -76.979978),
-    imageUrl:
-      "https://igmapadel-pe.matchpoint.com.es/images.ashx?id=da6a70c7ad6968ed2815e16e6df7d061",
-    amenities: ["Estacionamiento", "Alquiler de equipos"],
-    hours: "Lun-Dom 6:00-00:00",
     bookingSlug: null,
   },
   {
@@ -209,23 +187,6 @@ export const facilities: DirectoryFacility[] = [
     bookingSlug: null,
   },
   {
-    id: "mas-padel-san-miguel",
-    name: "Más Padel - San Miguel",
-    district: "San Miguel",
-    address: "Av. Bertolotto 611, San Miguel 15086",
-    courtCount: 4,
-    courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
-    instagramUrl: null,
-    googleMapsUrl: toGoogleMapsUrl(-12.092503, -77.081746),
-    imageUrl:
-      "https://static.wixstatic.com/media/0393fe_c541031f1df445299efd380ecee89fe2f000.jpg/v1/fill/w_1035,h_690,al_c,q_85,usm_0.33_1.00_0.00,enc_avif,quality_auto/0393fe_c541031f1df445299efd380ecee89fe2f000.jpg",
-    amenities: ["Estacionamiento"],
-    hours: "Lun-Dom 6:00-23:00",
-    bookingSlug: null,
-  },
-  {
     id: "club-padel-lima",
     name: "Club Padel Lima (La Once)",
     district: "Surquillo",
@@ -248,8 +209,8 @@ export const facilities: DirectoryFacility[] = [
     address: "La Molina 15026",
     courtCount: null,
     courtType: "indoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 964 290 667",
+    whatsappUrl: toWhatsAppUrl("+51 964 290 667"),
     instagramUrl: null,
     googleMapsUrl: toGoogleMapsUrl(-12.082549, -76.910588),
     imageUrl:
@@ -292,48 +253,14 @@ export const facilities: DirectoryFacility[] = [
     bookingSlug: null,
   },
   {
-    id: "padel-malecon-villa",
-    name: "Pádel Malecón Villa",
-    district: "Chorrillos",
-    address: "Ca. Costanera 211, Lima 15087 (Malecón de Villa)",
-    courtCount: 1,
-    courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
-    instagramUrl: null,
-    googleMapsUrl: toGoogleMapsUrl(-12.211196, -77.019497),
-    imageUrl:
-      "https://padelmundial.com/wp-content/uploads/2024/08/Cancha-La-Villa-del-Padel-Club.png",
-    amenities: [],
-    hours: "Abierto 24 horas",
-    bookingSlug: null,
-  },
-  {
-    id: "eleven-sports",
-    name: "Eleven Sports Complex",
-    district: "Surquillo",
-    address: "Av. Tomás Marsano 630, Surquillo 15048",
-    courtCount: 2,
-    courtType: "outdoor",
-    phone: null,
-    whatsappUrl: null,
-    instagramUrl: null,
-    googleMapsUrl: toGoogleMapsUrl(-12.109539, -77.014492),
-    imageUrl:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ77dh0qVESNDfAGN0D1nPgk6iNaTkbSJC3GQ&s",
-    amenities: [],
-    hours: "Lun-Dom 6:00-23:30",
-    bookingSlug: null,
-  },
-  {
     id: "adidas-x3-miraflores",
     name: "Club adidas X3 - Padel",
     district: "Miraflores",
     address: "Av. Paseo de la República 5840, Miraflores 15074",
     courtCount: null,
     courtType: "indoor",
-    phone: null,
-    whatsappUrl: null,
+    phone: "+51 913 861 76",
+    whatsappUrl: toWhatsAppUrl("+51 913 861 76"),
     instagramUrl: null,
     googleMapsUrl: toGoogleMapsUrl(-12.124457, -77.024747),
     imageUrl:

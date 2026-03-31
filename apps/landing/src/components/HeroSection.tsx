@@ -156,11 +156,11 @@ export default function HeroSection() {
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/80">
                 <span className="flex items-center gap-2">
                   <CheckIcon />
-                  17 canchas en Lima
+                  13 canchas en Lima
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckIcon />
-                  10 distritos
+                  6 distritos
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckIcon />
