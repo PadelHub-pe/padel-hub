@@ -116,9 +116,11 @@ export async function verifyOtpCode(
   const attemptsKey = `${OTP_ATTEMPTS_PREFIX}${phone}`;
 
   // 1. Get stored code
+  // Upstash Redis may return a number for all-digit strings, so coerce to string
   let storedCode: string | null;
   if (r) {
-    storedCode = await r.get<string>(codeKey);
+    const raw = await r.get<string | number>(codeKey);
+    storedCode = raw != null ? String(raw) : null;
   } else {
     storedCode = memGet(codeKey);
   }
