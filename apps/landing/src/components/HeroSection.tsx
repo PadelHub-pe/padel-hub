@@ -159,8 +159,7 @@ export default function HeroSection() {
                   13 canchas en Lima
                 </span>
                 <span className="flex items-center gap-2">
-                  <CheckIcon />
-                  6 distritos
+                  <CheckIcon />6 distritos
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckIcon />
