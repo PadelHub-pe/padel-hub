@@ -47,9 +47,21 @@ describe("verification-token", () => {
     expect(validateVerificationToken("")).toBeNull();
   });
 
-  it("returns null for malformed token (wrong number of parts)", () => {
+  it("returns null for malformed token (too few parts)", () => {
     expect(validateVerificationToken("a.b")).toBeNull();
-    expect(validateVerificationToken("a.b.c.d.e")).toBeNull();
+    expect(validateVerificationToken("a")).toBeNull();
+  });
+
+  it("creates and validates token with email identifier (contains dots)", () => {
+    const token = createVerificationToken("user@example.com");
+    const result = validateVerificationToken(token);
+    expect(result).toBe("user@example.com");
+  });
+
+  it("creates and validates token with dotted email", () => {
+    const token = createVerificationToken("first.last@gmail.com");
+    const result = validateVerificationToken(token);
+    expect(result).toBe("first.last@gmail.com");
   });
 
   it("returns null for expired token", () => {

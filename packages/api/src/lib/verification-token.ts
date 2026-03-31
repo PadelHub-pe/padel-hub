@@ -43,11 +43,23 @@ export function createVerificationToken(phone: string): string {
  * Returns the phone number if valid, or `null` if invalid/expired.
  */
 export function validateVerificationToken(token: string): string | null {
-  const parts = token.split(".");
-  if (parts.length !== 4) return null;
+  // Token format: v1.{identifier}.{expiresAt}.{signature}
+  // The identifier may contain dots (e.g. email addresses), so we parse
+  // from the edges: version is before the first dot, signature after the
+  // last dot, expiresAt between the second-to-last and last dots.
+  const firstDot = token.indexOf(".");
+  const lastDot = token.lastIndexOf(".");
+  const secondLastDot = token.lastIndexOf(".", lastDot - 1);
 
-  const [version, phone, expiresAtStr, signature] = parts;
-  if (version !== TOKEN_VERSION || !phone || !expiresAtStr || !signature) {
+  if (firstDot === -1 || lastDot === -1 || secondLastDot === -1) return null;
+  if (firstDot >= secondLastDot) return null;
+
+  const version = token.slice(0, firstDot);
+  const identifier = token.slice(firstDot + 1, secondLastDot);
+  const expiresAtStr = token.slice(secondLastDot + 1, lastDot);
+  const signature = token.slice(lastDot + 1);
+
+  if (version !== TOKEN_VERSION || !identifier || !expiresAtStr || !signature) {
     return null;
   }
 
@@ -59,7 +71,7 @@ export function validateVerificationToken(token: string): string | null {
 
   // Verify signature (timing-safe comparison)
   const secret = getSecret();
-  const payload = `${TOKEN_VERSION}.${phone}.${expiresAtStr}`;
+  const payload = `${TOKEN_VERSION}.${identifier}.${expiresAtStr}`;
   const expectedSignature = hmac(payload, secret);
 
   const sigBuf = Buffer.from(signature, "hex");
@@ -68,5 +80,5 @@ export function validateVerificationToken(token: string): string | null {
   if (sigBuf.length !== expectedBuf.length) return null;
   if (!timingSafeEqual(sigBuf, expectedBuf)) return null;
 
-  return phone;
+  return identifier;
 }
