@@ -263,8 +263,7 @@ export const facilities: DirectoryFacility[] = [
     whatsappUrl: toWhatsAppUrl("+51 913 861 76"),
     instagramUrl: null,
     googleMapsUrl: toGoogleMapsUrl(-12.124457, -77.024747),
-    imageUrl:
-      "https://static.wixstatic.com/media/768dcf_a26368d652fe4855bc4e268f24ccae35~mv2.jpg/v1/fill/w_2070,h_1602,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/768dcf_a26368d652fe4855bc4e268f24ccae35~mv2.jpg",
+    imageUrl: "/images/adidas-x3-miraflores.png",
     amenities: ["Estacionamiento"],
     hours: "Lun-Vie 6:00-23:00, Sab 7:30-23:00, Dom 7:30-21:00",
     bookingSlug: null,
