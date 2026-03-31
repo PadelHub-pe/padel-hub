@@ -65,7 +65,8 @@
     "CLOUDFLARE_IMAGES_TOKEN",
     "KAPSO_API_KEY",
     "WHATSAPP_PHONE_NUMBER_ID",
-    "TURNSTILE_SECRET_KEY"
+    "TURNSTILE_SECRET_KEY",
+    "OTP_CHANNEL"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

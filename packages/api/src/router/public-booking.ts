@@ -19,7 +19,6 @@ import {
 import {
   generateOtpCode,
   sendBookingConfirmation,
-  sendOtp,
   whatsappConfig,
 } from "@wifo/whatsapp";
 
@@ -30,6 +29,7 @@ import type {
 } from "../utils/schedule";
 import { logBookingActivity } from "../lib/booking-activity";
 import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
+import { dispatchOtp, getOtpChannel } from "../lib/otp-dispatcher";
 import { checkOtpSendRateLimit } from "../lib/otp-rate-limit";
 import { storeOtpCode, verifyOtpCode } from "../lib/otp-store";
 import { verifyTurnstileToken } from "../lib/turnstile";
@@ -68,12 +68,12 @@ const calculatePriceSchema = z.object({
 });
 
 const sendOtpSchema = z.object({
-  phone: z.string().regex(/^\d{7,15}$/, "Ingresa un número de teléfono válido"),
+  identifier: z.string().min(1, "Identificador requerido"),
   turnstileToken: z.string().min(1, "Verificación requerida"),
 });
 
 const verifyOtpSchema = z.object({
-  phone: z.string().regex(/^\d{7,15}$/, "Ingresa un número de teléfono válido"),
+  identifier: z.string().min(1, "Identificador requerido"),
   code: z.string().length(6, "El código debe tener 6 dígitos"),
 });
 
@@ -160,19 +160,18 @@ function generateBookingCode(): string {
 }
 
 /**
- * Validate a verification token and extract the phone number.
+ * Validate a verification token and extract the identifier (phone or email).
  * Throws UNAUTHORIZED if invalid.
  */
-function requireVerifiedPhone(token: string): string {
-  const phone = validateVerificationToken(token);
-  if (!phone) {
+function requireVerifiedIdentifier(token: string): string {
+  const identifier = validateVerificationToken(token);
+  if (!identifier) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message:
-        "Verificación requerida. Por favor verifica tu número de teléfono.",
+      message: "Verificación requerida. Por favor verifica tu identidad.",
     });
   }
-  return phone;
+  return identifier;
 }
 
 /** Format a Date to "YYYY-MM-DD" string. */
@@ -310,6 +309,7 @@ export const publicBookingRouter = {
         amenities: facility.amenities,
         allowedDurationMinutes: facility.allowedDurationMinutes,
         courts: activeCourts,
+        otpChannel: getOtpChannel(),
       };
     }),
 
@@ -442,11 +442,12 @@ export const publicBookingRouter = {
     }),
 
   /**
-   * Send a WhatsApp OTP code for phone verification (public).
-   * Rate-limited to 5 sends per phone per hour.
+   * Send an OTP code for verification (public).
+   * Delivery channel (WhatsApp or email) is controlled by OTP_CHANNEL env var.
+   * Rate-limited to 5 sends per identifier per hour.
    */
   sendOtp: publicProcedure.input(sendOtpSchema).mutation(async ({ input }) => {
-    const { phone, turnstileToken } = input;
+    const { identifier, turnstileToken } = input;
 
     // 1. Verify Turnstile (bot protection)
     const turnstileValid = await verifyTurnstileToken(turnstileToken);
@@ -458,7 +459,7 @@ export const publicBookingRouter = {
     }
 
     // 2. Rate limit
-    const rateLimit = await checkOtpSendRateLimit(phone);
+    const rateLimit = await checkOtpSendRateLimit(identifier);
     if (!rateLimit.allowed) {
       throw new TRPCError({
         code: "TOO_MANY_REQUESTS",
@@ -466,12 +467,12 @@ export const publicBookingRouter = {
       });
     }
 
-    // 2. Generate and store code
+    // 3. Generate and store code
     const code = generateOtpCode();
-    await storeOtpCode(phone, code);
+    await storeOtpCode(identifier, code);
 
-    // 3. Send via WhatsApp
-    const result = await sendOtp({ phone, code });
+    // 4. Send via configured channel (WhatsApp or email)
+    const result = await dispatchOtp(identifier, code);
     if (!result.success) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -491,9 +492,9 @@ export const publicBookingRouter = {
   verifyOtp: publicProcedure
     .input(verifyOtpSchema)
     .mutation(async ({ input }) => {
-      const { phone, code } = input;
+      const { identifier, code } = input;
 
-      const result = await verifyOtpCode(phone, code);
+      const result = await verifyOtpCode(identifier, code);
 
       switch (result) {
         case "expired":
@@ -509,7 +510,7 @@ export const publicBookingRouter = {
         case "invalid":
           return { verified: false as const };
         case "valid": {
-          const token = createVerificationToken(phone);
+          const token = createVerificationToken(identifier);
           return { verified: true as const, token };
         }
       }
@@ -534,8 +535,13 @@ export const publicBookingRouter = {
         });
       }
 
-      // 2. Validate verification token → extract phone
-      const customerPhone = requireVerifiedPhone(input.verificationToken);
+      // 2. Validate verification token → extract identifier (phone or email)
+      const verifiedIdentifier = requireVerifiedIdentifier(
+        input.verificationToken,
+      );
+      const channel = getOtpChannel();
+      const customerPhone = channel === "whatsapp" ? verifiedIdentifier : null;
+      const customerEmail = channel === "email" ? verifiedIdentifier : null;
 
       // 3. Verify facility exists and is active
       const facility = await ctx.db.query.facilities.findFirst({
@@ -642,6 +648,7 @@ export const publicBookingRouter = {
             isPeakRate,
             customerName,
             customerPhone,
+            customerEmail,
             isManualBooking: false,
             status: "confirmed",
             confirmedAt: new Date(),
@@ -662,7 +669,7 @@ export const publicBookingRouter = {
         return newBooking;
       });
 
-      // 7. Post-transaction: activity log + WhatsApp (non-critical)
+      // 7. Post-transaction: activity log + notification (non-critical)
       if (booking) {
         await logBookingActivity({
           db: ctx.db,
@@ -671,26 +678,30 @@ export const publicBookingRouter = {
           description: `Reserva online creada por ${customerName}`,
           performedBy: null,
         });
-        const dd = date.getUTCDate().toString().padStart(2, "0");
-        const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
-        const yyyy = date.getUTCFullYear().toString();
-        await sendBookingConfirmation({
-          phone: customerPhone,
-          customerName,
-          facilityName: facility.name,
-          courtName: court.name,
-          date: `${dd}/${mm}/${yyyy}`,
-          startTime,
-          endTime,
-          bookingCode: booking.code,
-        });
+
+        // Send WhatsApp confirmation only when using WhatsApp channel
+        if (customerPhone) {
+          const dd = date.getUTCDate().toString().padStart(2, "0");
+          const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+          const yyyy = date.getUTCFullYear().toString();
+          await sendBookingConfirmation({
+            phone: customerPhone,
+            customerName,
+            facilityName: facility.name,
+            courtName: court.name,
+            date: `${dd}/${mm}/${yyyy}`,
+            startTime,
+            endTime,
+            bookingCode: booking.code,
+          });
+        }
       }
 
       return booking;
     }),
 
   /**
-   * Get bookings for a verified phone number (public).
+   * Get bookings for a verified identifier (public).
    * Returns booking history for the "Mis Reservas" page.
    */
   getMyBookings: publicProcedure
@@ -698,15 +709,18 @@ export const publicBookingRouter = {
     .query(async ({ ctx, input }) => {
       const { facilityId } = input;
 
-      // 1. Validate verification token → extract phone
-      const phone = requireVerifiedPhone(input.verificationToken);
+      // 1. Validate verification token → extract identifier (phone or email)
+      const identifier = requireVerifiedIdentifier(input.verificationToken);
+      const channel = getOtpChannel();
 
-      // 2. Fetch bookings by phone + facility
+      // 2. Fetch bookings by identifier + facility
+      const identifierFilter =
+        channel === "whatsapp"
+          ? eq(bookings.customerPhone, identifier)
+          : eq(bookings.customerEmail, identifier);
+
       const bookingsList = await ctx.db.query.bookings.findMany({
-        where: and(
-          eq(bookings.facilityId, facilityId),
-          eq(bookings.customerPhone, phone),
-        ),
+        where: and(eq(bookings.facilityId, facilityId), identifierFilter),
         with: {
           court: {
             columns: { id: true, name: true, type: true },
@@ -723,15 +737,16 @@ export const publicBookingRouter = {
 
   /**
    * Cancel a public booking (guest cancellation).
-   * Validates phone ownership via verification token.
+   * Validates ownership via verification token.
    */
   cancelBooking: publicProcedure
     .input(cancelBookingSchema)
     .mutation(async ({ ctx, input }) => {
       const { bookingId, reason } = input;
 
-      // 1. Validate verification token → extract phone
-      const phone = requireVerifiedPhone(input.verificationToken);
+      // 1. Validate verification token → extract identifier (phone or email)
+      const identifier = requireVerifiedIdentifier(input.verificationToken);
+      const channel = getOtpChannel();
 
       // 2. Fetch booking
       const booking = await ctx.db.query.bookings.findFirst({
@@ -745,8 +760,13 @@ export const publicBookingRouter = {
         });
       }
 
-      // 3. Verify phone ownership
-      if (booking.customerPhone !== phone) {
+      // 3. Verify ownership (phone or email depending on channel)
+      const ownsBooking =
+        channel === "whatsapp"
+          ? booking.customerPhone === identifier
+          : booking.customerEmail === identifier;
+
+      if (!ownsBooking) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "No tienes permiso para cancelar esta reserva",

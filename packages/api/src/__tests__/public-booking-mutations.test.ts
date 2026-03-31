@@ -15,7 +15,7 @@ const {
   mockSendBookingConfirmation,
   mockVerifyTurnstileToken,
 } = vi.hoisted(() => ({
-  mockValidateVerificationToken: vi.fn().mockReturnValue("987654321"),
+  mockValidateVerificationToken: vi.fn().mockReturnValue("test@example.com"),
   mockLogBookingActivity: vi.fn().mockResolvedValue(undefined),
   mockResolveAndPersistBookingStatuses: vi.fn().mockResolvedValue([]),
   mockSendBookingConfirmation: vi
@@ -40,9 +40,12 @@ vi.mock("../lib/booking-status-persist", () => ({
 // Mock WhatsApp + OTP (needed because router file imports them)
 vi.mock("@wifo/whatsapp", () => ({
   generateOtpCode: vi.fn().mockReturnValue("123456"),
-  sendOtp: vi.fn().mockResolvedValue({ success: true }),
   sendBookingConfirmation: mockSendBookingConfirmation,
   whatsappConfig: { otp: { expirationMinutes: 10, codeLength: 6 } },
+}));
+vi.mock("../lib/otp-dispatcher", () => ({
+  dispatchOtp: vi.fn().mockResolvedValue({ success: true }),
+  getOtpChannel: vi.fn().mockReturnValue("email"),
 }));
 vi.mock("../lib/otp-store", () => ({
   storeOtpCode: vi.fn().mockResolvedValue(undefined),
@@ -106,8 +109,8 @@ function makeBooking(overrides?: Record<string, unknown>) {
     isPeakRate: false,
     status: "confirmed",
     customerName: "Juan Pérez",
-    customerPhone: "987654321",
-    customerEmail: null,
+    customerPhone: null,
+    customerEmail: "test@example.com",
     isManualBooking: false,
     cancelledBy: null,
     cancellationReason: null,
@@ -251,7 +254,7 @@ function publicCaller(db: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockValidateVerificationToken.mockReturnValue("987654321");
+  mockValidateVerificationToken.mockReturnValue("test@example.com");
   mockLogBookingActivity.mockResolvedValue(undefined);
   mockResolveAndPersistBookingStatuses.mockResolvedValue([]);
   mockSendBookingConfirmation.mockResolvedValue({
@@ -413,36 +416,25 @@ describe("publicBooking.createBooking", () => {
     ).rejects.toThrow();
   });
 
-  it("sends WhatsApp booking confirmation after creation", async () => {
+  it("skips WhatsApp confirmation when using email channel", async () => {
     const db = createMockDb({});
     const caller = publicCaller(db);
 
     await caller.publicBooking.createBooking(validInput);
 
-    expect(mockSendBookingConfirmation).toHaveBeenCalledWith({
-      phone: "987654321",
-      customerName: "Juan Pérez",
-      facilityName: "Club Test",
-      courtName: "Cancha 1",
-      date: "01/04/2026",
-      startTime: "10:00",
-      endTime: "11:00",
-      bookingCode: "PH-2026-ABCD",
-    });
+    // Email channel → customerPhone is null → no WhatsApp confirmation
+    expect(mockSendBookingConfirmation).not.toHaveBeenCalled();
   });
 
-  it("succeeds even when WhatsApp confirmation fails", async () => {
-    mockSendBookingConfirmation.mockResolvedValue({
-      success: false,
-      error: "API error",
-    });
+  it("succeeds without sending WhatsApp confirmation in email mode", async () => {
     const db = createMockDb({});
     const caller = publicCaller(db);
 
     const result = await caller.publicBooking.createBooking(validInput);
 
     expect(result).toHaveProperty("code");
-    expect(mockSendBookingConfirmation).toHaveBeenCalled();
+    // Email channel → no WhatsApp confirmation sent
+    expect(mockSendBookingConfirmation).not.toHaveBeenCalled();
   });
 });
 
@@ -562,11 +554,11 @@ describe("publicBooking.cancelBooking", () => {
     ).rejects.toThrow("Reserva no encontrada");
   });
 
-  it("throws FORBIDDEN when phone does not match booking", async () => {
-    mockValidateVerificationToken.mockReturnValue("999999999");
+  it("throws FORBIDDEN when identifier does not match booking", async () => {
+    mockValidateVerificationToken.mockReturnValue("other@example.com");
     const existingBooking = makeBooking({
       status: "confirmed",
-      customerPhone: "987654321",
+      customerEmail: "test@example.com",
     });
     const db = createMockDb({ overlappingBooking: existingBooking });
     const caller = publicCaller(db);

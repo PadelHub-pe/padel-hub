@@ -77,10 +77,14 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
     setTurnstileToken(token);
   }, []);
 
+  // OTP channel (from server config)
+  const otpChannel = facility.otpChannel;
+  const isEmailOtp = otpChannel === "email";
+
   // Form state
   const [step, setStep] = useState<Step>("contact");
   const [customerName, setCustomerName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
   const [otpError, setOtpError] = useState("");
 
@@ -102,11 +106,24 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
       setError("Ingresa tu nombre");
       return;
     }
-    const cleanPhone = phone.replace(/\D/g, "");
-    if (!/^\d{7,15}$/.test(cleanPhone)) {
-      setError("Ingresa un número de teléfono válido");
-      return;
+
+    // Validate identifier based on channel
+    const cleanIdentifier = isEmailOtp
+      ? identifier.trim()
+      : identifier.replace(/\D/g, "");
+
+    if (isEmailOtp) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanIdentifier)) {
+        setError("Ingresa un correo electrónico válido");
+        return;
+      }
+    } else {
+      if (!/^\d{7,15}$/.test(cleanIdentifier)) {
+        setError("Ingresa un número de teléfono válido");
+        return;
+      }
     }
+
     if (turnstileSiteKey && !turnstileToken) {
       setError("Espera a que se complete la verificación de seguridad");
       return;
@@ -115,7 +132,7 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
     setError("");
     try {
       await sendOtpMutation.mutateAsync({
-        phone: phone.replace(/\D/g, ""),
+        identifier: cleanIdentifier,
         turnstileToken: turnstileToken || "dev-bypass",
       });
       // Reset Turnstile for the next use (createBooking)
@@ -131,9 +148,12 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
 
   async function handleVerifyOtp(code: string) {
     setOtpError("");
+    const cleanIdentifier = isEmailOtp
+      ? identifier.trim()
+      : identifier.replace(/\D/g, "");
     try {
       const result = await verifyOtpMutation.mutateAsync({
-        phone: phone.replace(/\D/g, ""),
+        identifier: cleanIdentifier,
         code,
       });
 
@@ -216,9 +236,12 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
 
   async function handleResendOtp() {
     setOtpError("");
+    const cleanIdentifier = isEmailOtp
+      ? identifier.trim()
+      : identifier.replace(/\D/g, "");
     try {
       await sendOtpMutation.mutateAsync({
-        phone: phone.replace(/\D/g, ""),
+        identifier: cleanIdentifier,
         turnstileToken: turnstileToken || "dev-bypass",
       });
       turnstileRef.current?.reset();
@@ -303,20 +326,24 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
           </div>
 
           <div>
-            <Label htmlFor="phone">Teléfono (WhatsApp)</Label>
+            <Label htmlFor="identifier">
+              {isEmailOtp ? "Correo electrónico" : "Teléfono (WhatsApp)"}
+            </Label>
             <Input
-              id="phone"
-              type="tel"
-              placeholder="987654321"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              id="identifier"
+              type={isEmailOtp ? "email" : "tel"}
+              placeholder={isEmailOtp ? "tu@email.com" : "987654321"}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="mt-1"
-              autoComplete="tel"
-              inputMode="tel"
-              maxLength={15}
+              autoComplete={isEmailOtp ? "email" : "tel"}
+              inputMode={isEmailOtp ? "email" : "tel"}
+              maxLength={isEmailOtp ? 255 : 15}
             />
             <p className="text-muted-foreground mt-1 text-xs">
-              Te enviaremos un código de verificación por WhatsApp.
+              {isEmailOtp
+                ? "Te enviaremos un código de verificación por correo electrónico."
+                : "Te enviaremos un código de verificación por WhatsApp."}
             </p>
           </div>
 
@@ -330,7 +357,9 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
           >
             {sendOtpMutation.isPending
               ? "Enviando código..."
-              : "Verificar teléfono"}
+              : isEmailOtp
+                ? "Verificar correo"
+                : "Verificar teléfono"}
           </Button>
         </div>
       )}
@@ -341,7 +370,7 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
           <div className="text-center">
             <p className="text-sm">
               Ingresa el código que enviamos a{" "}
-              <span className="font-medium">{phone}</span>
+              <span className="font-medium">{identifier}</span>
             </p>
           </div>
 
@@ -370,7 +399,7 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
               onClick={() => setStep("contact")}
               className="text-muted-foreground text-xs underline"
             >
-              Cambiar número
+              {isEmailOtp ? "Cambiar correo" : "Cambiar número"}
             </button>
           </div>
         </div>

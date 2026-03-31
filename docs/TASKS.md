@@ -1,5 +1,108 @@
 # Tasks
 
+## Current: Dual OTP Channel (Email + WhatsApp) with Feature Flag
+
+**Goal**: Add email as an alternative OTP delivery channel alongside WhatsApp, controlled by an env var flag. When WhatsApp is unavailable (Meta Business verification pending), email OTP is used. Switching back to WhatsApp is a one-line env change.
+
+**Context**: WhatsApp OTP via Kapso requires Meta Business verification (pending). The OTP infrastructure (store, rate limiting, verification tokens) is already channel-agnostic — only the delivery mechanism and UI labels are WhatsApp-specific.
+
+---
+
+### TASK-43: Add OTP channel config and email OTP sender
+
+**Type**: feat
+**Scope**: `packages/api`, `packages/email`
+**Files**: ~4
+
+1. **Add env flag** in `packages/api/src/env.ts` (or a shared config):
+   - `OTP_CHANNEL` — `"whatsapp" | "email"`, default `"email"` (safe default while WhatsApp is pending)
+
+2. **Create email OTP template** (`packages/email/src/templates/OtpVerification.tsx`):
+   - Simple React Email template: "Tu código de verificación es: **{code}**"
+   - 10-minute expiration note
+   - PadelHub branding (reuse existing email layout patterns)
+
+3. **Create email OTP sender** (`packages/email/src/senders/otp-verification.ts`):
+   - `sendOtpEmail({ email, code })` — follows existing sender pattern (see `password-reset.ts`)
+   - Export from `@wifo/email` barrel
+
+4. **Create OTP dispatcher** (`packages/api/src/lib/otp-dispatcher.ts`):
+   - `sendOtpToUser(identifier, code)` — reads `OTP_CHANNEL` env, routes to WhatsApp `sendOtp` or email `sendOtpEmail`
+   - Single import point for the router
+
+**Tests**: Unit test the dispatcher routing logic (mock both senders).
+
+---
+
+### TASK-44: Update public-booking router for dual-channel OTP
+
+**Type**: feat
+**Scope**: `packages/api`
+**Depends on**: TASK-43
+**Files**: ~3
+
+1. **Update input schemas** in `public-booking.ts`:
+   - `sendOtpSchema`: change `phone` to `identifier` (or add `email` field alongside `phone`)
+   - Better: keep both fields optional, require exactly one based on channel config
+   - Simplest approach: `identifier: z.string()` + validate format based on `OTP_CHANNEL`
+
+2. **Update `sendOtp` procedure**:
+   - Use `sendOtpToUser()` dispatcher instead of direct WhatsApp `sendOtp()`
+   - Rate limit key remains the identifier (phone or email)
+   - `expiresInSeconds` stays the same (600s)
+
+3. **Update `verifyOtp` procedure**:
+   - Same logic, just accept `identifier` instead of `phone`
+
+4. **Update `createBooking` procedure**:
+   - `requireVerifiedPhone` → `requireVerifiedIdentifier` (token still works — it signs any string)
+   - Store in `customerPhone` if WhatsApp, or `customerEmail` if email (note: `customerEmail` column may need adding — check schema)
+
+5. **Update verification token** (`verification-token.ts`):
+   - Already generic — `createVerificationToken(phone)` works with any string. Just rename param to `identifier` for clarity.
+
+**Tests**: Update existing `public-booking-otp.test.ts` and `verification-token.test.ts`.
+
+---
+
+### TASK-45: Update bookings UI for dual-channel OTP
+
+**Type**: feat
+**Scope**: `apps/bookings`
+**Depends on**: TASK-44
+**Files**: ~3
+
+1. **Update `confirm-page.tsx`**:
+   - Read OTP channel from a public env var (`NEXT_PUBLIC_OTP_CHANNEL`)
+   - If `"email"`: show email input instead of phone input, update label from "Teléfono (WhatsApp)" to "Correo electrónico"
+   - Update helper text from "Te enviaremos un código de verificación por WhatsApp" to "Te enviaremos un código de verificación por correo electrónico"
+   - Update "Cambiar número" button text to "Cambiar correo"
+   - Send `identifier` (email or phone) to `sendOtp` mutation
+
+2. **Update `mis-reservas-page.tsx`**:
+   - Same channel-aware input (email vs phone)
+   - localStorage key can stay the same (keyed by facilityId)
+
+3. **Add `NEXT_PUBLIC_OTP_CHANNEL`** to `apps/bookings/src/env.ts`
+
+**No structural changes** — same multi-step flow (contact → OTP → confirming), just different input field and labels.
+
+---
+
+### TASK-46: Lint, typecheck, test, and QA
+
+**Type**: chore
+**Scope**: all
+**Depends on**: TASK-45
+
+- `pnpm lint && pnpm format && pnpm lint:ws`
+- `pnpm typecheck`
+- `pnpm test` — all 661+ tests pass
+- Manual QA: test email OTP flow end-to-end locally
+- Verify switching `OTP_CHANNEL=whatsapp` reverts to WhatsApp flow
+
+---
+
 ## Previous: Public Bookings Production Readiness ✅
 
 **Goal**: Harden `apps/bookings` (public booking page) for production — bot protection, race conditions, error handling, SEO, and edge cases.

@@ -42,7 +42,7 @@ function clearToken(facilityId: string) {
   }
 }
 
-type Step = "phone" | "otp" | "verified";
+type Step = "contact" | "otp" | "verified";
 
 interface MisReservasPageProps {
   facilitySlug: string;
@@ -54,12 +54,18 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
     trpc.publicBooking.getFacility.queryOptions({ slug: facilitySlug }),
   );
 
+  // OTP channel (from server config)
+  const otpChannel = facility.otpChannel;
+  const isEmailOtp = otpChannel === "email";
+
   // Check for existing token
   const [token, setToken] = useState<string | null>(() =>
     getStoredToken(facility.id),
   );
-  const [step, setStep] = useState<Step>(() => (token ? "verified" : "phone"));
-  const [phone, setPhone] = useState("");
+  const [step, setStep] = useState<Step>(() =>
+    token ? "verified" : "contact",
+  );
+  const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
   const [otpError, setOtpError] = useState("");
 
@@ -81,11 +87,22 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
   );
 
   async function handleSendOtp() {
-    const cleaned = phone.replace(/\D/g, "");
-    if (!/^\d{7,15}$/.test(cleaned)) {
-      setError("Ingresa un número de teléfono válido");
-      return;
+    const cleanIdentifier = isEmailOtp
+      ? identifier.trim()
+      : identifier.replace(/\D/g, "");
+
+    if (isEmailOtp) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanIdentifier)) {
+        setError("Ingresa un correo electrónico válido");
+        return;
+      }
+    } else {
+      if (!/^\d{7,15}$/.test(cleanIdentifier)) {
+        setError("Ingresa un número de teléfono válido");
+        return;
+      }
     }
+
     if (turnstileSiteKey && !turnstileToken) {
       setError("Espera a que se complete la verificación de seguridad");
       return;
@@ -94,7 +111,7 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
     setError("");
     try {
       await sendOtpMutation.mutateAsync({
-        phone: cleaned,
+        identifier: cleanIdentifier,
         turnstileToken: turnstileToken || "dev-bypass",
       });
       turnstileRef.current?.reset();
@@ -109,11 +126,13 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
 
   async function handleVerifyOtp(code: string) {
     setOtpError("");
-    const cleaned = phone.replace(/\D/g, "");
+    const cleanIdentifier = isEmailOtp
+      ? identifier.trim()
+      : identifier.replace(/\D/g, "");
 
     try {
       const result = await verifyOtpMutation.mutateAsync({
-        phone: cleaned,
+        identifier: cleanIdentifier,
         code,
       });
 
@@ -134,10 +153,12 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
 
   async function handleResendOtp() {
     setOtpError("");
-    const cleaned = phone.replace(/\D/g, "");
+    const cleanIdentifier = isEmailOtp
+      ? identifier.trim()
+      : identifier.replace(/\D/g, "");
     try {
       await sendOtpMutation.mutateAsync({
-        phone: cleaned,
+        identifier: cleanIdentifier,
         turnstileToken: turnstileToken || "dev-bypass",
       });
       turnstileRef.current?.reset();
@@ -154,8 +175,8 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
   function handleLogout() {
     clearToken(facility.id);
     setToken(null);
-    setStep("phone");
-    setPhone("");
+    setStep("contact");
+    setIdentifier("");
     setError("");
     setOtpError("");
   }
@@ -163,7 +184,7 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
   function handleTokenExpired() {
     clearToken(facility.id);
     setToken(null);
-    setStep("phone");
+    setStep("contact");
   }
 
   return (
@@ -193,29 +214,35 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
 
       <h1 className="font-display mt-4 text-xl font-bold">Mis Reservas</h1>
 
-      {/* Phone verification */}
-      {step === "phone" && (
+      {/* Contact verification */}
+      {step === "contact" && (
         <div className="mt-6 space-y-4">
           <p className="text-muted-foreground text-sm">
-            Ingresa tu número de teléfono para ver tus reservas en{" "}
-            <span className="font-medium">{facility.name}</span>.
+            Ingresa tu{" "}
+            {isEmailOtp ? "correo electrónico" : "número de teléfono"} para ver
+            tus reservas en <span className="font-medium">{facility.name}</span>
+            .
           </p>
 
           <div>
-            <Label htmlFor="phone">Teléfono (WhatsApp)</Label>
+            <Label htmlFor="identifier">
+              {isEmailOtp ? "Correo electrónico" : "Teléfono (WhatsApp)"}
+            </Label>
             <Input
-              id="phone"
-              type="tel"
-              placeholder="987654321"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              id="identifier"
+              type={isEmailOtp ? "email" : "tel"}
+              placeholder={isEmailOtp ? "tu@email.com" : "987654321"}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="mt-1"
-              autoComplete="tel"
-              inputMode="tel"
-              maxLength={15}
+              autoComplete={isEmailOtp ? "email" : "tel"}
+              inputMode={isEmailOtp ? "email" : "tel"}
+              maxLength={isEmailOtp ? 255 : 15}
             />
             <p className="text-muted-foreground mt-1 text-xs">
-              Te enviaremos un código de verificación por WhatsApp.
+              {isEmailOtp
+                ? "Te enviaremos un código de verificación por correo electrónico."
+                : "Te enviaremos un código de verificación por WhatsApp."}
             </p>
           </div>
 
@@ -229,7 +256,9 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
           >
             {sendOtpMutation.isPending
               ? "Enviando código..."
-              : "Verificar teléfono"}
+              : isEmailOtp
+                ? "Verificar correo"
+                : "Verificar teléfono"}
           </Button>
         </div>
       )}
@@ -240,7 +269,7 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
           <div className="text-center">
             <p className="text-sm">
               Ingresa el código que enviamos a{" "}
-              <span className="font-medium">{phone}</span>
+              <span className="font-medium">{identifier}</span>
             </p>
           </div>
 
@@ -264,10 +293,10 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
             </button>
 
             <button
-              onClick={() => setStep("phone")}
+              onClick={() => setStep("contact")}
               className="text-muted-foreground text-xs underline"
             >
-              Cambiar número
+              {isEmailOtp ? "Cambiar correo" : "Cambiar número"}
             </button>
           </div>
         </div>
@@ -280,6 +309,7 @@ export function MisReservasPage({ facilitySlug }: MisReservasPageProps) {
           facilityId={facility.id}
           facilityName={facility.name}
           token={token}
+          isEmailOtp={isEmailOtp}
           onLogout={handleLogout}
           onTokenExpired={handleTokenExpired}
         />
@@ -303,6 +333,7 @@ interface VerifiedViewProps {
   facilityId: string;
   facilityName: string;
   token: string;
+  isEmailOtp: boolean;
   onLogout: () => void;
   onTokenExpired: () => void;
 }
@@ -312,6 +343,7 @@ function VerifiedView({
   facilityId,
   facilityName,
   token,
+  isEmailOtp,
   onLogout,
   onTokenExpired,
 }: VerifiedViewProps) {
@@ -407,7 +439,7 @@ function VerifiedView({
           onClick={onLogout}
           className="text-muted-foreground text-xs underline"
         >
-          Cambiar número
+          {isEmailOtp ? "Cambiar correo" : "Cambiar número"}
         </button>
       </div>
 
