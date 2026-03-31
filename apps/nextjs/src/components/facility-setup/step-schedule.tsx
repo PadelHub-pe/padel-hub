@@ -5,12 +5,7 @@ import { useWatch } from "react-hook-form";
 
 import { cn } from "@wifo/ui";
 import { Checkbox } from "@wifo/ui/checkbox";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@wifo/ui/form";
+import { FormField, FormItem, FormLabel, FormMessage } from "@wifo/ui/form";
 import { Label } from "@wifo/ui/label";
 import {
   Select,
@@ -216,7 +211,6 @@ export function StepSchedule({ control }: StepScheduleProps) {
           </FormItem>
         )}
       />
-
     </div>
   );
 }

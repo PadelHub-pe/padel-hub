@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { startOfDay } from "date-fns";
 
 import { getImageUrl } from "@wifo/images/url";
 
@@ -10,6 +11,7 @@ import { FacilityLandingSkeleton } from "./_components/facility-landing-skeleton
 
 interface PageProps {
   params: Promise<{ facilitySlug: string }>;
+  searchParams: Promise<{ date?: string }>;
 }
 
 export async function generateMetadata({
@@ -46,8 +48,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function FacilityPage({ params }: PageProps) {
+export default async function FacilityPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { facilitySlug } = await params;
+  const { date: dateParam } = await searchParams;
 
   // Validate facility exists before rendering
   try {
@@ -57,13 +63,27 @@ export default async function FacilityPage({ params }: PageProps) {
     notFound();
   }
 
+  // Parse initial date from search params (supports redirects from /book?date=...)
+  const initialDate = dateParam
+    ? startOfDay(new Date(dateParam + "T00:00:00"))
+    : startOfDay(new Date());
+
   // Prefetch for client component hydration
   prefetch(trpc.publicBooking.getFacility.queryOptions({ slug: facilitySlug }));
+  prefetch(
+    trpc.publicBooking.getAvailableSlots.queryOptions({
+      slug: facilitySlug,
+      date: initialDate,
+    }),
+  );
 
   return (
     <HydrateClient>
       <Suspense fallback={<FacilityLandingSkeleton />}>
-        <FacilityLanding facilitySlug={facilitySlug} />
+        <FacilityLanding
+          facilitySlug={facilitySlug}
+          initialDate={initialDate}
+        />
       </Suspense>
     </HydrateClient>
   );

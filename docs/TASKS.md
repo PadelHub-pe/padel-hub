@@ -1,6 +1,124 @@
 # Tasks
 
-## Current: Dual OTP Channel (Email + WhatsApp) with Feature Flag
+## Current: Redesign Public Bookings Landing UX
+
+**Goal**: Eliminate the extra page navigation between landing and booking. Show court availability directly on the facility landing page so players can pick a slot immediately, like Matchpoint.
+
+**Context**: User feedback identified three friction points:
+1. Giant facility photo forces scrolling before seeing actionable UI
+2. Date is already pre-selected (today) but slots aren't shown — requires clicking "Ver disponibilidad" → separate `/book` page → select court → select slot (3+ clicks to see a time)
+3. The intermediate court selection step adds friction when you can just show all courts at once
+
+**Positive signal**: The sticky bottom CTA bar is well-received — keep that pattern.
+
+---
+
+### TASK-47: Compact hero section with background image
+
+**Type**: feat
+**Scope**: `apps/bookings`
+**Files**: ~3
+
+Replace the full-screen `PhotoCarousel` + `FacilityHeader` with a compact hero:
+
+1. **Create `HeroSection` component** (`_components/hero-section.tsx`):
+   - First facility photo as background image with dark overlay
+   - Facility name (h1), district, court count overlaid on image
+   - Compact height (~180-200px), not full viewport
+   - Keep "PadelHub" logo + "Mis Reservas" link in the header above
+
+2. **Move secondary info below the fold**:
+   - Description and amenities go below the slot grid (or in a collapsible "Más info" section)
+   - Additional photos: small thumbnail strip or remove from landing entirely (they're visible on detail)
+
+3. **Result**: The first viewport shows hero + date selector + start of availability — no scrolling needed to see actionable UI.
+
+**Acceptance criteria**:
+- Landing page shows actionable UI (date selector) within first viewport on mobile (375px)
+- Facility name and location clearly visible on the hero
+- Photos still accessible (either as hero background or secondary section)
+
+---
+
+### TASK-48: Show availability directly on landing page
+
+**Type**: feat
+**Scope**: `apps/bookings`
+**Files**: ~5
+**Depends on**: TASK-47
+
+Merge the `/book` page functionality into the landing page:
+
+1. **Add `getAvailableSlots` prefetch** to `[facilitySlug]/page.tsx`:
+   - Prefetch for today's date (the default selection)
+   - Pass both `getFacility` and `getAvailableSlots` data to client component
+
+2. **Integrate into `FacilityLanding`**:
+   - Add `getAvailableSlots` query (reactive to `selectedDate`)
+   - Add `DurationTabs` component (reuse from `/book`)
+   - Add `SlotGrid` with `groupByCourt` mode — shows ALL courts with their time slots
+   - Loading state: skeleton grid while slots load on date change
+
+3. **Update sticky bottom CTA**:
+   - Before slot selection: show selected date only (no action button)
+   - After slot selection: show slot info (court · time · price) + "Continuar" button → navigates to `/confirm?courtId=...&date=...&start=...&end=...`
+
+4. **Handle edge cases**:
+   - No availability for selected date → "No hay horarios disponibles" message with suggestion to try another date
+   - Single duration → hide duration tabs (existing behavior)
+   - Date change → clear selected slot, refetch slots
+
+**Acceptance criteria**:
+- Selecting a date shows all available slots grouped by court immediately
+- User can pick a slot and go straight to `/confirm` — one page, one click
+- Slot grid reuses existing `SlotGrid` component (with `groupByCourt`)
+
+---
+
+### TASK-49: Redirect `/book` route and cleanup
+
+**Type**: refactor
+**Scope**: `apps/bookings`
+**Files**: ~2
+**Depends on**: TASK-48
+
+1. **Add redirect** from `/book` to landing page:
+   - `[facilitySlug]/book/page.tsx` → redirect to `/${facilitySlug}?date=${dateParam}` (preserve date param)
+   - Handles any existing deep links or bookmarks
+
+2. **Remove unused book components** (or keep if we want fallback):
+   - `CourtSelector` — no longer used (slots shown grouped on landing)
+   - `BookingPage` — replaced by landing page flow
+   - Keep `DurationTabs` and `SlotGrid` since they're reused
+
+**Acceptance criteria**:
+- `/book?date=2025-01-15` redirects to `/?date=2025-01-15`
+- No dead code left behind
+
+---
+
+### TASK-50: Lint, typecheck, test, and QA
+
+**Type**: chore
+**Scope**: `apps/bookings`
+**Files**: ~0 (fix what fails)
+**Depends on**: TASK-49
+
+1. Run `pnpm lint && pnpm format && pnpm lint:ws && pnpm typecheck`
+2. Run `pnpm test` — fix any broken tests
+3. Manual QA on mobile viewport (375px):
+   - [ ] First viewport shows hero + date selector + start of slots
+   - [ ] Date change loads new slots (loading state visible)
+   - [ ] Duration tabs filter slots correctly
+   - [ ] Slot selection shows sticky CTA with slot info
+   - [ ] "Continuar" navigates to `/confirm` with correct params
+   - [ ] `/book?date=...` redirects properly
+   - [ ] Confirm → OTP → Success flow still works end-to-end
+   - [ ] "Mis Reservas" link still works
+
+---
+
+## Previous: Dual OTP Channel (Email + WhatsApp) with Feature Flag
 
 **Goal**: Add email as an alternative OTP delivery channel alongside WhatsApp, controlled by an env var flag. When WhatsApp is unavailable (Meta Business verification pending), email OTP is used. Switching back to WhatsApp is a one-line env change.
 
