@@ -86,7 +86,6 @@ const createBookingSchema = z
     endTime: z.string().regex(/^\d{2}:\d{2}$/),
     customerName: z.string().min(1, "Nombre es requerido").max(100),
     verificationToken: z.string().min(1),
-    turnstileToken: z.string().min(1, "Verificación requerida"),
   })
   .refine((d) => d.startTime < d.endTime, {
     message: "La hora de inicio debe ser anterior a la hora de fin",
@@ -526,16 +525,8 @@ export const publicBookingRouter = {
       const { facilityId, courtId, date, startTime, endTime, customerName } =
         input;
 
-      // 1. Verify Turnstile (bot protection)
-      const turnstileValid = await verifyTurnstileToken(input.turnstileToken);
-      if (!turnstileValid) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Verificación de seguridad fallida. Intenta nuevamente.",
-        });
-      }
-
-      // 2. Validate verification token → extract identifier (phone or email)
+      // 1. Validate verification token → extract identifier (phone or email)
+      // Turnstile was already verified during sendOtp; the OTP token proves legitimacy.
       const verifiedIdentifier = requireVerifiedIdentifier(
         input.verificationToken,
       );

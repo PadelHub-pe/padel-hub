@@ -277,7 +277,6 @@ describe("publicBooking.createBooking", () => {
     endTime: "11:00",
     customerName: "Juan Pérez",
     verificationToken: "v1.51987654321.9999999999.abc123",
-    turnstileToken: "test-token",
   };
 
   it("creates a booking and returns confirmation", async () => {

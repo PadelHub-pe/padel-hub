@@ -188,7 +188,6 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
         endTime,
         customerName: customerName.trim(),
         verificationToken: result.token,
-        turnstileToken: turnstileToken || "dev-bypass",
       });
 
       if (booking) {
