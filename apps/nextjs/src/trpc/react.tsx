@@ -13,7 +13,6 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@wifo/api";
 
-import { env } from "~/env";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -37,7 +36,8 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       links: [
         loggerLink({
           enabled: (op) =>
-            env.NODE_ENV === "development" ||
+            // eslint-disable-next-line no-restricted-properties -- env import pulls server vars into client bundle
+            process.env.NODE_ENV === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
         httpBatchStreamLink({
@@ -70,7 +70,8 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin;
-  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
+  // eslint-disable-next-line no-restricted-properties
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   // eslint-disable-next-line no-restricted-properties
   return `http://localhost:${process.env.PORT ?? 3000}`;
 };
