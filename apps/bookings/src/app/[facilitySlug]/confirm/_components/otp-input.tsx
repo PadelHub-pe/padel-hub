@@ -43,7 +43,7 @@ export function OtpInput({
 
       // Check if complete
       const code = newValues.join("");
-      if (code.length === length && !code.includes("")) {
+      if (code.length === length) {
         onComplete(code);
       }
     },
