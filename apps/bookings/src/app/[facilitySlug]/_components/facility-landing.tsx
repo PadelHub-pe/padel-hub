@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -205,22 +205,120 @@ function DurationTabs({
 /** Slots loading skeleton */
 function SlotsSkeleton() {
   return (
-    <section className="space-y-5">
-      <p className="text-sm font-medium">Horarios disponibles</p>
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="bg-muted h-4 w-24 animate-pulse rounded" />
-            <div className="bg-muted h-5 w-14 animate-pulse rounded-md" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {Array.from({ length: 4 }).map((_, j) => (
-              <div key={j} className="bg-muted h-16 animate-pulse rounded-lg" />
-            ))}
-          </div>
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">Horarios disponibles</p>
+      </div>
+      {/* Filter chips skeleton */}
+      <div className="flex gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-muted h-8 w-20 animate-pulse rounded-full"
+          />
+        ))}
+      </div>
+      {/* Time block skeleton */}
+      <div className="space-y-4">
+        <div className="bg-muted h-4 w-16 animate-pulse rounded" />
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 6 }).map((_, j) => (
+            <div
+              key={j}
+              className="bg-muted h-[72px] animate-pulse rounded-lg"
+            />
+          ))}
         </div>
-      ))}
+      </div>
     </section>
+  );
+}
+
+/* ---------- Time-block helpers ---------- */
+
+type TimeBlock = "mañana" | "tarde" | "noche";
+
+function getTimeBlock(startTime: string): TimeBlock {
+  const hour = Number(startTime.split(":")[0]);
+  if (hour < 12) return "mañana";
+  if (hour < 18) return "tarde";
+  return "noche";
+}
+
+const TIME_BLOCK_LABELS: Record<TimeBlock, string> = {
+  mañana: "Mañana",
+  tarde: "Tarde",
+  noche: "Noche",
+};
+
+interface TimeGroup {
+  startTime: string;
+  endTime: string;
+  block: TimeBlock;
+  slots: SlotItem[];
+}
+
+function groupSlotsByTime(slots: SlotItem[]): TimeGroup[] {
+  const map = new Map<string, TimeGroup>();
+
+  for (const slot of slots) {
+    const key = `${slot.startTime}-${slot.endTime}`;
+    let group = map.get(key);
+    if (!group) {
+      group = {
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        block: getTimeBlock(slot.startTime),
+        slots: [],
+      };
+      map.set(key, group);
+    }
+    group.slots.push(slot);
+  }
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.startTime.localeCompare(b.startTime),
+  );
+}
+
+/** Court filter chips */
+function CourtFilterChips({
+  courts,
+  selected,
+  onSelect,
+}: {
+  courts: { courtId: string; courtName: string; courtType: string }[];
+  selected: string | null;
+  onSelect: (courtId: string | null) => void;
+}) {
+  return (
+    <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4">
+      <button
+        type="button"
+        onClick={() => onSelect(null)}
+        className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+          selected === null
+            ? "bg-primary text-primary-foreground border-primary"
+            : "border-border bg-card hover:border-primary/40 hover:bg-primary/5"
+        }`}
+      >
+        Todas
+      </button>
+      {courts.map((court) => (
+        <button
+          key={court.courtId}
+          type="button"
+          onClick={() => onSelect(court.courtId)}
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+            selected === court.courtId
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border bg-card hover:border-primary/40 hover:bg-primary/5"
+          }`}
+        >
+          {court.courtName}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -246,11 +344,69 @@ function SlotsSection({
     }),
   );
 
-  const filteredSlots = slotsData.slots.filter(
+  const [courtFilter, setCourtFilter] = useState<string | null>(null);
+
+  // Unique courts for filter chips (derived from ALL slots for this duration)
+  const courts = useMemo(() => {
+    const seen = new Map<
+      string,
+      { courtId: string; courtName: string; courtType: string }
+    >();
+    for (const s of slotsData.slots) {
+      if (s.durationMinutes === duration && !seen.has(s.courtId)) {
+        seen.set(s.courtId, {
+          courtId: s.courtId,
+          courtName: s.courtName,
+          courtType: s.courtType,
+        });
+      }
+    }
+    return Array.from(seen.values());
+  }, [slotsData.slots, duration]);
+
+  // Reset court filter if the selected court has no slots for this duration
+  const validFilter =
+    courtFilter !== null && courts.some((c) => c.courtId === courtFilter)
+      ? courtFilter
+      : null;
+  if (validFilter !== courtFilter) {
+    setCourtFilter(null);
+  }
+
+  const filteredSlots = useMemo(
+    () =>
+      slotsData.slots.filter(
+        (s) =>
+          s.durationMinutes === duration &&
+          (validFilter === null || s.courtId === validFilter),
+      ),
+    [slotsData.slots, duration, validFilter],
+  );
+
+  const timeGroups = useMemo(
+    () => groupSlotsByTime(filteredSlots),
+    [filteredSlots],
+  );
+
+  // Pre-compute which time groups start a new block (avoids mutable variable in render)
+  const blockStarts = useMemo(() => {
+    const set = new Set<number>();
+    let prev: TimeBlock | null = null;
+    for (let i = 0; i < timeGroups.length; i++) {
+      const group = timeGroups[i];
+      if (group && group.block !== prev) {
+        set.add(i);
+        prev = group.block;
+      }
+    }
+    return set;
+  }, [timeGroups]);
+
+  const hasSlotsForDuration = slotsData.slots.some(
     (s) => s.durationMinutes === duration,
   );
 
-  if (filteredSlots.length === 0) {
+  if (!hasSlotsForDuration) {
     return (
       <div className="py-8 text-center">
         <p className="text-muted-foreground text-sm">
@@ -263,89 +419,91 @@ function SlotsSection({
     );
   }
 
-  // Group slots by court
-  const groups = new Map<
-    string,
-    {
-      courtId: string;
-      courtName: string;
-      courtType: string;
-      slots: SlotItem[];
-    }
-  >();
-
-  for (const slot of filteredSlots) {
-    let group = groups.get(slot.courtId);
-    if (!group) {
-      group = {
-        courtId: slot.courtId,
-        courtName: slot.courtName,
-        courtType: slot.courtType,
-        slots: [],
-      };
-      groups.set(slot.courtId, group);
-    }
-    group.slots.push(slot);
-  }
-
-  const courtGroups = Array.from(groups.values());
-
   return (
-    <section className="space-y-5">
+    <section className="space-y-4">
       <p className="text-sm font-medium">Horarios disponibles</p>
-      {courtGroups.map((group) => (
-        <div key={group.courtId}>
-          <div className="mb-2 flex items-center gap-2">
-            <h3 className="text-sm font-semibold">{group.courtName}</h3>
-            <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[11px] font-medium capitalize">
-              {group.courtType}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {group.slots.map((slot) => {
-              const isSelected =
-                selectedSlot != null &&
-                selectedSlot.courtId === slot.courtId &&
-                selectedSlot.startTime === slot.startTime &&
-                selectedSlot.endTime === slot.endTime;
 
-              return (
-                <button
-                  key={`${slot.courtId}-${slot.startTime}-${slot.endTime}`}
-                  type="button"
-                  onClick={() => onSelect(slot)}
-                  aria-label={`${slot.courtName}, ${slot.startTime} a ${slot.endTime}, S/ ${(slot.priceInCents / 100).toFixed(0)}${slot.isPeakRate ? " (hora punta)" : ""}`}
-                  className={`flex flex-col items-start rounded-lg border p-3 text-left transition-colors ${
-                    isSelected
-                      ? "border-primary bg-primary/5 ring-primary/20 ring-2"
-                      : "border-border hover:border-primary/40"
-                  }`}
-                >
-                  <span className="text-sm font-medium">
-                    {slot.startTime} – {slot.endTime}
-                  </span>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span
-                      className={`text-xs font-medium ${
-                        slot.isPeakRate
-                          ? "text-orange-600 dark:text-orange-400"
-                          : "text-muted-foreground"
+      {/* Court filter chips — only show when there are 2+ courts */}
+      {courts.length > 1 && (
+        <CourtFilterChips
+          courts={courts}
+          selected={validFilter}
+          onSelect={setCourtFilter}
+        />
+      )}
+
+      {filteredSlots.length === 0 ? (
+        <div className="py-6 text-center">
+          <p className="text-muted-foreground text-sm">
+            No hay horarios para esta cancha.
+          </p>
+          <button
+            type="button"
+            onClick={() => setCourtFilter(null)}
+            className="text-primary mt-1 text-xs font-medium"
+          >
+            Ver todas las canchas
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {timeGroups.map((group, idx) => (
+            <div key={`${group.startTime}-${group.endTime}`}>
+              {blockStarts.has(idx) && (
+                <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+                  {TIME_BLOCK_LABELS[group.block]}
+                </p>
+              )}
+              <p className="text-muted-foreground mb-2 text-xs">
+                {group.startTime} – {group.endTime}
+              </p>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                {group.slots.map((slot) => {
+                  const isSelected =
+                    selectedSlot != null &&
+                    selectedSlot.courtId === slot.courtId &&
+                    selectedSlot.startTime === slot.startTime &&
+                    selectedSlot.endTime === slot.endTime;
+
+                  return (
+                    <button
+                      key={`${slot.courtId}-${slot.startTime}-${slot.endTime}`}
+                      type="button"
+                      onClick={() => onSelect(slot)}
+                      aria-label={`${slot.courtName}, ${slot.startTime} a ${slot.endTime}, S/ ${(slot.priceInCents / 100).toFixed(0)}${slot.isPeakRate ? " (hora punta)" : ""}`}
+                      className={`flex flex-col items-start rounded-lg border p-3 text-left transition-colors ${
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-primary/20 ring-2"
+                          : "border-border hover:border-primary/40"
                       }`}
                     >
-                      S/ {(slot.priceInCents / 100).toFixed(0)}
-                    </span>
-                    {slot.isPeakRate && (
-                      <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
-                        Punta
+                      <span className="text-sm font-medium">
+                        {slot.courtName}
                       </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span
+                          className={`text-xs font-medium ${
+                            slot.isPeakRate
+                              ? "text-orange-600 dark:text-orange-400"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          S/ {(slot.priceInCents / 100).toFixed(0)}
+                        </span>
+                        {slot.isPeakRate && (
+                          <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
+                            Punta
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </section>
   );
 }

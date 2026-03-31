@@ -1,6 +1,84 @@
 # Tasks
 
-## Current: Redesign Public Bookings Landing UX
+## Current: Improve Slot Grid UX — Group by Time + Reduce Scroll
+
+**Goal**: Restructure the slot grid on the public booking landing page to reduce scrolling and improve slot discoverability. Currently grouped by court (vertical scroll per court); switch to time-first grouping with court chips, responsive columns, and time-block labels.
+
+**Context**: User testing feedback on `apps/bookings`:
+1. Too much vertical scroll to see other courts — group by time instead (`Hora → Canchas`)
+2. Add court/type filter to reduce scroll when keeping many results
+3. Use more than 2 columns on desktop
+4. Group slots by time blocks (Mañana, Tarde, Noche) for scanability
+
+**Scope**: Client-side only — same API, same data, just different grouping/layout in `SlotsSection`.
+
+---
+
+### TASK-51: Regroup slots by time and add court filter chips
+
+**Type**: feat
+**Scope**: `apps/bookings`
+**Files**: ~1 (`facility-landing.tsx`)
+
+Refactor the `SlotsSection` component (lines 228-351) to group by time instead of court:
+
+1. **Group by startTime** instead of courtId:
+   - Key: `startTime` (e.g., "18:00")
+   - Each time group shows all available courts as slot buttons
+   - Slot button shows: court name, price, peak badge (court name replaces the section header role)
+
+2. **Time-block section labels**:
+   - "Mañana" (before 12:00), "Tarde" (12:00–18:00), "Noche" (18:00+)
+   - Rendered as sticky section headers or subtle dividers between groups
+   - Only show labels that have slots
+
+3. **Court filter chips** (above the grid):
+   - "Todas" (default) + one chip per court (e.g., "Cancha 1", "Cancha 2")
+   - Optionally group by type if all courts have the same name pattern: "Indoor" / "Outdoor"
+   - Filter is client-side on the already-fetched slots
+
+4. **Responsive grid columns**:
+   - Mobile: `grid-cols-2` (unchanged)
+   - Tablet (md): `grid-cols-3`
+   - Desktop (lg): `grid-cols-4`
+
+5. **Update slot button design**:
+   - Add court name (since it's no longer in the section header)
+   - Layout: time range (primary), court name + price (secondary line)
+
+6. **Update `SlotsSkeleton`** to match new layout structure.
+
+**Acceptance criteria**:
+- Slots are grouped by time: each time row shows available courts
+- Time blocks (Mañana/Tarde/Noche) label the sections
+- Court filter chips work correctly (filter + "Todas" reset)
+- Grid uses 3 columns on tablet, 4 on desktop
+- Slot selection + sticky CTA still works (no regression)
+- Existing duration tabs still work as before
+
+---
+
+### TASK-52: Lint, typecheck, and QA slot grid changes
+
+**Type**: chore
+**Scope**: `apps/bookings`
+**Depends on**: TASK-51
+
+1. Run `pnpm lint && pnpm format && pnpm lint:ws && pnpm typecheck`
+2. Run `pnpm test` — fix any broken tests
+3. Manual QA:
+   - [ ] Time-grouped slots render correctly (multiple courts per time row)
+   - [ ] Time-block labels appear in correct positions
+   - [ ] Court filter chips filter correctly, "Todas" resets
+   - [ ] Responsive columns: 2 (mobile) → 3 (tablet) → 4 (desktop)
+   - [ ] Slot selection highlights correctly, sticky CTA shows court+time+price
+   - [ ] Duration tabs still filter correctly
+   - [ ] No availability → empty state message still works
+   - [ ] Full booking flow: select slot → confirm → OTP → success
+
+---
+
+## Previous: Redesign Public Bookings Landing UX
 
 **Goal**: Eliminate the extra page navigation between landing and booking. Show court availability directly on the facility landing page so players can pick a slot immediately, like Matchpoint.
 

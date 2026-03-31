@@ -35,7 +35,7 @@ export function HeroSection({
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
 
       {/* Content */}
-      <div className="container relative flex min-h-[180px] flex-col justify-end pt-12 pb-5">
+      <div className="relative container flex min-h-[180px] flex-col justify-end pt-12 pb-5">
         <h1 className="font-display text-xl font-bold tracking-tight text-white">
           {name}
         </h1>
