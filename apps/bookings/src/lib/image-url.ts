@@ -2,6 +2,12 @@ import type { ImageVariant } from "@wifo/images";
 
 import { env } from "~/env";
 
+const SRCSET_VARIANTS: { variant: ImageVariant; width: number }[] = [
+  { variant: "thumbnail", width: 300 },
+  { variant: "card", width: 600 },
+  { variant: "gallery", width: 1200 },
+];
+
 /**
  * Client-safe image URL builder.
  * If the value is already a full URL (e.g. Unsplash, Google), returns it as-is.
@@ -13,4 +19,16 @@ export function getClientImageUrl(
 ): string {
   if (imageId.startsWith("http")) return imageId;
   return `https://imagedelivery.net/${env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH}/${imageId}/${variant}`;
+}
+
+/**
+ * Client-safe responsive srcset builder.
+ */
+export function getClientImageSrcSet(imageId: string): string {
+  if (imageId.startsWith("http")) return imageId;
+  const hash = env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_HASH;
+  return SRCSET_VARIANTS.map(
+    ({ variant, width }) =>
+      `https://imagedelivery.net/${hash}/${imageId}/${variant} ${width}w`,
+  ).join(", ");
 }

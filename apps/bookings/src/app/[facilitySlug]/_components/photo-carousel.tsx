@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 
-import { getImageSrcSet, getImageUrl } from "@wifo/images/url";
 import { cn } from "@wifo/ui";
+
+import { getClientImageSrcSet, getClientImageUrl } from "~/lib/image-url";
 
 interface PhotoCarouselProps {
   photos: string[];
@@ -21,8 +22,8 @@ export function PhotoCarousel({ photos, facilityName }: PhotoCarouselProps) {
       <div className="relative -mx-4 aspect-[4/3] overflow-hidden rounded-b-2xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={getImageUrl(firstPhoto, "gallery")}
-          srcSet={getImageSrcSet(firstPhoto)}
+          src={getClientImageUrl(firstPhoto, "gallery")}
+          srcSet={getClientImageSrcSet(firstPhoto)}
           alt={facilityName}
           className="absolute inset-0 size-full object-cover"
           sizes="(max-width: 480px) 100vw, 480px"
@@ -71,8 +72,8 @@ function MultiPhotoCarousel({ photos, facilityName }: PhotoCarouselProps) {
               <div className="relative aspect-[4/3]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={getImageUrl(photo, "gallery")}
-                  srcSet={getImageSrcSet(photo)}
+                  src={getClientImageUrl(photo, "gallery")}
+                  srcSet={getClientImageSrcSet(photo)}
                   alt={`${facilityName} - Foto ${index + 1}`}
                   className="absolute inset-0 size-full object-cover"
                   sizes="(max-width: 480px) 100vw, 480px"
