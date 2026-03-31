@@ -74,12 +74,10 @@ export function FacilityLanding({
   }
 
   return (
-    <main className="pb-24">
+    <main className="overflow-x-hidden pb-24">
       {/* Brand Header */}
       <header className="container flex items-center justify-between py-3">
-        <span className="font-display text-primary text-sm font-bold tracking-tight">
-          PadelHub
-        </span>
+        <img src="/logo.svg" alt="PadelHub" className="h-5" />
         <Link
           href={`/${facilitySlug}/mis-reservas`}
           className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"

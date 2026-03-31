@@ -11,6 +11,8 @@ const AMENITY_MAP: Record<string, { label: string; icon: string }> = {
   pro_shop: { label: "Pro Shop", icon: "🏪" },
   tienda: { label: "Tienda", icon: "🏪" },
   rental: { label: "Alquiler de Equipos", icon: "🎾" },
+  alquiler_equipos: { label: "Alquiler de Equipos", icon: "🎾" },
+  cafe_snacks: { label: "Café y Snacks", icon: "☕" },
   wifi: { label: "Wi-Fi", icon: "📶" },
   accessible: { label: "Accesible", icon: "♿" },
   lessons: { label: "Clases", icon: "👨‍🏫" },

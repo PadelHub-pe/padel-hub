@@ -19,7 +19,7 @@ export function HeroSection({
   const location = [district, address].filter(Boolean).join(" · ");
 
   return (
-    <section className="relative -mx-4 overflow-hidden bg-zinc-900">
+    <section className="relative overflow-hidden bg-zinc-900">
       {/* Background image */}
       {heroImage && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -35,7 +35,7 @@ export function HeroSection({
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
 
       {/* Content */}
-      <div className="relative flex min-h-[160px] flex-col justify-end px-4 pt-10 pb-5">
+      <div className="container relative flex min-h-[180px] flex-col justify-end pt-12 pb-5">
         <h1 className="font-display text-xl font-bold tracking-tight text-white">
           {name}
         </h1>
