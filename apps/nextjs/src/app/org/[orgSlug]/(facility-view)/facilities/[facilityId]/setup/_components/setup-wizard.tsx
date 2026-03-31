@@ -12,6 +12,7 @@ import { Card, CardContent } from "@wifo/ui/card";
 import { Form } from "@wifo/ui/form";
 
 import type {
+  InfoFormValues,
   ScheduleFormValues,
   SetupStep,
 } from "~/components/facility-setup";
@@ -20,6 +21,7 @@ import {
   SetupComplete,
   StepCourts,
   StepIndicator,
+  StepInfo,
   StepPhotos,
   StepSchedule,
 } from "~/components/facility-setup";
@@ -27,12 +29,25 @@ import { useTRPC } from "~/trpc/react";
 
 // Setup steps
 const SETUP_STEPS: SetupStep[] = [
-  { number: 1, label: "Canchas" },
-  { number: 2, label: "Horarios" },
-  { number: 3, label: "Fotos" },
+  { number: 1, label: "Info" },
+  { number: 2, label: "Canchas" },
+  { number: 3, label: "Horarios" },
+  { number: 4, label: "Fotos" },
 ];
 
-// Step 2: Schedule Schema (no duration — kept as default 90 min)
+// Step 1: Info Schema
+const infoSchema = z.object({
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  address: z.string().min(5, "La dirección debe tener al menos 5 caracteres"),
+  district: z.string().min(2, "El distrito es requerido"),
+  phone: z.string().min(6, "El teléfono debe tener al menos 6 caracteres"),
+  email: z.string().email("Email inválido").or(z.literal("")),
+  allowedDurationMinutes: z
+    .array(z.number())
+    .min(1, "Selecciona al menos una duración"),
+});
+
+// Step 3: Schedule Schema
 const scheduleSchema = z.object({
   operatingHours: z.array(
     z.object({
@@ -53,10 +68,11 @@ interface SetupWizardProps {
 
 /**
  * Compute the first incomplete step based on setup progress.
- * Step 1 = Courts + Pricing, Step 2 = Schedule, Step 3 = Photos (optional).
+ * Step 1 = Info, Step 2 = Courts + Pricing, Step 3 = Schedule, Step 4 = Photos (optional).
  */
 function getInitialStep(
   setupStatus: {
+    hasBasicInfo: boolean;
     hasCourts: boolean;
     hasPricing: boolean;
     hasSchedule: boolean;
@@ -65,13 +81,15 @@ function getInitialStep(
 ): number {
   // Determine the first incomplete step
   let autoStep = 1;
-  if (setupStatus.hasCourts && setupStatus.hasPricing) {
-    autoStep = setupStatus.hasSchedule ? 3 : 2;
+  if (setupStatus.hasBasicInfo) {
+    autoStep = 2;
+    if (setupStatus.hasCourts && setupStatus.hasPricing) {
+      autoStep = setupStatus.hasSchedule ? 4 : 3;
+    }
   }
 
   // If a step was requested (e.g. from banner ?step=N), use it only if reachable
-  if (requestedStep && requestedStep >= 1 && requestedStep <= 3) {
-    // Can navigate to any step up to the auto-detected one
+  if (requestedStep && requestedStep >= 1 && requestedStep <= 4) {
     if (requestedStep <= autoStep) {
       return requestedStep;
     }
@@ -101,6 +119,11 @@ export function SetupWizard({
     trpc.facility.getSetupStatus.queryOptions({ facilityId }),
   );
 
+  // Fetch facility profile for info step pre-fill
+  const { data: facilityProfile } = useQuery(
+    trpc.facility.getProfile.queryOptions({ facilityId }),
+  );
+
   // Fetch current court count for "Siguiente" button gating
   const { data: courts } = useQuery(
     trpc.court.list.queryOptions({ facilityId }),
@@ -124,6 +147,18 @@ export function SetupWizard({
   // Keep courtCount in sync with query data
   const effectiveCourtCount = courts?.length ?? courtCount;
 
+  const infoForm = useForm<InfoFormValues>({
+    resolver: standardSchemaResolver(infoSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      district: "",
+      phone: "",
+      email: "",
+      allowedDurationMinutes: [60, 90],
+    },
+  });
+
   const scheduleForm = useForm<ScheduleFormValues>({
     resolver: standardSchemaResolver(scheduleSchema),
     defaultValues: {
@@ -131,7 +166,25 @@ export function SetupWizard({
     },
   });
 
-  // Pre-fill form with existing operating hours when fetched
+  // Pre-fill info form with existing facility profile
+  useEffect(() => {
+    if (facilityProfile) {
+      const addr = facilityProfile.address.street;
+      infoForm.reset({
+        name: facilityProfile.name,
+        address: addr === "Por configurar" ? "" : addr,
+        district: facilityProfile.address.district,
+        phone: facilityProfile.phone,
+        email: facilityProfile.email,
+        allowedDurationMinutes:
+          facilityProfile.allowedDurationMinutes.length > 0
+            ? facilityProfile.allowedDurationMinutes
+            : [60, 90],
+      });
+    }
+  }, [facilityProfile, infoForm]);
+
+  // Pre-fill schedule form with existing operating hours when fetched
   useEffect(() => {
     if (existingHours) {
       scheduleForm.reset({
@@ -146,6 +199,9 @@ export function SetupWizard({
   }, [existingHours, scheduleForm]);
 
   // tRPC mutations
+  const updateProfile = useMutation(
+    trpc.facility.updateProfile.mutationOptions(),
+  );
   const updateOperatingHours = useMutation(
     trpc.schedule.updateOperatingHours.mutationOptions(),
   );
@@ -160,7 +216,42 @@ export function SetupWizard({
     }),
   );
 
-  const isLoading = updateOperatingHours.isPending || completeSetup.isPending;
+  const isLoading =
+    updateProfile.isPending ||
+    updateOperatingHours.isPending ||
+    completeSetup.isPending;
+
+  async function handleInfoSubmit(values: InfoFormValues) {
+    setGeneralError(null);
+    try {
+      await updateProfile.mutateAsync({
+        facilityId,
+        name: values.name,
+        phone: values.phone,
+        email: values.email ? values.email : "",
+        website: facilityProfile?.website ?? "",
+        description: facilityProfile?.description ?? "",
+        address: {
+          street: values.address,
+          district: values.district,
+          city: "Lima",
+        },
+        amenities: facilityProfile?.amenities ?? [],
+        allowedDurationMinutes: values.allowedDurationMinutes as (
+          | 60
+          | 90
+          | 120
+        )[],
+      });
+      setCurrentStep(2);
+    } catch (error) {
+      setGeneralError(
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error. Intenta nuevamente.",
+      );
+    }
+  }
 
   function handleCourtsNext() {
     setGeneralError(null);
@@ -168,7 +259,7 @@ export function SetupWizard({
       setGeneralError("Debe agregar al menos una cancha para continuar.");
       return;
     }
-    setCurrentStep(2);
+    setCurrentStep(3);
   }
 
   async function handleScheduleSubmit(values: ScheduleFormValues) {
@@ -198,7 +289,7 @@ export function SetupWizard({
           isClosed: oh.isClosed,
         })),
       });
-      setCurrentStep(3);
+      setCurrentStep(4);
     } catch (error) {
       setGeneralError(
         error instanceof Error
@@ -220,11 +311,11 @@ export function SetupWizard({
 
       // Route user to the relevant step based on the error
       if (message.includes("cancha")) {
-        setCurrentStep(1);
-      } else if (message.includes("precio")) {
-        setCurrentStep(1);
-      } else if (message.includes("horarios")) {
         setCurrentStep(2);
+      } else if (message.includes("precio")) {
+        setCurrentStep(2);
+      } else if (message.includes("horarios")) {
+        setCurrentStep(3);
       }
 
       setGeneralError(message);
@@ -233,10 +324,12 @@ export function SetupWizard({
 
   async function handleNext() {
     if (currentStep === 1) {
-      handleCourtsNext();
+      await infoForm.handleSubmit(handleInfoSubmit)();
     } else if (currentStep === 2) {
-      await scheduleForm.handleSubmit(handleScheduleSubmit)();
+      handleCourtsNext();
     } else if (currentStep === 3) {
+      await scheduleForm.handleSubmit(handleScheduleSubmit)();
+    } else if (currentStep === 4) {
       await handleCompleteSetup();
     }
   }
@@ -258,7 +351,7 @@ export function SetupWizard({
   }
 
   const isNextDisabled =
-    isLoading || (currentStep === 1 && effectiveCourtCount < 1);
+    isLoading || (currentStep === 2 && effectiveCourtCount < 1);
 
   const basePath = `/org/${orgSlug}/facilities/${facilityId}`;
 
@@ -322,22 +415,24 @@ export function SetupWizard({
           )}
 
           {currentStep === 1 && (
+            <Form {...infoForm}>
+              <StepInfo control={infoForm.control} />
+            </Form>
+          )}
+          {currentStep === 2 && (
             <StepCourts
               facilityId={facilityId}
               onCourtCountChange={setCourtCount}
             />
           )}
-          {currentStep === 2 && (
+          {currentStep === 3 && (
             <Form {...scheduleForm}>
               <form onSubmit={scheduleForm.handleSubmit(handleScheduleSubmit)}>
-                <StepSchedule
-                  control={scheduleForm.control}
-                  facilityId={facilityId}
-                />
+                <StepSchedule control={scheduleForm.control} />
               </form>
             </Form>
           )}
-          {currentStep === 3 && <StepPhotos facilityId={facilityId} />}
+          {currentStep === 4 && <StepPhotos facilityId={facilityId} />}
         </CardContent>
       </Card>
 
@@ -374,7 +469,7 @@ export function SetupWizard({
         >
           {isLoading ? (
             <LoadingSpinner />
-          ) : currentStep === 3 ? (
+          ) : currentStep === 4 ? (
             <>
               Completar Configuración
               <CheckIcon className="ml-1 h-4 w-4" />

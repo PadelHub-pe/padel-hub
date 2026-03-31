@@ -270,8 +270,8 @@ export function StepCourts({
           </div>
         ))}
 
-        {/* Add Court Card */}
-        {canAddMore && (
+        {/* Add Court Card (only when there are existing courts) */}
+        {canAddMore && courts.length > 0 && (
           <button
             type="button"
             onClick={handleStartAdd}

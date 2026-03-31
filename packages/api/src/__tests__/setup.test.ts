@@ -291,13 +291,14 @@ describe("facility.getSetupStatus", () => {
       expect.objectContaining({
         isComplete: false,
         onboardingCompletedAt: null,
+        hasBasicInfo: true,
         hasCourts: false,
         hasSchedule: false,
         hasPricing: false,
         hasPhotos: false,
         hasAmenities: false,
-        completedSteps: 0,
-        totalSteps: 3,
+        completedSteps: 1,
+        totalSteps: 4,
         canActivate: false,
         steps: expect.objectContaining({
           courts: expect.objectContaining({ completed: false, count: 0 }),
@@ -526,7 +527,7 @@ describe("facility.getSetupStatus", () => {
   // completedSteps / totalSteps
   // -------------------------------------------------------------------------
 
-  it("completedSteps=0 when nothing configured", async () => {
+  it("completedSteps=1 when only basic info configured (default facility)", async () => {
     mockFacility = makeFacility();
     mockCourts = [];
     mockHours = [];
@@ -536,11 +537,11 @@ describe("facility.getSetupStatus", () => {
       facilityId: FACILITY_ID,
     });
 
-    expect(result.completedSteps).toBe(0);
-    expect(result.totalSteps).toBe(3);
+    expect(result.completedSteps).toBe(1); // hasBasicInfo only
+    expect(result.totalSteps).toBe(4);
   });
 
-  it("completedSteps=1 when only courts exist (no pricing)", async () => {
+  it("completedSteps=2 when basic info + courts exist (no pricing)", async () => {
     mockFacility = makeFacility();
     mockCourts = [makeCourt({ id: "c1", priceInCents: null })];
     mockHours = [];
@@ -550,10 +551,10 @@ describe("facility.getSetupStatus", () => {
       facilityId: FACILITY_ID,
     });
 
-    expect(result.completedSteps).toBe(1); // hasCourts only
+    expect(result.completedSteps).toBe(2); // hasBasicInfo + hasCourts
   });
 
-  it("completedSteps=2 when courts with pricing exist", async () => {
+  it("completedSteps=3 when basic info + courts with pricing exist", async () => {
     mockFacility = makeFacility();
     mockCourts = [makeCourt({ id: "c1", priceInCents: 5000 })];
     mockHours = [];
@@ -563,10 +564,10 @@ describe("facility.getSetupStatus", () => {
       facilityId: FACILITY_ID,
     });
 
-    expect(result.completedSteps).toBe(2); // hasCourts + hasPricing
+    expect(result.completedSteps).toBe(3); // hasBasicInfo + hasCourts + hasPricing
   });
 
-  it("completedSteps=3 when courts + pricing + schedule", async () => {
+  it("completedSteps=4 when basic info + courts + pricing + schedule", async () => {
     mockFacility = makeFacility();
     mockCourts = [makeCourt({ id: "c1", priceInCents: 5000 })];
     mockHours = [{ id: "h1" }];
@@ -576,7 +577,7 @@ describe("facility.getSetupStatus", () => {
       facilityId: FACILITY_ID,
     });
 
-    expect(result.completedSteps).toBe(3);
+    expect(result.completedSteps).toBe(4);
   });
 
   // -------------------------------------------------------------------------
@@ -702,13 +703,14 @@ describe("facility.getSetupStatus", () => {
 
     expect(result).toMatchObject({
       isComplete: true,
+      hasBasicInfo: true,
       hasCourts: true,
       hasSchedule: true,
       hasPricing: true,
       hasPhotos: true,
       hasAmenities: true,
-      completedSteps: 3,
-      totalSteps: 3,
+      completedSteps: 4,
+      totalSteps: 4,
       canActivate: true,
     });
   });
@@ -728,12 +730,13 @@ describe("facility.getSetupStatus", () => {
 
     expect(result).toMatchObject({
       isComplete: false,
+      hasBasicInfo: true,
       hasCourts: true,
       hasSchedule: false,
       hasPricing: false,
       hasPhotos: true,
       hasAmenities: false,
-      completedSteps: 1,
+      completedSteps: 2,
       canActivate: false,
     });
   });

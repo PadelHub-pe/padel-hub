@@ -199,6 +199,10 @@ export const facilityRouter = {
         columns: { id: true },
       });
 
+      const hasBasicInfo =
+        facility.address !== "Por configurar" &&
+        facility.address.length > 0 &&
+        facility.phone.length > 0;
       const hasCourts = facilityCourts.length > 0;
       const hasSchedule = facilityHours.length > 0;
       const hasPricing =
@@ -210,15 +214,20 @@ export const facilityRouter = {
       const hasAmenities = (facility.amenities ?? []).length > 0;
       const isComplete = facility.onboardingCompletedAt !== null;
 
-      // P0 steps: courts, schedule, pricing
+      // P0 steps: basic info, courts, schedule, pricing
       const completedSteps =
-        (hasCourts ? 1 : 0) + (hasSchedule ? 1 : 0) + (hasPricing ? 1 : 0);
-      const totalSteps = 3;
-      const canActivate = hasCourts && hasSchedule && hasPricing;
+        (hasBasicInfo ? 1 : 0) +
+        (hasCourts ? 1 : 0) +
+        (hasSchedule ? 1 : 0) +
+        (hasPricing ? 1 : 0);
+      const totalSteps = 4;
+      const canActivate =
+        hasBasicInfo && hasCourts && hasSchedule && hasPricing;
 
       return {
         isComplete,
         onboardingCompletedAt: facility.onboardingCompletedAt,
+        hasBasicInfo,
         hasCourts,
         hasSchedule,
         hasPricing,
