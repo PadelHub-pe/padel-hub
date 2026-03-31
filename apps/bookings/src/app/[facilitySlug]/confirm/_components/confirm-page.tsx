@@ -135,9 +135,6 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
         identifier: cleanIdentifier,
         turnstileToken: turnstileToken || "dev-bypass",
       });
-      // Reset Turnstile for the next use (createBooking)
-      turnstileRef.current?.reset();
-      setTurnstileToken("");
       setStep("otp");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al enviar el código");
@@ -159,14 +156,6 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
 
       if (!result.verified) {
         setOtpError("Código incorrecto. Intenta de nuevo.");
-        return;
-      }
-
-      // Wait for Turnstile token if not ready yet
-      if (turnstileSiteKey && !turnstileToken) {
-        setOtpError(
-          "Espera a que se complete la verificación de seguridad e intenta de nuevo.",
-        );
         return;
       }
 
