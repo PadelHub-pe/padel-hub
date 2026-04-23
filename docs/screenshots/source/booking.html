@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>PadelHub — public booking (player)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+body { background: var(--gray-100); display: flex; justify-content: center; }
+
+.phone {
+  width: 390px;
+  background: white;
+  display: flex; flex-direction: column;
+}
+
+/* Status bar (iOS) */
+.status-bar {
+  height: 44px; padding: 0 22px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding-bottom: 10px; font-size: 15px; font-weight: 600; color: var(--navy);
+}
+
+/* Hero image */
+.hero {
+  height: 180px;
+  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #10B981 130%);
+  position: relative;
+  color: white;
+  padding: 20px 20px 16px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.hero::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 20% 120%, rgba(16,185,129,0.4), transparent 50%);
+  pointer-events: none;
+}
+.hero .facility-tag {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  padding: 4px 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  border-radius: 6px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.hero h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.hero .meta { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+
+/* Section */
+.section { padding: 16px 18px; border-bottom: 1px solid var(--gray-200); }
+.section .title { font-size: 12px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+.date-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.date-chip {
+  min-width: 54px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--gray-50);
+  text-align: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.date-chip .dow { font-size: 10.5px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; letter-spacing: 0.06em; }
+.date-chip .day { font-size: 17px; font-weight: 700; color: var(--navy); margin-top: 2px; line-height: 1; }
+.date-chip.active {
+  background: var(--primary-50);
+  border-color: var(--primary-500);
+}
+.date-chip.active .dow { color: var(--primary-700); }
+
+.court-tabs { display: flex; gap: 6px; }
+.court-tab {
+  padding: 7px 12px; border-radius: 999px;
+  background: var(--gray-100); color: var(--gray-700);
+  font-size: 12.5px; font-weight: 600;
+}
+.court-tab.active { background: var(--navy); color: white; }
+
+.duration { display: flex; gap: 6px; margin-top: 2px; }
+.dur-chip {
+  padding: 7px 12px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600;
+  background: var(--gray-100); color: var(--gray-700);
+}
+.dur-chip.active {
+  background: var(--primary-50); color: var(--primary-700);
+  border: 1px solid var(--primary-500);
+}
+
+.slot-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.slot-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  background: white;
+}
+.slot-card.peak { border-color: #F59E0B; background: #FFFBEB; }
+.slot-card.taken { opacity: 0.45; background: var(--gray-50); }
+.slot-card .time { font-size: 14px; font-weight: 700; color: var(--navy); line-height: 1; }
+.slot-card .price { font-size: 12.5px; font-weight: 600; color: var(--secondary-600); margin-top: 4px; }
+.slot-card .tag { font-size: 10px; font-weight: 600; color: #B45309; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+.slot-card.taken .time { color: var(--gray-500); text-decoration: line-through; text-decoration-thickness: 1px; }
+.slot-card.taken .price { color: var(--gray-500); }
+
+.cta-bar {
+  padding: 14px 18px 22px;
+  border-top: 1px solid var(--gray-200);
+  background: white;
+}
+.cta {
+  width: 100%;
+  padding: 14px;
+  background: var(--secondary-500);
+  color: white;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.cta-hint {
+  text-align: center;
+  font-size: 11.5px; color: var(--gray-500);
+  margin-top: 8px;
+}
+.cta-hint .ws { color: var(--secondary-600); font-weight: 600; }
+
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>●●●● 5G 🔋</span></div>
+
+  <div class="hero">
+    <span class="facility-tag">San Isidro · Indoor</span>
+    <h1>One Padel — Manuel Olguín</h1>
+    <div class="meta">3 canchas · 7am–11pm · 2.4km de ti</div>
+  </div>
+
+  <div class="section">
+    <div class="title">Fecha</div>
+    <div class="date-row">
+      <div class="date-chip"><div class="dow">Vie</div><div class="day">24</div></div>
+      <div class="date-chip active"><div class="dow">Sáb</div><div class="day">25</div></div>
+      <div class="date-chip"><div class="dow">Dom</div><div class="day">26</div></div>
+      <div class="date-chip"><div class="dow">Lun</div><div class="day">27</div></div>
+      <div class="date-chip"><div class="dow">Mar</div><div class="day">28</div></div>
+      <div class="date-chip"><div class="dow">Mié</div><div class="day">29</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="title">Duración</div>
+    <div class="duration">
+      <div class="dur-chip">60 min</div>
+      <div class="dur-chip active">90 min</div>
+      <div class="dur-chip">120 min</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="title">Horarios disponibles — Court 1</div>
+    <div class="slot-grid">
+      <div class="slot-card"><span class="time">7:00</span><span class="price">S/ 90</span></div>
+      <div class="slot-card taken"><span class="time">8:30</span><span class="price">S/ 90</span></div>
+      <div class="slot-card"><span class="time">10:00</span><span class="price">S/ 90</span></div>
+      <div class="slot-card taken"><span class="time">11:30</span><span class="price">S/ 90</span></div>
+      <div class="slot-card peak"><span class="time">17:00</span><span class="price">S/ 130</span><span class="tag">Peak</span></div>
+      <div class="slot-card peak"><span class="time">18:30</span><span class="price">S/ 130</span><span class="tag">Peak</span></div>
+      <div class="slot-card peak"><span class="time">20:00</span><span class="price">S/ 130</span><span class="tag">Peak</span></div>
+      <div class="slot-card"><span class="time">21:30</span><span class="price">S/ 90</span></div>
+      <div class="slot-card"><span class="time">22:00</span><span class="price">S/ 90</span></div>
+    </div>
+  </div>
+
+  <div class="cta-bar">
+    <button class="cta">Reservar 17:00 — S/ 130</button>
+    <div class="cta-hint">Verificamos tu número por <span class="ws">WhatsApp</span> · sin crear cuenta</div>
+  </div>
+</div>
+</body>
+</html>
