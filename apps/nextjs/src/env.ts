@@ -20,6 +20,7 @@ export const env = createEnv({
     POSTGRES_URL: z.url(),
     UPSTASH_REDIS_REST_URL: z.url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+    CRON_SECRET: z.string().min(16).optional(),
   },
 
   /**
