@@ -10,9 +10,12 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 
+import {
+  formatLimaDate,
+  parseLimaDateParam,
+  startOfLimaDay,
+} from "@wifo/api/datetime";
 import { Button } from "@wifo/ui/button";
 import { Input } from "@wifo/ui/input";
 import { Label } from "@wifo/ui/label";
@@ -41,14 +44,13 @@ export function ConfirmPage({ facilitySlug }: ConfirmPageProps) {
   const endTime = searchParams.get("end") ?? "";
 
   const date = useMemo(() => {
-    try {
-      return parseISO(dateParam);
-    } catch {
-      return new Date();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      return parseLimaDateParam(dateParam);
     }
+    return startOfLimaDay(new Date());
   }, [dateParam]);
 
-  const formattedDate = format(date, "EEEE d 'de' MMMM", { locale: es });
+  const formattedDate = formatLimaDate(date, "EEEE d 'de' MMMM");
 
   // Fetch facility for court info
   const { data: facility } = useSuspenseQuery(

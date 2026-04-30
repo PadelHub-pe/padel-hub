@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { startOfDay } from "date-fns";
 
+import { parseLimaDateParam, startOfLimaDay } from "@wifo/api/datetime";
 import { getImageUrl } from "@wifo/images/url";
 
 import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
@@ -64,9 +64,11 @@ export default async function FacilityPage({
   }
 
   // Parse initial date from search params (supports redirects from /book?date=...)
-  const initialDate = dateParam
-    ? startOfDay(new Date(dateParam + "T00:00:00"))
-    : startOfDay(new Date());
+  // Always Lima-zoned so the same instant is produced on server and client.
+  const initialDate =
+    dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+      ? parseLimaDateParam(dateParam)
+      : startOfLimaDay(new Date());
 
   // Prefetch for client component hydration
   prefetch(trpc.publicBooking.getFacility.queryOptions({ slug: facilitySlug }));

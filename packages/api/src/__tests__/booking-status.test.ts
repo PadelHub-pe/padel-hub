@@ -4,6 +4,7 @@ import type {
   BookingForResolution,
   BookingStatus,
 } from "../utils/booking-status";
+import { buildLimaDateTime, parseLimaDateParam } from "../lib/datetime";
 import {
   resolveBookingStatus,
   resolveBookingStatuses,
@@ -13,22 +14,26 @@ import {
 // Factories
 // =============================================================================
 
+const TEST_DAY = parseLimaDateParam("2026-03-12");
+
 function makeBooking(
   overrides?: Partial<BookingForResolution>,
 ): BookingForResolution {
   return {
     id: "booking-1",
     status: "confirmed",
-    date: new Date(2026, 2, 12), // March 12, local time
+    date: TEST_DAY, // 00:00 Lima on 2026-03-12, as a real UTC instant
     startTime: "10:00",
     endTime: "11:30",
     ...overrides,
   };
 }
 
-/** Helper to create a Date at a specific time on 2026-03-12 */
+/** Helper to create a real instant for a specific time on 2026-03-12 (Lima TZ) */
 function timeOn(hours: number, minutes = 0): Date {
-  return new Date(2026, 2, 12, hours, minutes, 0, 0); // March = 2 (0-indexed)
+  const hh = hours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+  return buildLimaDateTime(TEST_DAY, `${hh}:${mm}`);
 }
 
 // =============================================================================

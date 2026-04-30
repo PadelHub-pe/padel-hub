@@ -1,20 +1,12 @@
 "use client";
 
 import {
-  addDays,
-  addMonths,
-  eachDayOfInterval,
-  endOfMonth,
-  format,
-  getDay,
-  isBefore,
-  isSameDay,
-  isSameMonth,
-  startOfDay,
-  startOfMonth,
-} from "date-fns";
-import { es } from "date-fns/locale";
-
+  addLimaDays,
+  formatLimaDate,
+  formatLimaDateParam,
+  startOfLimaDay,
+  startOfLimaMonth,
+} from "@wifo/api/datetime";
 import { cn } from "@wifo/ui";
 
 const MAX_DAYS_AHEAD = 14;
@@ -31,19 +23,19 @@ export function DatePicker({
   onSelectDate,
   className,
 }: DatePickerProps) {
-  const today = startOfDay(new Date());
-  const maxDate = addDays(today, MAX_DAYS_AHEAD);
+  const today = startOfLimaDay(new Date());
+  const todayYmd = formatLimaDateParam(today);
+  const tomorrowYmd = formatLimaDateParam(addLimaDays(today, 1));
+  const maxDate = addLimaDays(today, MAX_DAYS_AHEAD);
+  const maxYmd = formatLimaDateParam(maxDate);
+  const selectedYmd = selectedDate ? formatLimaDateParam(selectedDate) : null;
 
-  // Show quick date buttons for next 7 days
-  const quickDates = eachDayOfInterval({
-    start: today,
-    end: addDays(today, 6),
-  });
+  const quickDates = Array.from({ length: 7 }, (_, i) => addLimaDays(today, i));
 
-  function getDayLabel(date: Date): string {
-    if (isSameDay(date, today)) return "Hoy";
-    if (isSameDay(date, addDays(today, 1))) return "Mañana";
-    return format(date, "EEE", { locale: es });
+  function getDayLabel(ymd: string, date: Date): string {
+    if (ymd === todayYmd) return "Hoy";
+    if (ymd === tomorrowYmd) return "Mañana";
+    return formatLimaDate(date, "EEE");
   }
 
   return (
@@ -54,10 +46,11 @@ export function DatePicker({
         style={{ scrollbarWidth: "none" }}
       >
         {quickDates.map((date) => {
-          const isSelected = selectedDate && isSameDay(selectedDate, date);
+          const ymd = formatLimaDateParam(date);
+          const isSelected = selectedYmd === ymd;
           return (
             <button
-              key={date.toISOString()}
+              key={ymd}
               type="button"
               onClick={() => onSelectDate(date)}
               className={cn(
@@ -67,10 +60,14 @@ export function DatePicker({
                   : "bg-muted hover:bg-muted/80",
               )}
             >
-              <span className="text-xs capitalize">{getDayLabel(date)}</span>
-              <span className="text-lg font-semibold">{format(date, "d")}</span>
               <span className="text-xs capitalize">
-                {format(date, "MMM", { locale: es })}
+                {getDayLabel(ymd, date)}
+              </span>
+              <span className="text-lg font-semibold">
+                {formatLimaDate(date, "d")}
+              </span>
+              <span className="text-xs capitalize">
+                {formatLimaDate(date, "MMM")}
               </span>
             </button>
           );
@@ -80,8 +77,9 @@ export function DatePicker({
       {/* Full calendar below */}
       <MiniCalendar
         today={today}
-        maxDate={maxDate}
-        selectedDate={selectedDate}
+        todayYmd={todayYmd}
+        maxYmd={maxYmd}
+        selectedYmd={selectedYmd}
         onSelectDate={onSelectDate}
       />
     </div>
@@ -94,37 +92,41 @@ export function DatePicker({
 
 function MiniCalendar({
   today,
-  maxDate,
-  selectedDate,
+  todayYmd,
+  maxYmd,
+  selectedYmd,
   onSelectDate,
 }: {
   today: Date;
-  maxDate: Date;
-  selectedDate: Date | null;
+  todayYmd: string;
+  maxYmd: string;
+  selectedYmd: string | null;
   onSelectDate: (date: Date) => void;
 }) {
-  // Always show the month of today
-  const currentMonth = startOfMonth(today);
-  const nextMonth = addMonths(currentMonth, 1);
+  const currentMonth = startOfLimaMonth(today);
+  // Adding 32 days from any month start always lands inside the next month.
+  const nextMonth = startOfLimaMonth(addLimaDays(currentMonth, 32));
 
-  // Show two months if maxDate extends into next month
-  const showNextMonth = !isSameMonth(maxDate, currentMonth);
+  // Show next month if maxDate extends into it
+  const currentMonthYm = formatLimaDate(currentMonth, "yyyy-MM");
+  const maxMonthYm = maxYmd.slice(0, 7);
+  const showNextMonth = maxMonthYm !== currentMonthYm;
 
   return (
     <div className="mt-4 space-y-4">
       <CalendarMonth
         month={currentMonth}
-        today={today}
-        maxDate={maxDate}
-        selectedDate={selectedDate}
+        todayYmd={todayYmd}
+        maxYmd={maxYmd}
+        selectedYmd={selectedYmd}
         onSelectDate={onSelectDate}
       />
       {showNextMonth && (
         <CalendarMonth
           month={nextMonth}
-          today={today}
-          maxDate={maxDate}
-          selectedDate={selectedDate}
+          todayYmd={todayYmd}
+          maxYmd={maxYmd}
+          selectedYmd={selectedYmd}
           onSelectDate={onSelectDate}
         />
       )}
@@ -134,28 +136,36 @@ function MiniCalendar({
 
 function CalendarMonth({
   month,
-  today,
-  maxDate,
-  selectedDate,
+  todayYmd,
+  maxYmd,
+  selectedYmd,
   onSelectDate,
 }: {
   month: Date;
-  today: Date;
-  maxDate: Date;
-  selectedDate: Date | null;
+  todayYmd: string;
+  maxYmd: string;
+  selectedYmd: string | null;
   onSelectDate: (date: Date) => void;
 }) {
-  const monthStart = startOfMonth(month);
-  const monthEnd = endOfMonth(month);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const monthYmd = formatLimaDateParam(month);
+  // Days of this calendar month: walk forward from the 1st until the month flips.
+  const days: Date[] = [];
+  for (let i = 0; i < 31; i++) {
+    const day = addLimaDays(month, i);
+    if (formatLimaDate(day, "yyyy-MM") !== formatLimaDate(month, "yyyy-MM")) {
+      break;
+    }
+    days.push(day);
+  }
 
-  // getDay returns 0=Sun, we want Mon=0
-  const startDayOffset = (getDay(monthStart) + 6) % 7;
+  // Lima day-of-week of the 1st: 0=Sun..6=Sat. Convert to Mon-based offset.
+  const firstDow = Number(formatLimaDate(month, "i")); // ISO 1=Mon..7=Sun
+  const startDayOffset = firstDow - 1;
 
   return (
     <div>
       <h3 className="text-muted-foreground text-sm font-medium capitalize">
-        {format(month, "MMMM yyyy", { locale: es })}
+        {formatLimaDate(month, "MMMM yyyy")}
       </h3>
 
       {/* Weekday headers */}
@@ -174,17 +184,18 @@ function CalendarMonth({
       <div className="grid grid-cols-7 text-center">
         {/* Empty cells for offset */}
         {Array.from({ length: startDayOffset }).map((_, i) => (
-          <div key={`empty-${i}`} />
+          <div key={`empty-${monthYmd}-${i}`} />
         ))}
 
         {days.map((day) => {
-          const isDisabled = isBefore(day, today) || isBefore(maxDate, day);
-          const isSelected = selectedDate && isSameDay(selectedDate, day);
-          const isToday = isSameDay(day, today);
+          const dayYmd = formatLimaDateParam(day);
+          const isDisabled = dayYmd < todayYmd || dayYmd > maxYmd;
+          const isSelected = selectedYmd === dayYmd;
+          const isToday = dayYmd === todayYmd;
 
           return (
             <button
-              key={day.toISOString()}
+              key={dayYmd}
               type="button"
               disabled={isDisabled}
               onClick={() => onSelectDate(day)}
@@ -196,7 +207,7 @@ function CalendarMonth({
                 isToday && !isSelected && "font-bold",
               )}
             >
-              {format(day, "d")}
+              {formatLimaDate(day, "d")}
             </button>
           );
         })}

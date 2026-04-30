@@ -1,8 +1,6 @@
 import { randomBytes } from "crypto";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { addDays, format, startOfDay } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 import { and, desc, eq, gt, gte, lt, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -29,6 +27,14 @@ import type {
 } from "../utils/schedule";
 import { logBookingActivity } from "../lib/booking-activity";
 import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
+import {
+  addLimaDays,
+  formatLimaDate,
+  formatLimaDateParam,
+  limaNow,
+  nowUtc,
+  startOfLimaDay,
+} from "../lib/datetime";
 import { dispatchOtp, getOtpChannel } from "../lib/otp-dispatcher";
 import { checkOtpSendRateLimit } from "../lib/otp-rate-limit";
 import { storeOtpCode, verifyOtpCode } from "../lib/otp-store";
@@ -153,7 +159,7 @@ function calculateBookingPrice(
  * Uses crypto.randomBytes for unpredictable codes (~16.7M combinations).
  */
 function generateBookingCode(): string {
-  const year = new Date().getFullYear();
+  const year = formatLimaDate(nowUtc(), "yyyy");
   const random = randomBytes(4).toString("hex").substring(0, 6).toUpperCase();
   return `PH-${year}-${random}`;
 }
@@ -173,9 +179,9 @@ function requireVerifiedIdentifier(token: string): string {
   return identifier;
 }
 
-/** Format a Date to "YYYY-MM-DD" string. */
+/** Format a Date to "YYYY-MM-DD" string in Lima TZ. */
 function toDateStr(date: Date): string {
-  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+  return formatLimaDateParam(date);
 }
 
 // =============================================================================
@@ -187,8 +193,8 @@ async function fetchScheduleData(
   facilityId: string,
   date: Date,
 ) {
-  const dayStart = startOfDay(date);
-  const dayEnd = startOfDay(addDays(date, 1));
+  const dayStart = startOfLimaDay(date);
+  const dayEnd = addLimaDays(dayStart, 1);
 
   const [hoursList, periodsList, blockedSlotsList, bookingsList] =
     await Promise.all([
@@ -345,12 +351,11 @@ export const publicBookingRouter = {
         await fetchScheduleData(ctx.db, facility.id, input.date);
 
       // Filter out past slots when querying today's availability
-      const LIMA_TZ = "America/Lima";
-      const limaNow = toZonedTime(new Date(), LIMA_TZ);
-      const todayStr = format(limaNow, "yyyy-MM-dd");
+      const limaNowDate = limaNow();
+      const todayStr = formatLimaDateParam(nowUtc());
       const nowMinutes =
         dateStr === todayStr
-          ? limaNow.getHours() * 60 + limaNow.getMinutes()
+          ? limaNowDate.getHours() * 60 + limaNowDate.getMinutes()
           : undefined;
 
       const slots = getAvailableSlots({
@@ -593,8 +598,8 @@ export const publicBookingRouter = {
       //    Prevents double-booking race condition.
       const booking = await ctx.db.transaction(async (tx) => {
         // Check for overlapping active bookings
-        const dayStart = startOfDay(date);
-        const dayEnd = startOfDay(addDays(date, 1));
+        const dayStart = startOfLimaDay(date);
+        const dayEnd = addLimaDays(dayStart, 1);
         const overlapping = await tx.query.bookings.findFirst({
           where: and(
             eq(bookings.courtId, courtId),
@@ -670,17 +675,16 @@ export const publicBookingRouter = {
           performedBy: null,
         });
 
-        // Send WhatsApp confirmation only when using WhatsApp channel
+        // Send WhatsApp confirmation only when using WhatsApp channel.
+        // Format the booking's calendar day in Lima TZ — getUTC* would render
+        // the prior day for Lima evenings.
         if (customerPhone) {
-          const dd = date.getUTCDate().toString().padStart(2, "0");
-          const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
-          const yyyy = date.getUTCFullYear().toString();
           await sendBookingConfirmation({
             phone: customerPhone,
             customerName,
             facilityName: facility.name,
             courtName: court.name,
-            date: `${dd}/${mm}/${yyyy}`,
+            date: formatLimaDate(date, "dd/MM/yyyy"),
             startTime,
             endTime,
             bookingCode: booking.code,
@@ -721,7 +725,7 @@ export const publicBookingRouter = {
       });
 
       // 3. Auto-resolve statuses (confirmed → in_progress → completed)
-      await resolveAndPersistBookingStatuses(ctx.db, bookingsList, new Date());
+      await resolveAndPersistBookingStatuses(ctx.db, bookingsList, nowUtc());
 
       return { bookings: bookingsList };
     }),

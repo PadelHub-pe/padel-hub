@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
+import { parseLimaDateParam } from "@wifo/api/datetime";
+
 import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { ConfirmPage } from "./_components/confirm-page";
 
@@ -33,9 +35,10 @@ export default async function ConfirmBookingPage({
   // Prefetch facility data
   prefetch(trpc.publicBooking.getFacility.queryOptions({ slug: facilitySlug }));
 
-  // Prefetch price if all params are present
-  if (courtId && date && start && end) {
-    const parsedDate = new Date(date + "T00:00:00");
+  // Prefetch price if all params are present.
+  // parseLimaDateParam ensures server and client agree on the same instant.
+  if (courtId && date && start && end && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const parsedDate = parseLimaDateParam(date);
     prefetch(
       trpc.publicBooking.calculatePrice.queryOptions({
         facilityId: facility.id,

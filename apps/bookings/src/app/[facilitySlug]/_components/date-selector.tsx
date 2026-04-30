@@ -1,14 +1,11 @@
 "use client";
 
 import {
-  addDays,
-  eachDayOfInterval,
-  format,
-  isSameDay,
-  startOfDay,
-} from "date-fns";
-import { es } from "date-fns/locale";
-
+  addLimaDays,
+  formatLimaDate,
+  formatLimaDateParam,
+  startOfLimaDay,
+} from "@wifo/api/datetime";
 import { cn } from "@wifo/ui";
 
 const MAX_DAYS_AHEAD = 14;
@@ -22,16 +19,18 @@ export function DateSelector({
   selectedDate,
   onSelectDate,
 }: DateSelectorProps) {
-  const today = startOfDay(new Date());
-  const dates = eachDayOfInterval({
-    start: today,
-    end: addDays(today, MAX_DAYS_AHEAD - 1),
-  });
+  const today = startOfLimaDay(new Date());
+  const dates = Array.from({ length: MAX_DAYS_AHEAD }, (_, i) =>
+    addLimaDays(today, i),
+  );
+  const selectedYmd = formatLimaDateParam(selectedDate);
+  const todayYmd = formatLimaDateParam(today);
+  const tomorrowYmd = formatLimaDateParam(addLimaDays(today, 1));
 
-  function getDayLabel(date: Date): string {
-    if (isSameDay(date, today)) return "Hoy";
-    if (isSameDay(date, addDays(today, 1))) return "Mañana";
-    return format(date, "EEE", { locale: es });
+  function getDayLabel(ymd: string, date: Date): string {
+    if (ymd === todayYmd) return "Hoy";
+    if (ymd === tomorrowYmd) return "Mañana";
+    return formatLimaDate(date, "EEE");
   }
 
   return (
@@ -44,13 +43,14 @@ export function DateSelector({
         style={{ scrollbarWidth: "none" }}
       >
         {dates.map((date) => {
-          const isSelected = isSameDay(selectedDate, date);
+          const ymd = formatLimaDateParam(date);
+          const isSelected = ymd === selectedYmd;
           return (
             <button
-              key={date.toISOString()}
+              key={ymd}
               type="button"
               onClick={() => onSelectDate(date)}
-              aria-label={format(date, "EEEE d 'de' MMMM", { locale: es })}
+              aria-label={formatLimaDate(date, "EEEE d 'de' MMMM")}
               aria-pressed={isSelected}
               className={cn(
                 "flex w-14 flex-none flex-col items-center rounded-xl border py-2 transition-colors",
@@ -60,13 +60,13 @@ export function DateSelector({
               )}
             >
               <span className="text-[11px] leading-none font-medium capitalize">
-                {getDayLabel(date)}
+                {getDayLabel(ymd, date)}
               </span>
               <span className="mt-0.5 text-lg leading-tight font-bold">
-                {format(date, "d")}
+                {formatLimaDate(date, "d")}
               </span>
               <span className="text-[11px] leading-none capitalize opacity-70">
-                {format(date, "MMM", { locale: es })}
+                {formatLimaDate(date, "MMM")}
               </span>
             </button>
           );

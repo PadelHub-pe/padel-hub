@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 
+import { formatLimaDate, parseLimaDateParam } from "@wifo/api/datetime";
 import { cn } from "@wifo/ui";
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
@@ -61,19 +60,20 @@ export function BookingCard({
     variant: "outline" as const,
   };
 
-  const dateStr =
-    typeof booking.date === "string"
-      ? (booking.date as string)
-      : booking.date instanceof Date
-        ? (booking.date.toISOString().split("T")[0] ?? "")
-        : "";
+  // booking.date arrives as either a JS Date (timestamp column) or a YYYY-MM-DD
+  // string (after the schema migration to date column). Either way, we format
+  // using Lima TZ so the rendered day matches what the user picked.
+  const bookingInstant =
+    booking.date instanceof Date
+      ? booking.date
+      : typeof booking.date === "string" &&
+          /^\d{4}-\d{2}-\d{2}/.test(booking.date)
+        ? parseLimaDateParam((booking.date as string).slice(0, 10))
+        : null;
 
-  let formattedDate: string;
-  try {
-    formattedDate = format(parseISO(dateStr), "EEE d MMM", { locale: es });
-  } catch {
-    formattedDate = dateStr;
-  }
+  const formattedDate = bookingInstant
+    ? formatLimaDate(bookingInstant, "EEE d MMM")
+    : "";
 
   async function handleCancel() {
     setCancelError("");

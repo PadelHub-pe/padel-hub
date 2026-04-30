@@ -50,6 +50,7 @@
     }
   },
   "globalEnv": [
+    "TZ",
     "POSTGRES_URL",
     "AUTH_REDIRECT_PROXY_URL",
     "AUTH_SECRET",

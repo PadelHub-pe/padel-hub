@@ -1,19 +1,15 @@
+import { formatLimaDate, limaNow } from "@wifo/api/datetime";
+
 interface DashboardHeaderProps {
   title: string;
   subtitle?: string;
 }
 
 export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
-  // Format today's date in Spanish
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString("es-PE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  // Capitalize first letter
+  const formattedDate = formatLimaDate(
+    limaNow(),
+    "EEEE, d 'de' MMMM 'de' yyyy",
+  );
   const capitalizedDate =
     formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 

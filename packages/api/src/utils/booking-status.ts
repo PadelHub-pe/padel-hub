@@ -6,6 +6,8 @@
  * `in_progress → completed` when now >= endDateTime
  */
 
+import { buildLimaDateTime } from "../lib/datetime";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -38,18 +40,6 @@ export interface StatusTransition {
 // =============================================================================
 
 /**
- * Build a full Date from a booking's date + time string (HH:MM).
- * The booking date is stored as a date (no timezone), so we combine
- * year/month/day from the date with hours/minutes from the time string.
- */
-function buildDateTime(date: Date, time: string): Date {
-  const [hours, minutes] = time.split(":").map(Number) as [number, number];
-  const dt = new Date(date);
-  dt.setHours(hours, minutes, 0, 0);
-  return dt;
-}
-
-/**
  * Resolve the time-based status of a booking.
  *
  * Returns the new status if a transition should occur, or `null` if no change.
@@ -70,8 +60,11 @@ export function resolveBookingStatus(
     return null;
   }
 
-  const startDateTime = buildDateTime(booking.date, booking.startTime);
-  const endDateTime = buildDateTime(booking.date, booking.endTime);
+  // Combine the booking's calendar day with HH:MM time as Lima wall-clock,
+  // returning a real instant. Without this, the prior `setHours` call would
+  // pick the *server's* local hour, firing transitions 5 hours early on UTC runtimes.
+  const startDateTime = buildLimaDateTime(booking.date, booking.startTime);
+  const endDateTime = buildLimaDateTime(booking.date, booking.endTime);
 
   if (status === "confirmed" && now >= startDateTime) {
     // Check if it should jump straight to completed

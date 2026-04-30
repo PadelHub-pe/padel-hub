@@ -1,11 +1,4 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import {
-  addDays,
-  endOfMonth,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
 import { and, asc, count, eq, gte, lt, ne, sum } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -19,6 +12,13 @@ import {
 
 import { verifyFacilityAccess } from "../lib/access-control";
 import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
+import {
+  addLimaDays,
+  nowUtc,
+  startOfLimaDay,
+  startOfLimaMonth,
+  startOfLimaWeek,
+} from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
 import { getLimaDayOfWeek } from "../utils/schedule";
 
@@ -133,9 +133,9 @@ export const calendarRouter = {
       // Verify access with schedule:read permission
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      // Get the day boundaries
-      const dayStart = startOfDay(date);
-      const dayEnd = startOfDay(addDays(date, 1));
+      // Get the day boundaries (Lima TZ)
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
       const dayOfWeek = getLimaDayOfWeek(date);
 
       // Fetch data in parallel
@@ -179,7 +179,7 @@ export const calendarRouter = {
       ]);
 
       // Resolve booking statuses on access
-      const now = new Date();
+      const now = nowUtc();
       const statusMap = await resolveAndPersistBookingStatuses(
         ctx.db,
         bookingsList,
@@ -280,9 +280,9 @@ export const calendarRouter = {
       // Verify access with schedule:read permission
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      // Ensure weekStart is a Monday
-      const mondayStart = startOfWeek(weekStart, { weekStartsOn: 1 });
-      const weekEnd = addDays(mondayStart, 7);
+      // Ensure weekStart is a Monday in Lima TZ
+      const mondayStart = startOfLimaWeek(weekStart);
+      const weekEnd = addLimaDays(mondayStart, 7);
 
       // Fetch data in parallel
       const [courtsList, operatingHoursList, bookingsList, blockedSlotsList] =
@@ -317,7 +317,7 @@ export const calendarRouter = {
         ]);
 
       // Resolve booking statuses on access
-      const now = new Date();
+      const now = nowUtc();
       const statusMap = await resolveAndPersistBookingStatuses(
         ctx.db,
         bookingsList,
@@ -329,7 +329,7 @@ export const calendarRouter = {
 
       // Build days array
       const days = Array.from({ length: 7 }, (_, i) => {
-        const dayDate = addDays(mondayStart, i);
+        const dayDate = addLimaDays(mondayStart, i);
         // Mon=1, Tue=2, ..., Sat=6, Sun=0 — derived from index since we start on Monday
         const dayOfWeek = (i + 1) % 7;
         const dayOperatingHours = getOperatingHoursForDay(
@@ -338,8 +338,8 @@ export const calendarRouter = {
         );
 
         const dayBookings = bookingsList.filter((b) => {
-          const bookingDate = startOfDay(b.date);
-          return bookingDate.getTime() === startOfDay(dayDate).getTime();
+          const bookingDay = startOfLimaDay(b.date);
+          return bookingDay.getTime() === startOfLimaDay(dayDate).getTime();
         });
 
         const activeBookings = dayBookings.filter(
@@ -377,7 +377,8 @@ export const calendarRouter = {
         if (day.operatingHours.isClosed) return acc;
         const dayBookings = bookingsList.filter(
           (b) =>
-            startOfDay(b.date).getTime() === startOfDay(day.date).getTime() &&
+            startOfLimaDay(b.date).getTime() ===
+              startOfLimaDay(day.date).getTime() &&
             (statusMap.get(b.id) ?? b.status) !== "cancelled",
         );
         return (
@@ -450,8 +451,8 @@ export const calendarRouter = {
       // Verify access with schedule:read permission
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const dayStart = startOfDay(date);
-      const dayEnd = startOfDay(addDays(date, 1));
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
       const dayOfWeek = getLimaDayOfWeek(date);
 
       const [courtsList, operatingHoursList, statsResult] = await Promise.all([
@@ -526,8 +527,10 @@ export const calendarRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const monthStart = startOfMonth(month);
-      const monthEnd = startOfDay(addDays(endOfMonth(month), 1));
+      const monthStart = startOfLimaMonth(month);
+      // Adding 32 days from any month start always lands inside the next
+      // calendar month — `startOfLimaMonth` then snaps back to that month's 1st.
+      const monthEnd = startOfLimaMonth(addLimaDays(monthStart, 32));
 
       const rows = await ctx.db
         .selectDistinct({ date: bookings.date })

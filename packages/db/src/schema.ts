@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   integer,
   jsonb,
   numeric,
@@ -373,7 +374,9 @@ export const blockedSlots = pgTable("blocked_slots", {
   courtId: uuid("court_id").references(() => courts.id, {
     onDelete: "cascade",
   }), // null = all courts
-  date: timestamp("date", { mode: "date" }).notNull(),
+  // `date` (Postgres DATE) — calendar day in Lima TZ. Stored without a time
+  // component so timezone re-interpretation cannot drift the row.
+  date: date("date", { mode: "date" }).notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
   reason: blockedReasonEnum("reason").notNull(),
@@ -449,8 +452,9 @@ export const bookings = pgTable("bookings", {
     .notNull()
     .references(() => facilities.id, { onDelete: "cascade" }),
 
-  // Booking time
-  date: timestamp("date", { mode: "date" }).notNull(),
+  // Booking time — `date` (Postgres DATE) is the Lima calendar day.
+  // `startTime` / `endTime` are the Lima wall-clock HH:MM:SS the booking covers.
+  date: date("date", { mode: "date" }).notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
 

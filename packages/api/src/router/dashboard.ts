@@ -1,17 +1,16 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import {
-  addDays,
-  startOfDay,
-  startOfMonth,
-  subDays,
-  subMonths,
-} from "date-fns";
 import { and, asc, count, eq, gte, lt, ne, sum } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { bookings } from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
+import {
+  addLimaDays,
+  nowUtc,
+  startOfLimaDay,
+  startOfLimaMonth,
+} from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -53,12 +52,12 @@ export const dashboardRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-      const now = new Date();
-      const today = startOfDay(now);
-      const tomorrow = addDays(today, 1);
-      const yesterday = subDays(today, 1);
-      const thisMonthStart = startOfMonth(now);
-      const lastMonthStart = startOfMonth(subMonths(now, 1));
+      const now = nowUtc();
+      const today = startOfLimaDay(now);
+      const tomorrow = addLimaDays(today, 1);
+      const yesterday = addLimaDays(today, -1);
+      const thisMonthStart = startOfLimaMonth(now);
+      const lastMonthStart = startOfLimaMonth(addLimaDays(thisMonthStart, -1));
 
       // --- Today's bookings count (non-cancelled) ---
       const [todayCountResult] = await ctx.db
@@ -191,9 +190,9 @@ export const dashboardRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-      const now = new Date();
-      const today = startOfDay(now);
-      const tomorrow = addDays(today, 1);
+      const now = nowUtc();
+      const today = startOfLimaDay(now);
+      const tomorrow = addLimaDays(today, 1);
 
       // Fetch today's non-cancelled bookings with court + user relations
       const todayBookings = await ctx.db.query.bookings.findMany({

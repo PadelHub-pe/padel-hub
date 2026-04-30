@@ -1,6 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { addDays, startOfDay } from "date-fns";
 import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -13,6 +12,7 @@ import {
 } from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
+import { addLimaDays, startOfLimaDay } from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
 import { getLimaDayOfWeek } from "../utils/schedule";
 
@@ -430,8 +430,8 @@ export const scheduleRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const dayStart = startOfDay(date);
-      const dayEnd = addDays(dayStart, 1);
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
 
       const slots = await ctx.db.query.blockedSlots.findMany({
         where: and(
@@ -502,8 +502,8 @@ export const scheduleRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const dayStart = startOfDay(date);
-      const dayEnd = addDays(dayStart, 1);
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
 
       // Find active bookings that overlap with the proposed block
       const conflicting = await ctx.db.query.bookings.findMany({
@@ -567,7 +567,7 @@ export const scheduleRouter = {
         .values({
           facilityId,
           courtId: courtId ?? null,
-          date: startOfDay(date),
+          date: startOfLimaDay(date),
           startTime,
           endTime,
           reason,
@@ -616,8 +616,8 @@ export const scheduleRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const dayStart = startOfDay(date);
-      const dayEnd = addDays(dayStart, 1);
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
       const dayOfWeek = getLimaDayOfWeek(date);
 
       // Fetch all data in parallel

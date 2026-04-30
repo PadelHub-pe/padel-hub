@@ -9,6 +9,10 @@ import { RedirectToast } from "~/components/redirect-toast";
 import { api, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { SetupBanner } from "./_components/setup-banner";
 
+// "Today" must be re-evaluated per-request — without this, the rendered date
+// can be pinned to the moment of the static render. See docs/specs/bug-tz-lima.md.
+export const dynamic = "force-dynamic";
+
 interface FacilityDashboardPageProps {
   params: Promise<{ orgSlug: string; facilityId: string }>;
 }

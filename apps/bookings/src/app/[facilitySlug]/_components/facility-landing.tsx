@@ -4,8 +4,8 @@ import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { format, startOfDay } from "date-fns";
 
+import { formatLimaDateParam, startOfLimaDay } from "@wifo/api/datetime";
 import { Button } from "@wifo/ui/button";
 
 import { useTRPC } from "~/trpc/react";
@@ -44,7 +44,7 @@ export function FacilityLanding({
   const amenities = facility.amenities ?? [];
 
   const [selectedDate, setSelectedDate] = useState<Date>(
-    () => initialDate ?? startOfDay(new Date()),
+    () => initialDate ?? startOfLimaDay(new Date()),
   );
   const [selectedSlot, setSelectedSlot] = useState<SlotItem | null>(null);
 
@@ -63,7 +63,7 @@ export function FacilityLanding({
 
   function handleContinue() {
     if (!selectedSlot) return;
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const dateStr = formatLimaDateParam(selectedDate);
     const params = new URLSearchParams({
       courtId: selectedSlot.courtId,
       date: dateStr,

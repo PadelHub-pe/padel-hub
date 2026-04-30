@@ -493,22 +493,40 @@ Cloudflare Images integration for direct browser uploads and server-side managem
 
 ### Date Handling
 
-- Use `date-fns` and `date-fns-tz` for all date manipulation and formatting
-- Default timezone: `America/Lima` (PET, UTC-5)
-- Store dates in database as timestamps
-- Format dates for display using `format()` from date-fns with Spanish locale
-- Use `startOfDay()`, `endOfDay()`, `addDays()` for date range calculations
-- Example:
+PadelHub is a single-locale product (America/Lima, UTC-5, no DST). Vercel runtimes default to UTC and `TZ` is a reserved env var on the platform — you cannot pin the runtime TZ. Two layers enforce zone-correctness instead:
 
-  ```typescript
-  import { addDays, format, startOfDay } from "date-fns";
-  import { toZonedTime } from "date-fns-tz";
-  import { es } from "date-fns/locale";
+1. **Postgres session TZ**: `packages/db/src/client.ts` opens connections with `connection: { timezone: "America/Lima" }`. Postgres `now()`, `current_date`, and `timestamp` casts are aligned with Lima.
+2. **Zoned helpers**: `@wifo/api/datetime` exports the canonical primitives. **Use these everywhere a date is computed, parsed, or formatted.** Do not call raw `new Date()`, `startOfDay`, `setHours`, `parseISO`, `format(date, ...)` for user-visible dates — they run in UTC on Vercel.
 
-  const TIMEZONE = "America/Lima";
-  const limaDate = toZonedTime(new Date(), TIMEZONE);
-  const formatted = format(limaDate, "dd/MM/yyyy", { locale: es });
-  ```
+Local dev: `TZ=America/Lima` in `.env` matches dev behavior to production semantics. (Works locally because Node honors `TZ` at process start; on Vercel it's a no-op since the platform reserves the name.)
+
+Available helpers (`packages/api/src/lib/datetime.ts`):
+
+```typescript
+import {
+  LIMA_TZ,
+  limaNow,             // Date "now" rebased to Lima wall-clock (use for date-of-day arithmetic only)
+  nowUtc,              // current real instant; wrap for testability
+  startOfLimaDay,      // 00:00 PET as a real instant
+  endOfLimaDay,        // start of next Lima day (exclusive upper bound)
+  startOfLimaMonth,    // 00:00 PET on the 1st of the Lima month
+  startOfLimaWeek,     // 00:00 PET on the Monday of the Lima ISO week
+  addLimaDays,         // calendar-day arithmetic, DST-stable
+  parseLimaDateParam,  // "YYYY-MM-DD" URL param → real instant
+  formatLimaDate,      // formatInTimeZone, Spanish locale by default
+  formatLimaDateParam, // Date → "YYYY-MM-DD" string in Lima TZ
+  buildLimaDateTime,   // (date, "HH:MM") → real instant for that Lima wall-clock moment
+} from "@wifo/api/datetime";
+```
+
+Patterns:
+
+- **DB queries for "today"**: `gte(bookings.date, startOfLimaDay(nowUtc()))` and `lt(bookings.date, addLimaDays(startOfLimaDay(nowUtc()), 1))`.
+- **URL date params**: `parseLimaDateParam(searchParams.get("date") ?? formatLimaDateParam(new Date()))`.
+- **User-facing date formatting**: `formatLimaDate(d, "EEEE, d 'de' MMMM 'de' yyyy")` — never `format(d, ...)` from `date-fns` on the server, since that uses host TZ.
+- **Booking start/end instants**: `buildLimaDateTime(booking.date, booking.startTime)` — never `new Date(d); dt.setHours(h, m)`.
+
+Schema: calendar-day columns (`bookings.date`, `blocked_slots.date`) are Postgres `DATE`, not `timestamp`. Real-instant columns (`*_at`) remain `timestamp`. Tests run under `TZ=UTC` (vitest setup) so production zone-correctness is proven independent of host TZ.
 
 ### Tables (Web Dashboard)
 

@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 
+import { formatLimaDate, parseLimaDateParam } from "@wifo/api/datetime";
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 import { Separator } from "@wifo/ui/separator";
@@ -65,9 +64,14 @@ export function SuccessPage({ facilitySlug }: SuccessPageProps) {
     );
   }
 
-  const formattedDate = booking
-    ? format(parseISO(booking.date), "EEEE d 'de' MMMM", { locale: es })
-    : "";
+  // booking.date is "YYYY-MM-DD" (Lima calendar day) — render in Lima TZ.
+  const formattedDate =
+    booking && /^\d{4}-\d{2}-\d{2}/.test(booking.date)
+      ? formatLimaDate(
+          parseLimaDateParam(booking.date.slice(0, 10)),
+          "EEEE d 'de' MMMM",
+        )
+      : "";
 
   return (
     <main className="container pb-8">

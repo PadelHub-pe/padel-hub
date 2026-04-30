@@ -10,6 +10,10 @@
     "./lib/keep-alive": {
       "types": "./dist/lib/keep-alive.d.ts",
       "default": "./src/lib/keep-alive.ts"
+    },
+    "./datetime": {
+      "types": "./dist/lib/datetime.d.ts",
+      "default": "./src/lib/datetime.ts"
     }
   },
   "license": "MIT",

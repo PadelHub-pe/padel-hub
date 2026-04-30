@@ -1,6 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { addDays, startOfDay } from "date-fns";
 import {
   and,
   asc,
@@ -41,6 +40,13 @@ import {
   resolveAndPersistBookingStatuses,
   resolveAndPersistSingleBookingStatus,
 } from "../lib/booking-status-persist";
+import {
+  addLimaDays,
+  formatLimaDate,
+  formatLimaDateParam,
+  nowUtc,
+  startOfLimaDay,
+} from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
 import {
   getLimaDayOfWeek,
@@ -154,7 +160,7 @@ const calculatePriceSchema = z.object({
  * Generate a unique booking code in format PH-YYYY-XXXX
  */
 function generateBookingCode(): string {
-  const year = new Date().getFullYear();
+  const year = formatLimaDate(nowUtc(), "yyyy");
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `PH-${year}-${random}`;
 }
@@ -266,13 +272,13 @@ export const bookingRouter = {
 
       // Date range filter takes precedence over single date
       if (dateRange) {
-        const rangeStart = startOfDay(dateRange.start);
-        const rangeEnd = startOfDay(addDays(dateRange.end, 1));
+        const rangeStart = startOfLimaDay(dateRange.start);
+        const rangeEnd = addLimaDays(startOfLimaDay(dateRange.end), 1);
         conditions.push(gte(bookings.date, rangeStart));
         conditions.push(lt(bookings.date, rangeEnd));
       } else if (date) {
-        const dayStart = startOfDay(date);
-        const dayEnd = startOfDay(addDays(date, 1));
+        const dayStart = startOfLimaDay(date);
+        const dayEnd = addLimaDays(dayStart, 1);
         conditions.push(gte(bookings.date, dayStart));
         conditions.push(lt(bookings.date, dayEnd));
       }
@@ -327,7 +333,7 @@ export const bookingRouter = {
       });
 
       // Resolve time-based status transitions (confirmed → in_progress → completed)
-      const now = new Date();
+      const now = nowUtc();
       const statusMap = await resolveAndPersistBookingStatuses(
         ctx.db,
         bookingsList,
@@ -384,7 +390,7 @@ export const bookingRouter = {
       }
 
       // Resolve time-based status transition
-      const now = new Date();
+      const now = nowUtc();
       const newStatus = await resolveAndPersistSingleBookingStatus(
         ctx.db,
         booking,
@@ -595,8 +601,8 @@ export const bookingRouter = {
       }
 
       // Check for overlapping active bookings on same court + date + time range
-      const dayStart = startOfDay(input.date);
-      const dayEnd = startOfDay(addDays(input.date, 1));
+      const dayStart = startOfLimaDay(input.date);
+      const dayEnd = addLimaDays(dayStart, 1);
       const overlapping = await ctx.db.query.bookings.findFirst({
         where: and(
           eq(bookings.courtId, input.courtId),
@@ -617,7 +623,7 @@ export const bookingRouter = {
 
       // --- Server-side price calculation ---
       const dayOfWeek = getLimaDayOfWeek(input.date);
-      const dateStr = `${input.date.getFullYear()}-${(input.date.getMonth() + 1).toString().padStart(2, "0")}-${input.date.getDate().toString().padStart(2, "0")}`;
+      const dateStr = formatLimaDateParam(input.date);
 
       const [hoursList, periodsList, blockedSlotsList, facility] =
         await Promise.all([
@@ -769,9 +775,9 @@ export const bookingRouter = {
       // Verify access with booking:read permission
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-      // Get today's date range
-      const today = startOfDay(new Date());
-      const tomorrow = addDays(today, 1);
+      // Get today's date range (Lima TZ)
+      const today = startOfLimaDay(nowUtc());
+      const tomorrow = addLimaDays(today, 1);
 
       // Today's bookings count
       const [todayResult] = await ctx.db
@@ -1056,8 +1062,8 @@ export const bookingRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-      const dayStart = startOfDay(date);
-      const dayEnd = startOfDay(addDays(date, 1));
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
       const dayOfWeek = getLimaDayOfWeek(date);
 
       const [
@@ -1169,10 +1175,10 @@ export const bookingRouter = {
         });
       }
 
-      const dayStart = startOfDay(date);
-      const dayEnd = startOfDay(addDays(date, 1));
+      const dayStart = startOfLimaDay(date);
+      const dayEnd = addLimaDays(dayStart, 1);
       const dayOfWeek = getLimaDayOfWeek(date);
-      const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+      const dateStr = formatLimaDateParam(date);
 
       const [hoursList, periodsList, blockedSlotsList, facility] =
         await Promise.all([
