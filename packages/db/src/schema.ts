@@ -50,8 +50,10 @@ export const organizations = pgTable("organizations", {
   description: text("description"),
   billingEnabled: boolean("billing_enabled").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -79,8 +81,10 @@ export const organizationMembers = pgTable(
     role: orgRoleEnum("role").notNull().default("staff"),
     // For facility_manager/staff: which facilities they can access (null = all)
     facilityIds: jsonb("facility_ids").$type<string[]>().default([]),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
@@ -128,9 +132,11 @@ export const organizationInvites = pgTable("organization_invites", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   token: varchar("token", { length: 64 }).notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
-  acceptedAt: timestamp("accepted_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const organizationInvitesRelations = relations(
@@ -151,7 +157,7 @@ export const Post = pgTable("post", (t) => ({
   id: t.uuid().notNull().primaryKey().defaultRandom(),
   title: t.varchar({ length: 256 }).notNull(),
   content: t.text().notNull(),
-  createdAt: t.timestamp().defaultNow().notNull(),
+  createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
     .$onUpdateFn(() => sql`now()`),
@@ -203,9 +209,13 @@ export const facilities = pgTable(
       .default([60, 90]),
     isActive: boolean("is_active").default(false).notNull(),
     // Onboarding tracking (migrated from ownerAccounts)
-    onboardingCompletedAt: timestamp("onboarding_completed_at"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
+    onboardingCompletedAt: timestamp("onboarding_completed_at", {
+      withTimezone: true,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
@@ -300,8 +310,10 @@ export const courts = pgTable("courts", {
   peakPriceInCents: integer("peak_price_in_cents"),
   imageUrl: text("image_url"),
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -353,8 +365,10 @@ export const peakPeriods = pgTable("peak_periods", {
   endTime: time("end_time").notNull(),
   markupPercent: integer("markup_percent").notNull().default(25),
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -389,7 +403,9 @@ export const blockedSlots = pgTable("blocked_slots", {
   createdBy: text("created_by").references(() => user.id, {
     onDelete: "set null",
   }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const blockedSlotsRelations = relations(blockedSlots, ({ one }) => ({
@@ -474,7 +490,7 @@ export const bookings = pgTable("bookings", {
   // Cancellation
   cancelledBy: cancelledByEnum("cancelled_by"),
   cancellationReason: text("cancellation_reason"),
-  cancelledAt: timestamp("cancelled_at"),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
 
   // Customer info (for manual/walk-in bookings)
   customerName: varchar("customer_name", { length: 100 }),
@@ -484,9 +500,11 @@ export const bookings = pgTable("bookings", {
   // Meta
   notes: text("notes"),
   isManualBooking: boolean("is_manual_booking").default(false).notNull(),
-  confirmedAt: timestamp("confirmed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
@@ -528,7 +546,9 @@ export const bookingPlayers = pgTable(
     guestName: varchar("guest_name", { length: 100 }),
     guestEmail: varchar("guest_email", { length: 255 }),
     guestPhone: varchar("guest_phone", { length: 20 }),
-    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     unique().on(table.bookingId, table.userId),
@@ -574,7 +594,9 @@ export const bookingActivity = pgTable("booking_activity", {
   performedBy: text("performed_by").references(() => user.id, {
     onDelete: "set null",
   }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const bookingActivityRelations = relations(
@@ -741,12 +763,14 @@ export const accessRequests = pgTable(
     courtCount: integer("court_count"),
     phone: varchar("phone", { length: 20 }),
     status: accessRequestStatusEnum("status").notNull().default("pending"),
-    reviewedAt: timestamp("reviewed_at"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewedBy: text("reviewed_by").references(() => user.id, {
       onDelete: "set null",
     }),
     notes: text("notes"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (t) => [unique("access_requests_email_type_unique").on(t.email, t.type)],
 );
@@ -771,7 +795,9 @@ export const platformAdmins = pgTable("platform_admins", {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const platformAdminsRelations = relations(platformAdmins, ({ one }) => ({
