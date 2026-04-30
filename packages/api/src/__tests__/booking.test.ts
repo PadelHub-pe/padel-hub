@@ -84,7 +84,7 @@ function makeBooking(overrides?: Record<string, unknown>) {
     code: "PH-2026-AB12",
     facilityId: FACILITY_ID,
     courtId: COURT_ID,
-    date: new Date("2026-03-15"),
+    date: "2026-03-15",
     startTime: "10:00:00",
     endTime: "11:00:00",
     priceInCents: 5000,

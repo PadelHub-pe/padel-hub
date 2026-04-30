@@ -52,7 +52,7 @@ function makeBooking(overrides?: Record<string, unknown>) {
     code: "PH-2026-AB12",
     facilityId: FACILITY_ID,
     courtId: COURT_A_ID,
-    date: new Date("2026-03-12"),
+    date: "2026-03-12",
     startTime: "10:00:00",
     endTime: "11:00:00",
     priceInCents: 5000,
@@ -328,7 +328,7 @@ describe("booking.list", () => {
     });
 
     it("filters bookings within date range", async () => {
-      const booking = makeBooking({ date: new Date("2026-03-15") });
+      const booking = makeBooking({ date: "2026-03-15" });
       const db = createMockDb({ bookings: [booking] });
       const caller = authedCaller(db);
 

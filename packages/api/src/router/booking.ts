@@ -45,7 +45,6 @@ import {
   formatLimaDate,
   formatLimaDateParam,
   nowUtc,
-  startOfLimaDay,
 } from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
 import {
@@ -270,15 +269,16 @@ export const bookingRouter = {
         conditions.push(inArray(bookings.status, status));
       }
 
-      // Date range filter takes precedence over single date
+      // Date range filter takes precedence over single date.
+      // bookings.date is a YYYY-MM-DD string; compare against Lima calendar days.
       if (dateRange) {
-        const rangeStart = startOfLimaDay(dateRange.start);
-        const rangeEnd = addLimaDays(startOfLimaDay(dateRange.end), 1);
+        const rangeStart = formatLimaDateParam(dateRange.start);
+        const rangeEnd = formatLimaDateParam(addLimaDays(dateRange.end, 1));
         conditions.push(gte(bookings.date, rangeStart));
         conditions.push(lt(bookings.date, rangeEnd));
       } else if (date) {
-        const dayStart = startOfLimaDay(date);
-        const dayEnd = addLimaDays(dayStart, 1);
+        const dayStart = formatLimaDateParam(date);
+        const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
         conditions.push(gte(bookings.date, dayStart));
         conditions.push(lt(bookings.date, dayEnd));
       }
@@ -601,8 +601,8 @@ export const bookingRouter = {
       }
 
       // Check for overlapping active bookings on same court + date + time range
-      const dayStart = startOfLimaDay(input.date);
-      const dayEnd = addLimaDays(dayStart, 1);
+      const dayStart = formatLimaDateParam(input.date);
+      const dayEnd = formatLimaDateParam(addLimaDays(input.date, 1));
       const overlapping = await ctx.db.query.bookings.findFirst({
         where: and(
           eq(bookings.courtId, input.courtId),
@@ -713,7 +713,7 @@ export const bookingRouter = {
           code,
           courtId: input.courtId,
           facilityId,
-          date: input.date,
+          date: formatLimaDateParam(input.date),
           startTime: input.startTime,
           endTime: input.endTime,
           priceInCents,
@@ -776,8 +776,8 @@ export const bookingRouter = {
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
       // Get today's date range (Lima TZ)
-      const today = startOfLimaDay(nowUtc());
-      const tomorrow = addLimaDays(today, 1);
+      const today = formatLimaDateParam(nowUtc());
+      const tomorrow = formatLimaDateParam(addLimaDays(nowUtc(), 1));
 
       // Today's bookings count
       const [todayResult] = await ctx.db
@@ -1062,8 +1062,8 @@ export const bookingRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
-      const dayStart = startOfLimaDay(date);
-      const dayEnd = addLimaDays(dayStart, 1);
+      const dayStart = formatLimaDateParam(date);
+      const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
       const dayOfWeek = getLimaDayOfWeek(date);
 
       const [
@@ -1175,8 +1175,8 @@ export const bookingRouter = {
         });
       }
 
-      const dayStart = startOfLimaDay(date);
-      const dayEnd = addLimaDays(dayStart, 1);
+      const dayStart = formatLimaDateParam(date);
+      const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
       const dayOfWeek = getLimaDayOfWeek(date);
       const dateStr = formatLimaDateParam(date);
 

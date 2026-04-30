@@ -33,7 +33,6 @@ import {
   formatLimaDateParam,
   limaNow,
   nowUtc,
-  startOfLimaDay,
 } from "../lib/datetime";
 import { dispatchOtp, getOtpChannel } from "../lib/otp-dispatcher";
 import { checkOtpSendRateLimit } from "../lib/otp-rate-limit";
@@ -193,8 +192,8 @@ async function fetchScheduleData(
   facilityId: string,
   date: Date,
 ) {
-  const dayStart = startOfLimaDay(date);
-  const dayEnd = addLimaDays(dayStart, 1);
+  const dayStart = formatLimaDateParam(date);
+  const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
 
   const [hoursList, periodsList, blockedSlotsList, bookingsList] =
     await Promise.all([
@@ -598,8 +597,8 @@ export const publicBookingRouter = {
       //    Prevents double-booking race condition.
       const booking = await ctx.db.transaction(async (tx) => {
         // Check for overlapping active bookings
-        const dayStart = startOfLimaDay(date);
-        const dayEnd = addLimaDays(dayStart, 1);
+        const dayStart = formatLimaDateParam(date);
+        const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
         const overlapping = await tx.query.bookings.findFirst({
           where: and(
             eq(bookings.courtId, courtId),
@@ -637,7 +636,7 @@ export const publicBookingRouter = {
             code,
             courtId,
             facilityId,
-            date,
+            date: formatLimaDateParam(date),
             startTime,
             endTime,
             priceInCents,

@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { addDays, startOfDay, startOfMonth } from "date-fns";
+import { addDays } from "date-fns";
 import { and, count, eq, gte, inArray, lt, ne, sum } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -15,6 +15,12 @@ import {
 } from "@wifo/db/schema";
 import { sendOrganizationInvite } from "@wifo/email";
 
+import {
+  addLimaDays,
+  formatLimaDateParam,
+  nowUtc,
+  startOfLimaMonth,
+} from "../lib/datetime";
 import { insertDefaultOperatingHours } from "../lib/default-operating-hours";
 import { generateUniqueFacilitySlug } from "../lib/slugify";
 import { protectedProcedure } from "../trpc";
@@ -229,12 +235,12 @@ export const orgRouter = {
         );
       }
 
-      // Get today's date range
-      const today = startOfDay(new Date());
-      const tomorrow = addDays(today, 1);
+      // Get today's date range (Lima TZ; bookings.date is YYYY-MM-DD)
+      const today = formatLimaDateParam(nowUtc());
+      const tomorrow = formatLimaDateParam(addLimaDays(nowUtc(), 1));
 
       // Get this month's date range
-      const monthStart = startOfMonth(new Date());
+      const monthStart = formatLimaDateParam(startOfLimaMonth(nowUtc()));
 
       // Calculate stats for each facility
       const facilitiesWithStats = await Promise.all(
@@ -348,10 +354,12 @@ export const orgRouter = {
         };
       }
 
-      // Get this month's date range
-      const today = new Date();
-      const monthStart = startOfMonth(today);
-      const lastMonthStart = startOfMonth(addDays(monthStart, -1));
+      // Get this month's date range (Lima TZ; bookings.date is YYYY-MM-DD)
+      const monthStartDate = startOfLimaMonth(nowUtc());
+      const monthStart = formatLimaDateParam(monthStartDate);
+      const lastMonthStart = formatLimaDateParam(
+        startOfLimaMonth(addLimaDays(monthStartDate, -1)),
+      );
 
       // This month's bookings and revenue
       const [currentMonthResult] = await ctx.db

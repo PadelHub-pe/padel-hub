@@ -622,7 +622,7 @@ describe("calendar.getWeekView", () => {
         id: "b1",
         priceInCents: 5000,
         status: "confirmed",
-        date: new Date("2026-03-18"),
+        date: "2026-03-18",
       }),
       court,
       user: null,
@@ -633,7 +633,7 @@ describe("calendar.getWeekView", () => {
         id: "b2",
         priceInCents: 3000,
         status: "cancelled",
-        date: new Date("2026-03-18"),
+        date: "2026-03-18",
       }),
       court,
       user: null,
@@ -796,9 +796,9 @@ describe("calendar.getMonthBookingDates", () => {
     const db = createMockDb();
     // Mock the select chain for getMonthBookingDates
     const mockRows = [
-      { date: new Date("2026-03-10") },
-      { date: new Date("2026-03-15") },
-      { date: new Date("2026-03-20") },
+      { date: "2026-03-10" },
+      { date: "2026-03-15" },
+      { date: "2026-03-20" },
     ];
     db.selectDistinct = vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
@@ -814,9 +814,7 @@ describe("calendar.getMonthBookingDates", () => {
     });
 
     expect(result.dates).toHaveLength(3);
-    expect(result.dates.map((d: Date) => d.toISOString().slice(0, 10))).toEqual(
-      ["2026-03-10", "2026-03-15", "2026-03-20"],
-    );
+    expect(result.dates).toEqual(["2026-03-10", "2026-03-15", "2026-03-20"]);
   });
 
   it("returns empty array when no bookings exist", async () => {

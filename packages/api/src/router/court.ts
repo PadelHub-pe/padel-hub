@@ -1,12 +1,12 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { addDays, startOfDay } from "date-fns";
 import { and, count, eq, gte, lt } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { bookings, courts } from "@wifo/db/schema";
 
 import { verifyFacilityAccess } from "../lib/access-control";
+import { addLimaDays, formatLimaDateParam, nowUtc } from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
 
 // =============================================================================
@@ -77,9 +77,9 @@ export const courtRouter = {
       // Verify access with court:read permission
       await verifyFacilityAccess(ctx, facilityId, "court:read");
 
-      // Get today's date range
-      const today = startOfDay(new Date());
-      const tomorrow = startOfDay(addDays(new Date(), 1));
+      // Get today's date range (Lima TZ; bookings.date is YYYY-MM-DD)
+      const today = formatLimaDateParam(nowUtc());
+      const tomorrow = formatLimaDateParam(addLimaDays(nowUtc(), 1));
 
       const courtsList = await ctx.db.query.courts.findMany({
         where: eq(courts.facilityId, facilityId),
@@ -125,9 +125,9 @@ export const courtRouter = {
       // Verify access with court:read permission
       await verifyFacilityAccess(ctx, facilityId, "court:read");
 
-      // Get today's date range
-      const today = startOfDay(new Date());
-      const tomorrow = startOfDay(addDays(new Date(), 1));
+      // Get today's date range (Lima TZ; bookings.date is YYYY-MM-DD)
+      const today = formatLimaDateParam(nowUtc());
+      const tomorrow = formatLimaDateParam(addLimaDays(nowUtc(), 1));
 
       const courtsList = await ctx.db.query.courts.findMany({
         where: eq(courts.facilityId, facilityId),

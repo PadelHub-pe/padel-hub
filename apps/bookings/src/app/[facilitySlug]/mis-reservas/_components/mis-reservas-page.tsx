@@ -416,11 +416,10 @@ function VerifiedView({
     (b) => b.status !== "confirmed" && b.status !== "in_progress",
   );
 
-  // Sort upcoming by date ASC (soonest first)
+  // Sort upcoming by date ASC (soonest first). Date is a YYYY-MM-DD string,
+  // which is lexicographically equivalent to chronological order.
   upcoming.sort((a, b) => {
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
-    if (dateA !== dateB) return dateA - dateB;
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
     return a.startTime.localeCompare(b.startTime);
   });
 

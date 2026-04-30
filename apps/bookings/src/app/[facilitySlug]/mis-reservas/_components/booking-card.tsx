@@ -33,7 +33,7 @@ interface BookingCardProps {
   booking: {
     id: string;
     code: string;
-    date: Date;
+    date: string; // YYYY-MM-DD Lima calendar day; see docs/dev/datetime.md
     startTime: string;
     endTime: string;
     priceInCents: number;
@@ -60,20 +60,10 @@ export function BookingCard({
     variant: "outline" as const,
   };
 
-  // booking.date arrives as either a JS Date (timestamp column) or a YYYY-MM-DD
-  // string (after the schema migration to date column). Either way, we format
-  // using Lima TZ so the rendered day matches what the user picked.
-  const bookingInstant =
-    booking.date instanceof Date
-      ? booking.date
-      : typeof booking.date === "string" &&
-          /^\d{4}-\d{2}-\d{2}/.test(booking.date)
-        ? parseLimaDateParam((booking.date as string).slice(0, 10))
-        : null;
-
-  const formattedDate = bookingInstant
-    ? formatLimaDate(bookingInstant, "EEE d MMM")
-    : "";
+  // booking.date is a "YYYY-MM-DD" string (Lima calendar day). Format in Lima TZ.
+  const formattedDate = /^\d{4}-\d{2}-\d{2}$/.test(booking.date)
+    ? formatLimaDate(parseLimaDateParam(booking.date), "EEE d MMM")
+    : booking.date;
 
   async function handleCancel() {
     setCancelError("");

@@ -698,10 +698,9 @@ async function seed() {
     // CREATE BLOCKED SLOTS
     // ==========================================================================
 
-    const tomorrow = addDays(new Date(), 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    const dayAfterTomorrow = addDays(new Date(), 2);
-    dayAfterTomorrow.setHours(0, 0, 0, 0);
+    const todayStr = todayLima();
+    const tomorrow = addDaysStr(todayStr, 1);
+    const dayAfterTomorrow = addDaysStr(todayStr, 2);
 
     // Court-specific maintenance block
     await db.insert(blockedSlots).values({
@@ -737,8 +736,7 @@ async function seed() {
     // CREATE BOOKINGS WITH PLAYERS AND ACTIVITY
     // ==========================================================================
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = todayStr;
 
     // Helper to insert a booking with players and activity
     async function createBookingWithPlayers(
@@ -746,7 +744,7 @@ async function seed() {
         code: string;
         courtId: string;
         facilityId: string;
-        date: Date;
+        date: string;
         startTime: string;
         endTime: string;
         status:
@@ -890,7 +888,7 @@ async function seed() {
     // Today: confirmed, 4/4 players, Cancha 1 (custom S/.80)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-8X4K`,
+        code: `PH-${today.slice(0, 4)}-8X4K`,
         courtId: facility1CourtIds[0] ?? "",
         facilityId: facility1Id,
         date: today,
@@ -918,7 +916,7 @@ async function seed() {
     // Today: confirmed, 3/4 players, Cancha 2 (facility default S/.70)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-9Y5L`,
+        code: `PH-${today.slice(0, 4)}-9Y5L`,
         courtId: facility1CourtIds[1] ?? "",
         facilityId: facility1Id,
         date: today,
@@ -945,7 +943,7 @@ async function seed() {
     // Today: in_progress, 4/4 players, Cancha 1 (custom peak S/.100)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-7Z3M`,
+        code: `PH-${today.slice(0, 4)}-7Z3M`,
         courtId: facility1CourtIds[0] ?? "",
         facilityId: facility1Id,
         date: today,
@@ -978,7 +976,7 @@ async function seed() {
     // Today: pending, 1/4 player, Cancha 3 (custom S/.60, peak uses facility default S/.90)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-6W2N`,
+        code: `PH-${today.slice(0, 4)}-6W2N`,
         courtId: facility1CourtIds[2] ?? "",
         facilityId: facility1Id,
         date: today,
@@ -1003,7 +1001,7 @@ async function seed() {
     // Today: OPEN MATCH, 2/4 players, Cancha 2 (facility default peak S/.90)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-OM1A`,
+        code: `PH-${today.slice(0, 4)}-OM1A`,
         courtId: facility1CourtIds[1] ?? "",
         facilityId: facility1Id,
         date: today,
@@ -1024,10 +1022,10 @@ async function seed() {
     // Tomorrow: confirmed, 2/4 players
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-5V1P`,
+        code: `PH-${today.slice(0, 4)}-5V1P`,
         courtId: facility1CourtIds[0] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, 1),
+        date: addDaysStr(today, 1),
         startTime: "09:00",
         endTime: "10:30",
         status: "confirmed",
@@ -1050,10 +1048,10 @@ async function seed() {
     // Tomorrow: confirmed, 4/4 players, evening peak
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-4U0Q`,
+        code: `PH-${today.slice(0, 4)}-4U0Q`,
         courtId: facility1CourtIds[1] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, 1),
+        date: addDaysStr(today, 1),
         startTime: "17:00",
         endTime: "18:30",
         status: "confirmed",
@@ -1078,10 +1076,10 @@ async function seed() {
     // Past: completed, 4/4 players
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-3T9R`,
+        code: `PH-${today.slice(0, 4)}-3T9R`,
         courtId: facility1CourtIds[0] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, -1),
+        date: addDaysStr(today, -1),
         startTime: "10:00",
         endTime: "11:30",
         status: "completed",
@@ -1105,10 +1103,10 @@ async function seed() {
 
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-2S8S`,
+        code: `PH-${today.slice(0, 4)}-2S8S`,
         courtId: facility1CourtIds[1] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, -1),
+        date: addDaysStr(today, -1),
         startTime: "18:00",
         endTime: "19:30",
         status: "completed",
@@ -1130,10 +1128,10 @@ async function seed() {
 
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-1R7T`,
+        code: `PH-${today.slice(0, 4)}-1R7T`,
         courtId: facility1CourtIds[2] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, -3),
+        date: addDaysStr(today, -3),
         startTime: "16:00",
         endTime: "17:30",
         status: "completed",
@@ -1156,10 +1154,10 @@ async function seed() {
 
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-0Q6U`,
+        code: `PH-${today.slice(0, 4)}-0Q6U`,
         courtId: facility1CourtIds[0] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, -5),
+        date: addDaysStr(today, -5),
         startTime: "19:00",
         endTime: "20:30",
         status: "completed",
@@ -1189,10 +1187,10 @@ async function seed() {
     // Cancelled booking
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-XC1A`,
+        code: `PH-${today.slice(0, 4)}-XC1A`,
         courtId: facility1CourtIds[1] ?? "",
         facilityId: facility1Id,
-        date: addDays(today, -2),
+        date: addDaysStr(today, -2),
         startTime: "14:00",
         endTime: "15:30",
         status: "cancelled",
@@ -1219,7 +1217,7 @@ async function seed() {
     // Today: confirmed, Cancha Premium 1 (custom S/.100)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-MF1A`,
+        code: `PH-${today.slice(0, 4)}-MF1A`,
         courtId: facility2CourtIds[0] ?? "",
         facilityId: facility2Id,
         date: today,
@@ -1252,7 +1250,7 @@ async function seed() {
     // Today: confirmed, Cancha Premium 2 (facility default S/.90)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-MF2B`,
+        code: `PH-${today.slice(0, 4)}-MF2B`,
         courtId: facility2CourtIds[1] ?? "",
         facilityId: facility2Id,
         date: today,
@@ -1278,7 +1276,7 @@ async function seed() {
     // Today: pending, Cancha Vista Mar evening (custom S/.85, peak uses facility default S/.115)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-MF3C`,
+        code: `PH-${today.slice(0, 4)}-MF3C`,
         courtId: facility2CourtIds[2] ?? "",
         facilityId: facility2Id,
         date: today,
@@ -1303,10 +1301,10 @@ async function seed() {
     // Past: completed, Cancha Premium 1 (custom S/.100)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-MF4D`,
+        code: `PH-${today.slice(0, 4)}-MF4D`,
         courtId: facility2CourtIds[0] ?? "",
         facilityId: facility2Id,
-        date: addDays(today, -1),
+        date: addDaysStr(today, -1),
         startTime: "10:00",
         endTime: "11:30",
         status: "completed",
@@ -1331,10 +1329,10 @@ async function seed() {
     // Past: completed, Cancha Premium 2 evening (facility default peak S/.115)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-MF5E`,
+        code: `PH-${today.slice(0, 4)}-MF5E`,
         courtId: facility2CourtIds[1] ?? "",
         facilityId: facility2Id,
-        date: addDays(today, -2),
+        date: addDaysStr(today, -2),
         startTime: "19:00",
         endTime: "20:30",
         status: "completed",
@@ -1357,10 +1355,10 @@ async function seed() {
     // Past: completed, Cancha Vista Mar (custom S/.85)
     await createBookingWithPlayers(
       {
-        code: `PH-${today.getFullYear()}-MF6F`,
+        code: `PH-${today.slice(0, 4)}-MF6F`,
         courtId: facility2CourtIds[2] ?? "",
         facilityId: facility2Id,
-        date: addDays(today, -4),
+        date: addDaysStr(today, -4),
         startTime: "16:00",
         endTime: "17:30",
         status: "completed",
@@ -1447,6 +1445,22 @@ function addDays(date: Date, days: number): Date {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
+}
+
+// Lima-zoned calendar-day helpers — seed runs in Node where the host TZ may
+// be anything. Calendar columns (`bookings.date`, `blocked_slots.date`) are
+// strings end-to-end per docs/dev/datetime.md.
+function todayLima(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima",
+  }).format(new Date());
+}
+
+function addDaysStr(ymd: string, days: number): string {
+  const [y, m, d] = ymd.split("-").map(Number) as [number, number, number];
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.toISOString().slice(0, 10);
 }
 
 seed().catch((error) => {

@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, isPast, startOfDay } from "date-fns";
-import { es } from "date-fns/locale";
 
+import {
+  formatLimaDate,
+  formatLimaDateParam,
+  nowUtc,
+  parseLimaDateParam,
+} from "@wifo/api/datetime";
 import { Badge } from "@wifo/ui/badge";
 import { Button } from "@wifo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
@@ -85,9 +89,9 @@ export function BlockedSlotsSection({
 
   // Separate upcoming from past
   const upcomingSlots =
-    blockedSlots?.filter((s) => !isPast(startOfDay(s.date))) ?? [];
+    blockedSlots?.filter((s) => s.date >= formatLimaDateParam(nowUtc())) ?? [];
   const pastSlots =
-    blockedSlots?.filter((s) => isPast(startOfDay(s.date))) ?? [];
+    blockedSlots?.filter((s) => s.date < formatLimaDateParam(nowUtc())) ?? [];
 
   return (
     <Card className="lg:col-span-2">
@@ -173,7 +177,7 @@ interface BlockedSlotCardProps {
     id: string;
     courtId: string | null;
     courtName: string | null;
-    date: Date;
+    date: string;
     startTime: string;
     endTime: string;
     reason: string;
@@ -195,9 +199,10 @@ function BlockedSlotCard({
   onDelete,
   onCancelConfirm,
 }: BlockedSlotCardProps) {
-  const formattedDate = format(new Date(slot.date), "EEE dd/MM", {
-    locale: es,
-  });
+  const formattedDate = formatLimaDate(
+    parseLimaDateParam(slot.date),
+    "EEE dd/MM",
+  );
 
   return (
     <div

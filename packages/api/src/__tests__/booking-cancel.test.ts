@@ -55,7 +55,7 @@ function makeBooking(
     courtId: "court-1",
     code: "PH-2026-ABCD",
     status: "confirmed",
-    date: new Date("2026-03-15"),
+    date: "2026-03-15",
     startTime: "10:00:00",
     endTime: "11:00:00",
     priceInCents: 5000,

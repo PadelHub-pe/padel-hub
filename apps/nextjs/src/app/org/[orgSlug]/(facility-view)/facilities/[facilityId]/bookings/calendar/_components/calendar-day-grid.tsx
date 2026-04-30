@@ -24,7 +24,7 @@ interface Booking {
   id: string;
   code: string;
   courtId: string;
-  date: Date;
+  date: string; // YYYY-MM-DD Lima calendar day
   startTime: string;
   endTime: string;
   priceInCents: number;

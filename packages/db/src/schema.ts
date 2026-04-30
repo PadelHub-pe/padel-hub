@@ -1,7 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
-  customType,
+  date,
   integer,
   jsonb,
   numeric,
@@ -19,35 +19,10 @@ import { z } from "zod/v4";
 
 import { user } from "./auth-schema";
 
-// =============================================================================
-// limaDate — Postgres `date` column that round-trips through America/Lima
-// =============================================================================
-//
-// Drizzle's default `date({ mode: "date" })` parses incoming strings as
-// `new Date("YYYY-MM-DD")` which JavaScript interprets as UTC midnight. On a
-// Lima session that's the prior day at 19:00, so any consumer that re-formats
-// the value in Lima TZ renders one day earlier.
-//
-// PadelHub is single-locale (America/Lima, UTC-5, no DST since 1990) so the
-// offset is a fixed constant. This custom type:
-//   - reads "YYYY-MM-DD" as Lima 00:00 (real instant in UTC)
-//   - writes any real instant by extracting its Lima calendar day
-// resulting in a clean round-trip via the existing @wifo/api/datetime helpers.
-
-const LIMA_OFFSET_MS = 5 * 60 * 60 * 1000;
-
-const limaDate = customType<{ data: Date; driverData: string }>({
-  dataType() {
-    return "date";
-  },
-  fromDriver(value) {
-    return new Date(`${value}T05:00:00.000Z`);
-  },
-  toDriver(value) {
-    const limaMs = value.getTime() - LIMA_OFFSET_MS;
-    return new Date(limaMs).toISOString().slice(0, 10);
-  },
-});
+// Calendar-day columns (`bookings.date`, `blocked_slots.date`) use
+// `date({ mode: "string" })` so a calendar day stays a `"YYYY-MM-DD"` string
+// across the whole stack — no JS Date impersonating a calendar day, no
+// host-TZ reinterpretation. See docs/dev/datetime.md.
 
 // =============================================================================
 // Organization Schema
@@ -406,7 +381,7 @@ export const blockedSlots = pgTable("blocked_slots", {
   }), // null = all courts
   // `date` (Postgres DATE) — calendar day in Lima TZ. Stored without a time
   // component so timezone re-interpretation cannot drift the row.
-  date: limaDate("date").notNull(),
+  date: date("date", { mode: "string" }).notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
   reason: blockedReasonEnum("reason").notNull(),
@@ -484,7 +459,7 @@ export const bookings = pgTable("bookings", {
 
   // Booking time — `date` (Postgres DATE) is the Lima calendar day.
   // `startTime` / `endTime` are the Lima wall-clock HH:MM:SS the booking covers.
-  date: limaDate("date").notNull(),
+  date: date("date", { mode: "string" }).notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
 

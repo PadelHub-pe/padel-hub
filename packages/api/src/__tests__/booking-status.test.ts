@@ -4,7 +4,7 @@ import type {
   BookingForResolution,
   BookingStatus,
 } from "../utils/booking-status";
-import { buildLimaDateTime, parseLimaDateParam } from "../lib/datetime";
+import { buildLimaDateTime } from "../lib/datetime";
 import {
   resolveBookingStatus,
   resolveBookingStatuses,
@@ -14,7 +14,7 @@ import {
 // Factories
 // =============================================================================
 
-const TEST_DAY = parseLimaDateParam("2026-03-12");
+const TEST_DAY = "2026-03-12";
 
 function makeBooking(
   overrides?: Partial<BookingForResolution>,
@@ -22,7 +22,7 @@ function makeBooking(
   return {
     id: "booking-1",
     status: "confirmed",
-    date: TEST_DAY, // 00:00 Lima on 2026-03-12, as a real UTC instant
+    date: TEST_DAY, // YYYY-MM-DD Lima calendar day
     startTime: "10:00",
     endTime: "11:30",
     ...overrides,

@@ -1,12 +1,16 @@
-import { differenceInMinutes, format, parse } from "date-fns";
-import { es } from "date-fns/locale";
+import { differenceInMinutes, parse } from "date-fns";
 
+import {
+  formatLimaDate,
+  formatLimaDateTime,
+  parseLimaDateParam,
+} from "@wifo/api/datetime";
 import { Badge } from "@wifo/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@wifo/ui/card";
 
 interface BookingInfoPanelProps {
   booking: {
-    date: Date;
+    date: string; // YYYY-MM-DD Lima calendar day; see docs/dev/datetime.md
     startTime: string;
     endTime: string;
     code: string;
@@ -49,10 +53,11 @@ const cancelledByLabels: Record<string, string> = {
   system: "Sistema",
 };
 
-function formatDate(date: Date): string {
-  return format(new Date(date), "EEEE, d 'de' MMMM 'de' yyyy", {
-    locale: es,
-  });
+function formatDate(date: string): string {
+  return formatLimaDate(
+    parseLimaDateParam(date),
+    "EEEE, d 'de' MMMM 'de' yyyy",
+  );
 }
 
 function formatTime(time: string): string {
@@ -60,7 +65,7 @@ function formatTime(time: string): string {
 }
 
 function formatDateTime(date: Date): string {
-  return format(new Date(date), "d MMM yyyy, HH:mm", { locale: es });
+  return formatLimaDateTime(date, "d MMM yyyy, HH:mm");
 }
 
 function calculateDurationMinutes(startTime: string, endTime: string): number {

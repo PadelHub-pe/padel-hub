@@ -136,19 +136,25 @@ export function formatLimaDateParam(date: Date): string {
 }
 
 /**
- * Construct a real instant from a Lima wall-clock date + `HH:MM` time string.
+ * Construct a real instant from a Lima calendar day + `HH:MM` time string.
  *
  * Replacement for the broken `new Date(date); dt.setHours(h, m)` pattern in
  * booking-status.ts, which sets hours in *server* TZ.
  *
- * `date` may be any real instant whose Lima calendar-day is the target day.
+ * `date` may be either a `"YYYY-MM-DD"` calendar-day string (preferred — the
+ * shape stored in `bookings.date`) or any real instant whose Lima calendar
+ * day is the target day. The string form is the canonical one per
+ * docs/dev/datetime.md; Date is accepted for callers that already hold one.
  */
-export function buildLimaDateTime(date: Date, hhmm: string): Date {
+export function buildLimaDateTime(date: string | Date, hhmm: string): Date {
   const match = /^(\d{2}):(\d{2})(?::\d{2})?$/.exec(hhmm);
   if (!match) {
     throw new Error(`Invalid time: "${hhmm}" — expected HH:MM`);
   }
-  const ymd = formatInTimeZone(date, LIMA_TZ, "yyyy-MM-dd");
+  const ymd =
+    typeof date === "string"
+      ? date
+      : formatInTimeZone(date, LIMA_TZ, "yyyy-MM-dd");
   return fromZonedTime(`${ymd}T${match[1]}:${match[2]}:00`, LIMA_TZ);
 }
 

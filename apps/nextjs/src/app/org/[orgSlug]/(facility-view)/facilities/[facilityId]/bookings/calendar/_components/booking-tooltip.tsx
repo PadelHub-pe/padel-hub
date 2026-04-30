@@ -72,7 +72,7 @@ interface BookingData {
   id: string;
   code: string;
   status: BookingStatus;
-  date: Date;
+  date: string;
   startTime: string;
   endTime: string;
   priceInCents: number;

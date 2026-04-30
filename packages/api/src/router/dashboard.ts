@@ -7,8 +7,8 @@ import { bookings } from "@wifo/db/schema";
 import { verifyFacilityAccess } from "../lib/access-control";
 import {
   addLimaDays,
+  formatLimaDateParam,
   nowUtc,
-  startOfLimaDay,
   startOfLimaMonth,
 } from "../lib/datetime";
 import { protectedProcedure } from "../trpc";
@@ -53,11 +53,14 @@ export const dashboardRouter = {
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
       const now = nowUtc();
-      const today = startOfLimaDay(now);
-      const tomorrow = addLimaDays(today, 1);
-      const yesterday = addLimaDays(today, -1);
-      const thisMonthStart = startOfLimaMonth(now);
-      const lastMonthStart = startOfLimaMonth(addLimaDays(thisMonthStart, -1));
+      // bookings.date is YYYY-MM-DD — compare as strings end-to-end.
+      const today = formatLimaDateParam(now);
+      const tomorrow = formatLimaDateParam(addLimaDays(now, 1));
+      const yesterday = formatLimaDateParam(addLimaDays(now, -1));
+      const thisMonthStart = formatLimaDateParam(startOfLimaMonth(now));
+      const lastMonthStart = formatLimaDateParam(
+        startOfLimaMonth(addLimaDays(startOfLimaMonth(now), -1)),
+      );
 
       // --- Today's bookings count (non-cancelled) ---
       const [todayCountResult] = await ctx.db
@@ -191,8 +194,8 @@ export const dashboardRouter = {
       await verifyFacilityAccess(ctx, facilityId, "booking:read");
 
       const now = nowUtc();
-      const today = startOfLimaDay(now);
-      const tomorrow = addLimaDays(today, 1);
+      const today = formatLimaDateParam(now);
+      const tomorrow = formatLimaDateParam(addLimaDays(now, 1));
 
       // Fetch today's non-cancelled bookings with court + user relations
       const todayBookings = await ctx.db.query.bookings.findMany({

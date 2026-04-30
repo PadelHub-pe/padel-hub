@@ -1,4 +1,3 @@
-import { addDays, startOfDay } from "date-fns";
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 
 import type { db as DbType } from "@wifo/db/client";
@@ -12,6 +11,7 @@ import {
 } from "@wifo/db/schema";
 
 import { getLimaDayOfWeek } from "../utils/schedule";
+import { addLimaDays, formatLimaDateParam, nowUtc } from "./datetime";
 
 // =============================================================================
 // Types
@@ -98,8 +98,8 @@ export async function getFacilityForCalendar(
   facilityId: string,
   date: Date,
 ) {
-  const dayStart = startOfDay(date);
-  const dayEnd = addDays(dayStart, 1);
+  const dayStart = formatLimaDateParam(date);
+  const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
   const dayOfWeek = getLimaDayOfWeek(date);
 
   // Fetch all data in parallel
@@ -215,8 +215,8 @@ export async function getFacilityBookingStats(
   ctx: DbContext,
   facilityId: string,
 ) {
-  const today = startOfDay(new Date());
-  const tomorrow = addDays(today, 1);
+  const today = formatLimaDateParam(nowUtc());
+  const tomorrow = formatLimaDateParam(addLimaDays(nowUtc(), 1));
 
   const [todayBookings, pendingBookings, totalCourts] = await Promise.all([
     ctx.db.query.bookings.findMany({

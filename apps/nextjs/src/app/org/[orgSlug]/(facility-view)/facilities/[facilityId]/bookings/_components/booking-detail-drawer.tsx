@@ -3,9 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
+import {
+  formatLimaDate,
+  formatLimaDateTime,
+  parseLimaDateParam,
+} from "@wifo/api/datetime";
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
@@ -299,7 +302,7 @@ export function BookingDetailDrawer({
 function buildCancelBookingInfo(booking: {
   code: string;
   court: { name: string };
-  date: Date;
+  date: string;
   startTime: string;
   endTime: string;
   playerCount: number;
@@ -307,14 +310,17 @@ function buildCancelBookingInfo(booking: {
   return {
     code: booking.code,
     courtName: booking.court.name,
-    date: format(new Date(booking.date), "EEE d MMM", { locale: es }),
+    date: formatLimaDate(parseLimaDateParam(booking.date), "EEE d MMM"),
     timeRange: `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`,
     playerCount: booking.playerCount,
   };
 }
 
-function formatDate(date: Date): string {
-  return format(new Date(date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+function formatDate(date: string): string {
+  return formatLimaDate(
+    parseLimaDateParam(date),
+    "EEEE, d 'de' MMMM 'de' yyyy",
+  );
 }
 
 function formatTime(time: string): string {
@@ -322,7 +328,7 @@ function formatTime(time: string): string {
 }
 
 function formatDateTime(date: Date): string {
-  return format(new Date(date), "d MMM yyyy, HH:mm", { locale: es });
+  return formatLimaDateTime(date, "d MMM yyyy, HH:mm");
 }
 
 function formatPaymentMethod(method: string): string {

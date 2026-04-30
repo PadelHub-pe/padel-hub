@@ -23,7 +23,7 @@ export type BookingStatus =
 export interface BookingForResolution {
   id: string;
   status: BookingStatus;
-  date: Date;
+  date: string; // "YYYY-MM-DD" — Lima calendar day; see docs/dev/datetime.md
   startTime: string; // "HH:MM"
   endTime: string; // "HH:MM"
 }

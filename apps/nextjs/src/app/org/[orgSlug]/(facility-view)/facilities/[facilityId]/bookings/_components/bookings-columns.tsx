@@ -2,9 +2,14 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { format, isToday, isTomorrow, isYesterday } from "date-fns";
-import { es } from "date-fns/locale";
 
+import {
+  addLimaDays,
+  formatLimaDate,
+  formatLimaDateParam,
+  nowUtc,
+  parseLimaDateParam,
+} from "@wifo/api/datetime";
 import { cn } from "@wifo/ui";
 
 import { BookingActionsMenu } from "./booking-actions-menu";
@@ -23,7 +28,7 @@ type BookingStatus =
 export interface BookingRow {
   id: string;
   code: string;
-  date: Date;
+  date: string; // YYYY-MM-DD Lima calendar day; see docs/dev/datetime.md
   startTime: string;
   endTime: string;
   priceInCents: number;
@@ -190,18 +195,16 @@ function checkStartingSoon(booking: BookingRow): boolean {
   return diffMinutes > 0 && diffMinutes <= 30;
 }
 
-function formatBookingDate(date: Date): string {
-  const bookingDate = new Date(date);
+function formatBookingDate(date: string): string {
+  const today = formatLimaDateParam(nowUtc());
+  const tomorrow = formatLimaDateParam(addLimaDays(nowUtc(), 1));
+  const yesterday = formatLimaDateParam(addLimaDays(nowUtc(), -1));
 
-  if (isToday(bookingDate)) {
-    return "Hoy";
-  } else if (isTomorrow(bookingDate)) {
-    return "Mañana";
-  } else if (isYesterday(bookingDate)) {
-    return "Ayer";
-  }
+  if (date === today) return "Hoy";
+  if (date === tomorrow) return "Mañana";
+  if (date === yesterday) return "Ayer";
 
-  return format(bookingDate, "EEE d MMM", { locale: es });
+  return formatLimaDate(parseLimaDateParam(date), "EEE d MMM");
 }
 
 function formatTime(time: string): string {

@@ -7,9 +7,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
+import { formatLimaDate, parseLimaDateParam } from "@wifo/api/datetime";
 import { Button } from "@wifo/ui/button";
 import { toast } from "@wifo/ui/toast";
 
@@ -150,7 +149,7 @@ export function BookingDetailView() {
 function buildCancelInfo(booking: {
   code: string;
   court: { name: string };
-  date: Date;
+  date: string;
   startTime: string;
   endTime: string;
   playerCount: number;
@@ -160,7 +159,7 @@ function buildCancelInfo(booking: {
   return {
     code: booking.code,
     courtName: booking.court.name,
-    date: format(new Date(booking.date), "EEE d MMM", { locale: es }),
+    date: formatLimaDate(parseLimaDateParam(booking.date), "EEE d MMM"),
     timeRange: `${st} - ${et}`,
     playerCount: booking.playerCount,
   };

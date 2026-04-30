@@ -14,8 +14,8 @@ import { verifyFacilityAccess } from "../lib/access-control";
 import { resolveAndPersistBookingStatuses } from "../lib/booking-status-persist";
 import {
   addLimaDays,
+  formatLimaDateParam,
   nowUtc,
-  startOfLimaDay,
   startOfLimaMonth,
   startOfLimaWeek,
 } from "../lib/datetime";
@@ -133,9 +133,9 @@ export const calendarRouter = {
       // Verify access with schedule:read permission
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      // Get the day boundaries (Lima TZ)
-      const dayStart = startOfLimaDay(date);
-      const dayEnd = addLimaDays(dayStart, 1);
+      // Get the day boundaries (Lima TZ) — bookings.date is a string
+      const dayStart = formatLimaDateParam(date);
+      const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
       const dayOfWeek = getLimaDayOfWeek(date);
 
       // Fetch data in parallel
@@ -281,8 +281,9 @@ export const calendarRouter = {
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
       // Ensure weekStart is a Monday in Lima TZ
-      const mondayStart = startOfLimaWeek(weekStart);
-      const weekEnd = addLimaDays(mondayStart, 7);
+      const mondayStartDate = startOfLimaWeek(weekStart);
+      const mondayStart = formatLimaDateParam(mondayStartDate);
+      const weekEnd = formatLimaDateParam(addLimaDays(mondayStartDate, 7));
 
       // Fetch data in parallel
       const [courtsList, operatingHoursList, bookingsList, blockedSlotsList] =
@@ -327,9 +328,9 @@ export const calendarRouter = {
       // Sort and filter courts
       const sortedCourts = sortAndFilterCourts(courtsList);
 
-      // Build days array
+      // Build days array — string YYYY-MM-DD per day; comparisons are string-equality
       const days = Array.from({ length: 7 }, (_, i) => {
-        const dayDate = addLimaDays(mondayStart, i);
+        const dayDateStr = formatLimaDateParam(addLimaDays(mondayStartDate, i));
         // Mon=1, Tue=2, ..., Sat=6, Sun=0 — derived from index since we start on Monday
         const dayOfWeek = (i + 1) % 7;
         const dayOperatingHours = getOperatingHoursForDay(
@@ -337,10 +338,7 @@ export const calendarRouter = {
           dayOfWeek,
         );
 
-        const dayBookings = bookingsList.filter((b) => {
-          const bookingDay = startOfLimaDay(b.date);
-          return bookingDay.getTime() === startOfLimaDay(dayDate).getTime();
-        });
+        const dayBookings = bookingsList.filter((b) => b.date === dayDateStr);
 
         const activeBookings = dayBookings.filter(
           (b) => (statusMap.get(b.id) ?? b.status) !== "cancelled",
@@ -351,7 +349,7 @@ export const calendarRouter = {
         );
 
         return {
-          date: dayDate,
+          date: dayDateStr,
           dayOfWeek,
           operatingHours: {
             openTime: dayOperatingHours.openTime,
@@ -377,8 +375,7 @@ export const calendarRouter = {
         if (day.operatingHours.isClosed) return acc;
         const dayBookings = bookingsList.filter(
           (b) =>
-            startOfLimaDay(b.date).getTime() ===
-              startOfLimaDay(day.date).getTime() &&
+            b.date === day.date &&
             (statusMap.get(b.id) ?? b.status) !== "cancelled",
         );
         return (
@@ -451,8 +448,8 @@ export const calendarRouter = {
       // Verify access with schedule:read permission
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const dayStart = startOfLimaDay(date);
-      const dayEnd = addLimaDays(dayStart, 1);
+      const dayStart = formatLimaDateParam(date);
+      const dayEnd = formatLimaDateParam(addLimaDays(date, 1));
       const dayOfWeek = getLimaDayOfWeek(date);
 
       const [courtsList, operatingHoursList, statsResult] = await Promise.all([
@@ -527,10 +524,13 @@ export const calendarRouter = {
 
       await verifyFacilityAccess(ctx, facilityId, "schedule:read");
 
-      const monthStart = startOfLimaMonth(month);
-      // Adding 32 days from any month start always lands inside the next
-      // calendar month — `startOfLimaMonth` then snaps back to that month's 1st.
-      const monthEnd = startOfLimaMonth(addLimaDays(monthStart, 32));
+      // Calendar-day strings; adding 32 days from any month start always lands
+      // inside the next calendar month — `startOfLimaMonth` then snaps back.
+      const monthStartDate = startOfLimaMonth(month);
+      const monthStart = formatLimaDateParam(monthStartDate);
+      const monthEnd = formatLimaDateParam(
+        startOfLimaMonth(addLimaDays(monthStartDate, 32)),
+      );
 
       const rows = await ctx.db
         .selectDistinct({ date: bookings.date })

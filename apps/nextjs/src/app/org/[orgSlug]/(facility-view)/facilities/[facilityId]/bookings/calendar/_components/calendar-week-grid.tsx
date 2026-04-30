@@ -26,7 +26,7 @@ interface Booking {
   id: string;
   code: string;
   courtId: string;
-  date: Date;
+  date: string; // YYYY-MM-DD Lima calendar day
   startTime: string;
   endTime: string;
   priceInCents: number;
@@ -38,7 +38,7 @@ interface Booking {
 }
 
 interface DayInfo {
-  date: Date;
+  date: string; // YYYY-MM-DD Lima calendar day
   dayOfWeek: number;
   operatingHours: {
     openTime: string;
@@ -102,13 +102,12 @@ export const CalendarWeekGrid = memo(function CalendarWeekGrid({
     60,
   );
 
-  // Group bookings by date
+  // Group bookings by date — booking.date is already YYYY-MM-DD
   const bookingsByDate = bookings.reduce<Record<string, Booking[]>>(
     (acc, booking) => {
-      const dateKey = format(new Date(booking.date), "yyyy-MM-dd");
-      const existing = acc[dateKey] ?? [];
+      const existing = acc[booking.date] ?? [];
       existing.push(booking);
-      acc[dateKey] = existing;
+      acc[booking.date] = existing;
       return acc;
     },
     {},
