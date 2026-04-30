@@ -49,6 +49,7 @@ const PUBLIC_ROUTES = [
   "/forgot-password",
   "/reset-password",
   "/api/auth",
+  "/api/cron",
   "/api/trpc",
 ];
 
